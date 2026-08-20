@@ -1,0 +1,68 @@
+"""List-price sheet and batch discounts, for receipts.
+
+Receipts are arithmetic against public price sheets — no estimates. The prices
+below are a **bundled snapshot** (see ``PRICE_SHEET_DATE``); providers change
+prices, so verify against their published sheets and override at runtime with
+:func:`register_price` where they have moved. Costs for unknown models resolve
+to ``None`` rather than a guess.
+
+Batch tiers at OpenAI, Anthropic, and Google are publicly priced at 50% of
+list, which is what :data:`BATCH_DISCOUNT` encodes.
+"""
+
+from __future__ import annotations
+
+__all__ = [
+    "PRICE_SHEET_DATE",
+    "BATCH_DISCOUNT",
+    "register_price",
+    "get_price",
+    "list_cost_usd",
+    "batch_cost_usd",
+]
+
+PRICE_SHEET_DATE = "2026-08"
+
+# Fraction of list price paid on provider batch tiers (published: 50%).
+BATCH_DISCOUNT = 0.5
+
+# model -> (USD per 1M input tokens, USD per 1M output tokens), standard list.
+_PRICES: dict[str, tuple[float, float]] = {
+    # Anthropic (per anthropic.com/pricing)
+    "claude-opus-4-5": (5.00, 25.00),
+    "claude-sonnet-4-5": (3.00, 15.00),
+    "claude-haiku-4-5": (1.00, 5.00),
+    # OpenAI (per openai.com/api/pricing)
+    "gpt-5.1": (1.25, 10.00),
+    "gpt-5.1-mini": (0.25, 2.00),
+    "gpt-5.1-nano": (0.05, 0.40),
+}
+
+
+def register_price(model: str, input_per_m: float, output_per_m: float) -> None:
+    """Set or override the list price for *model* (USD per 1M tokens)."""
+    _PRICES[model] = (float(input_per_m), float(output_per_m))
+
+
+def get_price(model: str) -> tuple[float, float] | None:
+    """Exact match first, then longest registered prefix (handles date-pinned
+    model names like ``claude-sonnet-4-5-20250929``)."""
+    if model in _PRICES:
+        return _PRICES[model]
+    best = None
+    for name, price in _PRICES.items():
+        if model.startswith(name) and (best is None or len(name) > best[0]):
+            best = (len(name), price)
+    return best[1] if best else None
+
+
+def list_cost_usd(model: str, input_tokens: int, output_tokens: int) -> float | None:
+    price = get_price(model)
+    if price is None:
+        return None
+    return (input_tokens * price[0] + output_tokens * price[1]) / 1_000_000
+
+
+def batch_cost_usd(model: str, input_tokens: int, output_tokens: int) -> float | None:
+    cost = list_cost_usd(model, input_tokens, output_tokens)
+    return None if cost is None else cost * BATCH_DISCOUNT
