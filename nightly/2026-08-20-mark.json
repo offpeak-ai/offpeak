@@ -1,10 +1,10 @@
 {
   "night_of": "2026-08-20",
   "mode": "mark",
-  "generated_utc": "2026-08-21T04:30+00:00",
+  "generated_utc": "2026-08-21T08:21+00:00",
   "span_utc": {
     "from": "2026-08-20T16:00Z",
-    "to": "2026-08-21T04:30Z"
+    "to": "2026-08-21T07:00Z"
   },
   "tokens": {
     "batch_discount": 0.5,
@@ -16,22 +16,22 @@
     "power": "api.octopus.energy Agile day-ahead (keyless, region C)"
   },
   "carbon_gb": {
-    "n_halfhours": 25,
+    "n_halfhours": 31,
     "peak_window_17_21_bst": 170.62,
-    "offpeak_window_00_05_bst": 166,
+    "offpeak_window_00_05_bst": 166.1,
     "window_spread": 1.03,
     "cleanest_5h": {
-      "avg": 166,
-      "from": "2026-08-20T23:00Z"
+      "avg": 165.2,
+      "from": "2026-08-21T02:00Z"
     },
     "dirtiest_5h": {
       "avg": 186.4,
       "from": "2026-08-20T18:00Z"
     },
-    "chosen_window_spread": 1.12
+    "chosen_window_spread": 1.13
   },
   "power_gb_agile": {
-    "n_halfhours": 25,
+    "n_halfhours": 30,
     "peak_window_17_21_bst": 35.41,
     "offpeak_window_00_05_bst": 24.71,
     "window_spread": 1.43,
