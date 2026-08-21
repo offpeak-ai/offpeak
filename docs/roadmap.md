@@ -27,7 +27,10 @@ misleading one:
 - **No carbon-aware scheduling.** The night board observes the grid; the
   scheduler does not read it.
 - **No venues beyond the two batch tiers.** Google batch, spot capacity, and
-  off-peak windows on your own GPUs are interface-shaped but unwritten.
+  off-peak windows on your own GPUs are interface-shaped but unwritten. A
+  Groq batch driver exists in the tree but is **untested against the live
+  API** — it is opt-in, excluded from the `all` extra, and not in
+  `default_venues()`.
 
 ## The hosted desk
 
