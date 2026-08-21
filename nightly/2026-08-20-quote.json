@@ -1,0 +1,41 @@
+{
+  "night_of": "2026-08-20",
+  "mode": "quote",
+  "generated_utc": "2026-08-21T04:09+00:00",
+  "span_utc": {
+    "from": "2026-08-20T16:00Z",
+    "to": "2026-08-21T07:00Z"
+  },
+  "tokens": {
+    "batch_discount": 0.5,
+    "spread": 2.0,
+    "note": "published batch tiers, OpenAI + Anthropic (50% of list)"
+  },
+  "sources": {
+    "carbon": "api.carbonintensity.org.uk (NESO, keyless)",
+    "power": "api.octopus.energy Agile day-ahead (keyless, region C)"
+  },
+  "carbon_gb": {
+    "n_halfhours": 31,
+    "peak_window_17_21_bst": 163.5,
+    "offpeak_window_00_05_bst": 163.7,
+    "window_spread": 1.0,
+    "cleanest_5h": {
+      "avg": 157,
+      "from": "2026-08-21T02:00Z"
+    },
+    "dirtiest_5h": {
+      "avg": 180.9,
+      "from": "2026-08-20T19:00Z"
+    },
+    "chosen_window_spread": 1.15
+  },
+  "power_gb_agile": {
+    "n_halfhours": 30,
+    "peak_window_17_21_bst": 35.41,
+    "offpeak_window_00_05_bst": 24.71,
+    "window_spread": 1.43,
+    "max_p_kwh": 41.643,
+    "min_p_kwh": 23.9925
+  }
+}
