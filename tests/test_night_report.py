@@ -242,3 +242,28 @@ class TestUsZones:
         )
         assert rec["power_caiso_sp15"]["window_spread"] == 4.0
         assert "4.0x" in nr.render_row(rec)
+
+
+class TestBoardHeaderHealing:
+    def test_a_stale_header_is_repaired_and_rows_are_kept(self, tmp_path):
+        # Adding a column to the generator must repair an existing board, not
+        # leave rows that no longer line up with the header above them.
+        board = tmp_path / "BOARD.md"
+        board.write_text(
+            "# Offpeak night board — marked nights\n\n"
+            "| night | old | columns |\n|---|---|---|\n"
+            "| 2026-08-19 | a | b |\n"
+        )
+        nr.upsert_board_row(board, "2026-08-20", "| 2026-08-20 | new |\n")
+        text = board.read_text()
+        assert text.startswith(nr.BOARD_HEADER)
+        assert "| old | columns |" not in text
+        assert "| 2026-08-19 | a | b |" in text  # history survives the repair
+        assert "| 2026-08-20 | new |" in text
+
+    def test_repair_is_idempotent(self, tmp_path):
+        board = tmp_path / "BOARD.md"
+        for _ in range(3):
+            nr.upsert_board_row(board, "2026-08-20", "| 2026-08-20 | x |\n")
+        assert board.read_text().count("| 2026-08-20 |") == 1
+        assert board.read_text().count("# Offpeak night board") == 1
