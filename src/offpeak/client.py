@@ -8,14 +8,13 @@ own-GPU off-peak windows, and carbon-aware scheduling on the same interface.
 
 from __future__ import annotations
 
-import math
 import time
 from dataclasses import dataclass, field
 from datetime import datetime
 
 from .deadline import parse_deadline, seconds_until
 from .job import Job, Receipt, Result, Status
-from .prices import PRICE_SHEET_DATE
+from .prices import BATCH_DISCOUNT, PRICE_SHEET_DATE, format_usd
 from .venues.base import Venue
 
 __all__ = ["run", "receipt", "Settlement", "default_venues"]
@@ -205,14 +204,7 @@ def _run_sync(venue: Venue, j: Job) -> Result:
         return Result(job=j, error=str(exc))
 
 
-def _usd(amount: float) -> str:
-    """Money for humans: 2dp once there are cents to show, more significant
-    digits below that so a sub-cent run does not settle as a column of $0.00."""
-    if amount == 0:
-        return "0.00"
-    if abs(amount) >= 0.005:
-        return f"{amount:,.2f}"
-    return f"{amount:,.{-math.floor(math.log10(abs(amount))) + 2}f}"
+_usd = format_usd  # kept as a private alias; the canonical home is prices
 
 
 @dataclass
@@ -228,6 +220,7 @@ class Settlement:
     output_tokens: int = 0
     list_usd: float = 0.0
     paid_usd: float = 0.0
+    left_on_table_usd: float = 0.0
     unpriced: int = 0
     by_venue: dict = field(default_factory=dict)
 
@@ -253,6 +246,11 @@ class Settlement:
             f"captured  ${_usd(self.captured_usd)} ({self.captured_pct:.1f}%)",
             f"prices    snapshot {PRICE_SHEET_DATE} — override via offpeak.prices",
         ]
+        if self.fell_back:
+            lines.append(
+                f"left      ${_usd(self.left_on_table_usd)} on the table "
+                f"({self.fell_back} job(s) missed the batch tier)"
+            )
         if self.unpriced:
             lines.append(f"note      {self.unpriced} job(s) had no price sheet entry")
         lines.append("─" * 47)
@@ -281,4 +279,7 @@ def receipt(results: list[Result]) -> Settlement:
         else:
             settlement.list_usd += r.list_usd
             settlement.paid_usd += r.paid_usd
+            if r.fell_back:
+                # The spread this job would have captured had the batch held.
+                settlement.left_on_table_usd += r.list_usd * (1 - BATCH_DISCOUNT)
     return settlement
