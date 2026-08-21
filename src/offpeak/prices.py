@@ -27,15 +27,26 @@ PRICE_SHEET_DATE = "2026-08"
 BATCH_DISCOUNT = 0.5
 
 # model -> (USD per 1M input tokens, USD per 1M output tokens), standard list.
+# Only models currently on a public price sheet appear here — receipts must be
+# checkable against a published number. Models off the sheet (e.g. the gpt-5.1
+# family, still callable but no longer listed) resolve to None; use
+# :func:`register_price` if you run one at a privately known rate.
 _PRICES: dict[str, tuple[float, float]] = {
-    # Anthropic (per anthropic.com/pricing)
+    # Anthropic (per platform.claude.com/docs/en/about-claude/pricing)
+    "claude-fable-5": (10.00, 50.00),
+    "claude-opus-5": (5.00, 25.00),
+    "claude-sonnet-5": (2.00, 10.00),
+    "claude-opus-4-8": (5.00, 25.00),
+    "claude-opus-4-7": (5.00, 25.00),
+    "claude-opus-4-6": (5.00, 25.00),
     "claude-opus-4-5": (5.00, 25.00),
+    "claude-sonnet-4-6": (3.00, 15.00),
     "claude-sonnet-4-5": (3.00, 15.00),
     "claude-haiku-4-5": (1.00, 5.00),
-    # OpenAI (per openai.com/api/pricing)
-    "gpt-5.1": (1.25, 10.00),
-    "gpt-5.1-mini": (0.25, 2.00),
-    "gpt-5.1-nano": (0.05, 0.40),
+    # OpenAI (per developers.openai.com/api/docs/pricing; ≤272k-token context)
+    "gpt-5.6-sol": (2.50, 15.00),
+    "gpt-5.6-terra": (1.00, 6.00),
+    "gpt-5.6-luna": (0.10, 0.60),
 }
 
 
