@@ -23,3 +23,7 @@ htmlcov/
 # Claude Code (personal)
 .claude/settings.local.json
 HANDOFF.md
+
+# Docs build output; docs/spec.md is copied from SPEC.md at build time
+site/
+docs/spec.md
