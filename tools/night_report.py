@@ -25,6 +25,7 @@ from __future__ import annotations
 import argparse
 import datetime as dt
 import json
+import re
 import statistics
 import time
 import urllib.error
@@ -308,22 +309,30 @@ def render_row(rec: dict) -> str:
     )
 
 
+_DATA_ROW = re.compile(r"^\| \d{4}-\d{2}-\d{2} \|")
+
+
 def upsert_board_row(board: Path, night: str, row: str) -> None:
     """Write *row* for *night*, replacing any existing row for the same night.
 
     A re-run must correct the night it re-marks, not append a second opinion.
+
+    The header is rewritten from :data:`BOARD_HEADER` every time, so adding a
+    column to the generator repairs an existing board instead of leaving rows
+    that no longer line up with the header they were written under.
     """
-    if not board.exists():
-        board.write_text(BOARD_HEADER + row)
-        return
-    lines = board.read_text().splitlines(keepends=True)
+    existing = board.read_text().splitlines(keepends=True) if board.exists() else []
+    rows = [ln for ln in existing if _DATA_ROW.match(ln)]
+
     marker = f"| {night} |"
-    for i, line in enumerate(lines):
+    for i, line in enumerate(rows):
         if line.startswith(marker):
-            lines[i] = row
-            board.write_text("".join(lines))
-            return
-    board.write_text("".join(lines) + row)
+            rows[i] = row
+            break
+    else:
+        rows.append(row)
+
+    board.write_text(BOARD_HEADER + "".join(rows))
 
 
 def main() -> int:
