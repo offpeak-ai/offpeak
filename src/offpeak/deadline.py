@@ -8,7 +8,8 @@ Accepted forms:
 - ``"06:00"`` — the next occurrence of that wall-clock time (today if it is
   still ahead, otherwise tomorrow). This is the canonical overnight form.
 - ``"6h"``, ``"90m"``, ``"45s"``, ``"2d"`` — relative to now.
-- ISO 8601 strings — ``"2026-08-21T06:00:00-07:00"``.
+- ISO 8601 strings — ``"2026-08-21T06:00:00-07:00"``, including the
+  ``Z`` (UTC) suffix on every supported Python.
 
 All deadlines resolve to an aware :class:`datetime.datetime`. See SPEC.md for
 the full semantics.
@@ -76,8 +77,13 @@ def _parse(value: object, now: datetime) -> datetime:
             if candidate <= now:
                 candidate += timedelta(days=1)
             return candidate
+        text = value.strip()
+        # Python 3.11 taught fromisoformat to read a trailing "Z"; 3.10 did not,
+        # and Z is the ISO form most timestamps in the wild actually use.
+        if text.endswith(("Z", "z")):
+            text = f"{text[:-1]}+00:00"
         try:
-            parsed = datetime.fromisoformat(value.strip())
+            parsed = datetime.fromisoformat(text)
         except ValueError:
             raise ValueError(f"unrecognized deadline: {value!r}") from None
         return parsed if parsed.tzinfo else parsed.astimezone()

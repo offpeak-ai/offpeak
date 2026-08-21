@@ -14,24 +14,30 @@ from . import prices
 from .client import Settlement, default_venues, receipt, run
 from .deadline import parse_deadline, seconds_until
 from .job import Job, Receipt, Result, Status, job
+from .prices import format_usd
+from .quote import Quote, VenueQuote, quote
 from .venues.base import BatchState, Venue
 
-__version__ = "0.1.2"
+__version__ = "0.2.0"
 
 __all__ = [
     "job",
     "run",
+    "quote",
     "receipt",
     "Job",
     "Result",
     "Receipt",
     "Settlement",
+    "Quote",
+    "VenueQuote",
     "Status",
     "Venue",
     "BatchState",
     "parse_deadline",
     "seconds_until",
     "default_venues",
+    "format_usd",
     "prices",
     "__version__",
 ]

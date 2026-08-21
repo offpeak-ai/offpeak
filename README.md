@@ -35,6 +35,7 @@ prices    snapshot 2026-08 — override via offpeak.prices
 
 ## What it does
 
+- **Know the price before you spend it.** `quote(jobs, deadline=...)` prices a run against the published sheets with no API calls and no key — list versus batch, per venue, plus what the wait is worth.
 - **One argument, not a workflow.** `run(jobs, deadline=...)` handles batching, submission, polling, collection, and result matching across providers.
 - **Deadlines are guarded, not hoped for.** If a batch hasn't landed by the time the remaining window shrinks to a risk buffer, `offpeak` cancels and re-runs the stragglers synchronously at list price. You state the deadline; it gets met.
 - **Every run settles a receipt.** List cost, paid cost, captured spread — arithmetic against public price sheets, not estimates.
@@ -50,6 +51,32 @@ pip install "offpeak[openai]"
 ```
 
 Venues use the standard environment variables (`OPENAI_API_KEY`, `ANTHROPIC_API_KEY`), or pass a configured client: `OpenAIBatch(client=my_client)`.
+
+## The free quote
+
+What is the wait worth? Ask before you spend anything — `quote()` makes no API calls and needs no key.
+
+```bash
+python -m offpeak quote --model gpt-5.6-luna --input-tokens 800 --output-tokens 200 --jobs 5000
+```
+
+```
+OFFPEAK QUOTE ─────────────────────────────────
+jobs      5000 across 1 venue(s)
+deadline  2026-08-21 21:11 PDT (24.0h out)
+tokens    4,000,000 in · 1,000,000 out
+
+  openai:batch      5000 job(s)  list $1.00  batch $0.50  save $0.50 (50.0%)
+
+list      $1.00   (run now, synchronously)
+batch     $0.50   (run by the deadline)
+save      $0.50 (50.0%)
+basis     input explicit; output explicit
+prices    snapshot 2026-08 — estimate only, not a bill
+───────────────────────────────────────────────
+```
+
+From Python, `offpeak.quote(jobs, deadline="06:00")` takes the same jobs you would pass to `run()`. Token counts come from the job where it knows them (`metadata={"input_tokens": ..., "output_tokens": ...}`, or `max_tokens` as an output ceiling) and are a labeled chars/4 estimate where it does not — every figure reports its provenance in `basis`, and a quote with no output signal is marked a **floor**, not an estimate.
 
 ## Deadlines
 

@@ -291,3 +291,48 @@ def test_settlement_line_reports_failed_count():
     venue = BrokenVenue(sync_error=True)
     results = offpeak.run([job("claude-haiku-4-5", "x")], "2h", venues=[venue], poll_interval=0)
     assert "1 failed" in str(offpeak.receipt(results))
+
+
+def test_settlement_reports_what_the_fallback_left_on_the_table():
+    venue = FakeVenue(polls_to_complete=10_000)  # batch never lands
+    jobs = [job("claude-haiku-4-5", "x"), job("claude-haiku-4-5", "y")]
+    results = offpeak.run(jobs, "2h", venues=[venue], poll_interval=0, risk_buffer=10**9)
+
+    settlement = offpeak.receipt(results)
+    # Both fell back and paid list; the spread the batch tier would have given
+    # is exactly half of list, and that is what the desk left behind.
+    assert settlement.fell_back == 2
+    assert settlement.left_on_table_usd == pytest.approx(settlement.list_usd * 0.5)
+    assert "left      $" in str(settlement)
+    assert "2 job(s) missed the batch tier" in str(settlement)
+
+
+def test_a_clean_batch_run_leaves_nothing_on_the_table():
+    venue = FakeVenue()
+    results = offpeak.run([job("claude-haiku-4-5", "x")], "2h", venues=[venue], poll_interval=0)
+    settlement = offpeak.receipt(results)
+    assert settlement.left_on_table_usd == 0.0
+    assert "left      $" not in str(settlement)  # no line when nothing was missed
+
+
+def test_receipt_renders_sub_cent_costs_per_job():
+    venue = FakeVenue()
+    results = offpeak.run([job("claude-haiku-4-5", "x")], "2h", venues=[venue], poll_interval=0)
+    rendered = str(results[0].receipt)
+    assert "fake:batch claude-haiku-4-5" in rendered
+    assert "$0.0000750" in rendered  # 100 in @ $1/M + 10 out @ $5/M, batch = half
+    assert "$0.00 " not in rendered  # the whole point: not rounded away
+
+
+def test_receipt_render_marks_a_fallback():
+    venue = FakeVenue(polls_to_complete=10_000)
+    results = offpeak.run(
+        [job("claude-haiku-4-5", "x")], "2h", venues=[venue], poll_interval=0, risk_buffer=10**9
+    )
+    assert "(sync fallback)" in str(results[0].receipt)
+
+
+def test_receipt_render_shows_a_dash_for_an_unpriced_model():
+    venue = FakeVenue(prefix="mystery")
+    results = offpeak.run([job("mystery-model", "x")], "2h", venues=[venue], poll_interval=0)
+    assert "list $—" in str(results[0].receipt)

@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 
-from .prices import batch_cost_usd, list_cost_usd
+from .prices import batch_cost_usd, format_usd, list_cost_usd
 
 __all__ = ["Job", "Result", "Receipt", "Status", "job"]
 
@@ -92,6 +92,21 @@ class Receipt:
         if self.list_usd is None or self.paid_usd is None:
             return None
         return self.list_usd - self.paid_usd
+
+    def __str__(self) -> str:
+        """One line, in money you can actually read.
+
+        The float properties above stay floats — this is the rendering, so a
+        sub-cent job reports what it cost instead of $0.00.
+        """
+        where = f"{self.venue} {self.model}"
+        if self.fell_back:
+            where += " (sync fallback)"
+        return (
+            f"{where}: {self.input_tokens:,} in · {self.output_tokens:,} out · "
+            f"list ${format_usd(self.list_usd)} · paid ${format_usd(self.paid_usd)} · "
+            f"captured ${format_usd(self.spread_usd)}"
+        )
 
 
 @dataclass

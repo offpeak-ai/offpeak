@@ -82,3 +82,10 @@ def test_settlement_aggregates():
     assert settlement.captured_pct == pytest.approx(50.0)
     text = str(settlement)
     assert "OFFPEAK SETTLEMENT" in text and "captured" in text
+
+
+def test_a_registered_price_does_not_leak_into_other_tests():
+    # Guards the conftest fixture: test_cost_math_and_override registers
+    # "mystery", and without cleanup every later test sees it.
+    assert get_price("mystery") is None
+    assert get_price("mystery-model") is None
