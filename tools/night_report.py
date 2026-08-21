@@ -46,6 +46,18 @@ NIGHT_START_HOUR_UTC = 16  # 17:00 BST — the evening peak opens
 NIGHT_HOURS = 15  # ...through 07:00Z
 PEAK_WINDOW_UTC = (16, 20)  # 17-21 BST
 OFFPEAK_WINDOW_UTC = (23, 4)  # 00-05 BST, wraps midnight
+
+# US zones price in their own clock, so their windows are local hours rather
+# than UTC ones: the evening peak of the night's date, and the small hours of
+# the morning after — the same shape as the GB legs, read off a different clock.
+PEAK_WINDOW_LOCAL = (17, 21)
+OFFPEAK_WINDOW_LOCAL = (0, 5)
+
+# (label, gridstatus call) — day-ahead hourly, keyless, no account required.
+US_ZONES = {
+    "caiso_sp15": {"iso": "CAISO", "node": "TH_SP15_GEN-APND", "unit": "$/MWh"},
+    "ercot_houston": {"iso": "Ercot", "node": "HB_HOUSTON", "unit": "$/MWh"},
+}
 HALF_HOURS_IN_5H = 10
 
 RETRIES = 3
@@ -105,6 +117,77 @@ def agile(f: dt.datetime, t: dt.datetime) -> list[tuple[str, float]]:
     )
 
 
+def _us_rows(zone: str, night: dt.date) -> list[tuple[dt.datetime, float]]:
+    """Day-ahead hourly prices for *zone*, covering the night and the morning
+    after. Raises :class:`FetchError` when gridstatus is absent or the ISO is
+    unreachable — the caller degrades that into a missing column.
+    """
+    try:
+        import gridstatus
+    except ImportError as exc:
+        raise FetchError(
+            "gridstatus is not installed (US zones are an Action-only dependency)"
+        ) from exc
+
+    cfg = US_ZONES[zone]
+    rows: list[tuple[dt.datetime, float]] = []
+    failures: list[str] = []
+    # Fetch a day at a time. ERCOT's range form returns a single day, which
+    # silently nulls the evening peak and leaves only the following morning.
+    for day in (night, night + dt.timedelta(days=1)):
+        try:
+            iso = getattr(gridstatus, cfg["iso"])()
+            if cfg["iso"] == "CAISO":
+                df = iso.get_lmp(
+                    date=day, market="DAY_AHEAD_HOURLY", locations=[cfg["node"]]
+                )
+                value_col = "LMP"
+            else:
+                df = iso.get_spp(
+                    date=day, market="DAY_AHEAD_HOURLY", location_type="Trading Hub"
+                )
+                df = df[df["Location"] == cfg["node"]]
+                value_col = "SPP"
+        except Exception as exc:  # noqa: BLE001 — any ISO failure is a missing day
+            failures.append(f"{day}: {type(exc).__name__}: {str(exc)[:120]}")
+            continue
+        rows += [
+            (ts.to_pydatetime() if hasattr(ts, "to_pydatetime") else ts, float(val))
+            for ts, val in zip(df["Interval Start"], df[value_col], strict=False)
+        ]
+
+    if not rows:
+        raise FetchError(f"{zone}: no day-ahead rows ({'; '.join(failures) or 'empty'})")
+    return rows
+
+
+def us_leg(rows: list[tuple[dt.datetime, float]], night: dt.date) -> dict | None:
+    """Peak/offpeak windows for a US zone, in that zone's local clock."""
+    following = night + dt.timedelta(days=1)
+    peak = [
+        v for ts, v in rows
+        if ts.date() == night and PEAK_WINDOW_LOCAL[0] <= ts.hour < PEAK_WINDOW_LOCAL[1]
+    ]
+    offpeak = [
+        v for ts, v in rows
+        if ts.date() == following
+        and OFFPEAK_WINDOW_LOCAL[0] <= ts.hour < OFFPEAK_WINDOW_LOCAL[1]
+    ]
+    if not peak and not offpeak:
+        return None
+    peak_mean = round(statistics.mean(peak), 2) if peak else None
+    offpeak_mean = round(statistics.mean(offpeak), 2) if offpeak else None
+    return {
+        "n_hours": len(rows),
+        "peak_window_17_21_local": peak_mean,
+        "offpeak_window_00_05_local": offpeak_mean,
+        "window_spread": (
+            round(peak_mean / offpeak_mean, 2) if peak_mean and offpeak_mean else None
+        ),
+        "unit": "$/MWh",
+    }
+
+
 def best_worst_5h(series: list[tuple[str, float]]):
     """Cleanest and dirtiest rolling 5-hour windows, as ((avg, from), (avg, from))."""
     vals = [v for _, v in series]
@@ -154,6 +237,7 @@ def build_record(
     carbon_series: list | None,
     power_series: list | None,
     errors: dict[str, str],
+    us_legs: dict[str, dict] | None = None,
 ) -> dict:
     """Assemble the night's record. Pure — no network, no clock, no filesystem."""
     rec = {
@@ -185,6 +269,9 @@ def build_record(
         rec["power_gb_agile"] = _leg(
             power_series, {"max_p_kwh": max(vals), "min_p_kwh": min(vals)}
         )
+    for zone, leg in (us_legs or {}).items():
+        if leg:
+            rec[f"power_{zone}"] = leg
     if errors:
         rec["unavailable"] = errors
     return rec
@@ -194,9 +281,9 @@ BOARD_HEADER = (
     "# Offpeak night board — marked nights\n\n"
     "Quotes are open-data observation, not trade advice; settlements (real runs)\n"
     "live elsewhere. Generated nightly by `tools/night_report.py`.\n\n"
-    "| night | power GB peak/offpeak (p/kWh) | spread | carbon GB peak/offpeak (g/kWh) "
-    "| spread | tokens |\n"
-    "|---|---|---|---|---|---|\n"
+    "| night | power GB (p/kWh) | GB spread | carbon GB (g/kWh) | carbon spread "
+    "| CAISO SP15 | ERCOT HOU | tokens |\n"
+    "|---|---|---|---|---|---|---|---|\n"
 )
 
 
@@ -207,12 +294,16 @@ def fmt(x, unit: str = "") -> str:
 def render_row(rec: dict) -> str:
     pg = rec.get("power_gb_agile", {})
     cg = rec.get("carbon_gb", {})
+    sp15 = rec.get("power_caiso_sp15", {})
+    hou = rec.get("power_ercot_houston", {})
     return (
         f"| {rec['night_of']} "
         f"| {fmt(pg.get('peak_window_17_21_bst'))} / {fmt(pg.get('offpeak_window_00_05_bst'))} "
         f"| {fmt(pg.get('window_spread'), 'x')} "
         f"| {fmt(cg.get('peak_window_17_21_bst'))} / {fmt(cg.get('offpeak_window_00_05_bst'))} "
         f"| {fmt(cg.get('window_spread'), 'x')} "
+        f"| {fmt(sp15.get('window_spread'), 'x')} "
+        f"| {fmt(hou.get('window_spread'), 'x')} "
         f"| {rec['tokens']['spread']:.1f}x |\n"
     )
 
@@ -239,6 +330,11 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--mode", choices=["quote", "mark"], required=True)
     ap.add_argument("--outdir", default="nightly")
+    ap.add_argument(
+        "--us-zones",
+        action="store_true",
+        help="also price CAISO SP15 and ERCOT Houston (needs gridstatus)",
+    )
     a = ap.parse_args()
 
     now = dt.datetime.now(dt.timezone.utc)
@@ -256,6 +352,14 @@ def main() -> int:
     except FetchError as exc:
         errors["power"] = str(exc)
 
+    us_legs: dict[str, dict] = {}
+    if a.us_zones:
+        for zone in US_ZONES:
+            try:
+                us_legs[zone] = us_leg(_us_rows(zone, span[0].date()), span[0].date())
+            except FetchError as exc:
+                errors[zone] = str(exc)
+
     rec = build_record(
         mode=a.mode,
         night=span[0].date(),
@@ -264,6 +368,7 @@ def main() -> int:
         carbon_series=carbon_series,
         power_series=power_series,
         errors=errors,
+        us_legs=us_legs,
     )
 
     out = Path(a.outdir)

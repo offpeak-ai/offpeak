@@ -54,10 +54,16 @@ jobs:
           echo "mode=$mode" >> "$GITHUB_OUTPUT"
           echo "running the $mode pass"
 
+      - name: Install US-zone data source
+        # gridstatus is an Action-only dependency: the SDK does not need it and
+        # the generator degrades to GB-only without it.
+        run: pip install "gridstatus>=0.36"
+
       - name: Generate
         run: |
           python tools/night_report.py \
             --mode "${{ steps.pick.outputs.mode }}" \
+            --us-zones \
             --outdir board/nightly
 
       - name: Commit to board-data
