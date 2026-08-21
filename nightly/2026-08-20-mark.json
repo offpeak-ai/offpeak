@@ -1,0 +1,55 @@
+{
+  "night_of": "2026-08-20",
+  "mode": "mark",
+  "generated_utc": "2026-08-21T04:28+00:00",
+  "span_utc": {
+    "from": "2026-08-20T16:00Z",
+    "to": "2026-08-21T04:28Z"
+  },
+  "tokens": {
+    "batch_discount": 0.5,
+    "spread": 2.0,
+    "note": "published batch tiers, OpenAI + Anthropic (50% of list)"
+  },
+  "sources": {
+    "carbon": "api.carbonintensity.org.uk (NESO, keyless)",
+    "power": "api.octopus.energy Agile day-ahead (keyless, region C)"
+  },
+  "carbon_gb": {
+    "n_halfhours": 25,
+    "peak_window_17_21_bst": 170.62,
+    "offpeak_window_00_05_bst": 166,
+    "window_spread": 1.03,
+    "cleanest_5h": {
+      "avg": 166,
+      "from": "2026-08-20T23:00Z"
+    },
+    "dirtiest_5h": {
+      "avg": 186.4,
+      "from": "2026-08-20T18:00Z"
+    },
+    "chosen_window_spread": 1.12
+  },
+  "power_gb_agile": {
+    "n_halfhours": 25,
+    "peak_window_17_21_bst": 35.41,
+    "offpeak_window_00_05_bst": 24.71,
+    "window_spread": 1.43,
+    "max_p_kwh": 41.643,
+    "min_p_kwh": 23.9925
+  },
+  "power_caiso_sp15": {
+    "n_hours": 48,
+    "peak_window_17_21_local": 80.11,
+    "offpeak_window_00_05_local": 63.18,
+    "window_spread": 1.27,
+    "unit": "$/MWh"
+  },
+  "power_ercot_houston": {
+    "n_hours": 48,
+    "peak_window_17_21_local": 97.86,
+    "offpeak_window_00_05_local": 24.81,
+    "window_spread": 3.94,
+    "unit": "$/MWh"
+  }
+}
