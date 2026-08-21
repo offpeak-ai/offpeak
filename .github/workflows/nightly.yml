@@ -1,0 +1,74 @@
+name: Night board
+
+# Quotes at dusk, marks at dawn. Output is committed to the `board-data`
+# branch, not to main: main is protected (PR + four required checks), so a
+# nightly bot push there would be rejected every night.
+
+on:
+  schedule:
+    - cron: "0 19 * * *"   # quote — the night ahead, carbon forecast
+    - cron: "30 6 * * *"   # mark  — the night just finished, carbon actuals
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "Which pass to run"
+        required: true
+        default: quote
+        type: choice
+        options: [quote, mark]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: night-board
+  cancel-in-progress: false
+
+jobs:
+  board:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the generator (main)
+        uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: Check out the ledger (board-data)
+        uses: actions/checkout@v7
+        with:
+          ref: board-data
+          path: board
+
+      - name: Pick the pass
+        id: pick
+        run: |
+          if [ -n "${{ inputs.mode }}" ]; then
+            mode="${{ inputs.mode }}"
+          elif [ "${{ github.event.schedule }}" = "0 19 * * *" ]; then
+            mode=quote
+          else
+            mode=mark
+          fi
+          echo "mode=$mode" >> "$GITHUB_OUTPUT"
+          echo "running the $mode pass"
+
+      - name: Generate
+        run: |
+          python tools/night_report.py \
+            --mode "${{ steps.pick.outputs.mode }}" \
+            --outdir board/nightly
+
+      - name: Commit to board-data
+        working-directory: board
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add nightly
+          if git diff --staged --quiet; then
+            echo "nothing changed — not committing an empty night"
+            exit 0
+          fi
+          git commit -m "board: ${{ steps.pick.outputs.mode }} $(date -u +%Y-%m-%d)"
+          git push

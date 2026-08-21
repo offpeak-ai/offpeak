@@ -94,6 +94,8 @@ Unknown models settle with `cost = None` rather than a guess.
 
 `offpeak` is the open client and spec for a simple claim: **intelligence has a time value**. A large share of AI work — embeddings, evals, backfills, report generation, overnight agents — has no human waiting on it, and the venues already price that patience at −50%. This library is the missing workflow.
 
+The **[night board](https://github.com/offpeak-ai/offpeak/blob/board-data/nightly/BOARD.md)** marks the same claim against open grid data every night — power and carbon peak/off-peak spreads, alongside the 2.0x token spread the batch tiers already publish.
+
 The roadmap follows the same interface upward: more venues (Google batch, spot capacity, off-peak windows on your own GPUs), queue-latency forecasting instead of a fixed risk buffer, portfolio placement across venues, energy- and carbon-aware scheduling with per-job receipts. The venue interface (`offpeak.Venue`) is deliberately the extension point — a venue is anywhere deferred work can run.
 
 A hosted desk that does the forecasting, cross-venue portfolio scheduling, and SLA insurance at fleet scale — payloads never leaving your perimeter — is being built by the same team. The SDK and the deadline spec stay open, Apache-2.0.
