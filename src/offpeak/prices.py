@@ -12,9 +12,12 @@ list, which is what :data:`BATCH_DISCOUNT` encodes.
 
 from __future__ import annotations
 
+import math
+
 __all__ = [
     "PRICE_SHEET_DATE",
     "BATCH_DISCOUNT",
+    "format_usd",
     "register_price",
     "get_price",
     "list_cost_usd",
@@ -77,3 +80,19 @@ def list_cost_usd(model: str, input_tokens: int, output_tokens: int) -> float | 
 def batch_cost_usd(model: str, input_tokens: int, output_tokens: int) -> float | None:
     cost = list_cost_usd(model, input_tokens, output_tokens)
     return None if cost is None else cost * BATCH_DISCOUNT
+
+
+def format_usd(amount: float | None) -> str:
+    """Money for humans: 2dp once there are cents to show, more significant
+    digits below that so a sub-cent job does not settle as a column of $0.00.
+
+    ``None`` (an unpriced model) renders as an em dash, never as zero — a price
+    we do not know is not a price of nothing.
+    """
+    if amount is None:
+        return "—"
+    if amount == 0:
+        return "0.00"
+    if abs(amount) >= 0.005:
+        return f"{amount:,.2f}"
+    return f"{amount:,.{-math.floor(math.log10(abs(amount))) + 2}f}"

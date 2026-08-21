@@ -67,3 +67,20 @@ def test_unrecognized_rejected():
 def test_seconds_until():
     deadline = NOW + timedelta(minutes=10)
     assert seconds_until(deadline, now=NOW) == 600.0
+
+
+def test_iso_with_z_suffix_parses_on_every_supported_python():
+    # datetime.fromisoformat only learned "Z" in 3.11; offpeak supports 3.10,
+    # and Z is the ISO form most real timestamps use.
+    parsed = parse_deadline("2099-01-01T00:00:00Z")
+    assert parsed.utcoffset() == timedelta(0)
+    assert parsed.year == 2099
+
+
+def test_lowercase_z_is_accepted_too():
+    assert parse_deadline("2099-01-01T00:00:00z").utcoffset() == timedelta(0)
+
+
+def test_a_past_z_timestamp_is_rejected_for_being_past_not_unparseable():
+    with pytest.raises(ValueError, match="not in the future"):
+        parse_deadline("2020-01-01T00:00:00Z")
