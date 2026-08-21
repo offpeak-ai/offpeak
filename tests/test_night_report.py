@@ -174,5 +174,71 @@ class TestBoard:
 
     def test_missing_values_render_as_a_dash_not_a_crash(self):
         row = nr.render_row({"night_of": "2026-08-20", "tokens": {"spread": 2.0}})
-        assert row.count("—") == 6  # 2 windows x 2 legs, plus both spread columns
+        assert row.count("—") == 8  # 2 windows x 2 GB legs, 2 GB spreads, 2 US spreads
         assert row.endswith("2.0x |\n")
+
+
+class TestUsZones:
+    def _rows(self, night, peak_vals, offpeak_vals, tz_hours=-7):
+        tz = dt.timezone(dt.timedelta(hours=tz_hours))
+        rows = []
+        for i, v in enumerate(peak_vals):  # evening of the night's own date
+            rows.append((dt.datetime(night.year, night.month, night.day, 17 + i, tzinfo=tz), v))
+        nxt = night + dt.timedelta(days=1)
+        for i, v in enumerate(offpeak_vals):  # small hours of the morning after
+            rows.append((dt.datetime(nxt.year, nxt.month, nxt.day, i, tzinfo=tz), v))
+        return rows
+
+    def test_windows_are_read_off_the_zones_own_clock(self):
+        night = dt.date(2026, 8, 20)
+        leg = nr.us_leg(self._rows(night, [100.0, 120.0], [20.0, 30.0]), night)
+        assert leg["peak_window_17_21_local"] == 110.0
+        assert leg["offpeak_window_00_05_local"] == 25.0
+        assert leg["window_spread"] == 4.4
+
+    def test_offpeak_is_the_morning_after_not_the_same_morning(self):
+        # The whole point of the board: the evening peak against the trough
+        # that follows it, not the one twelve hours before it.
+        night = dt.date(2026, 8, 20)
+        rows = self._rows(night, [100.0], [20.0])
+        tz = dt.timezone(dt.timedelta(hours=-7))
+        rows.append((dt.datetime(2026, 8, 20, 2, tzinfo=tz), 999.0))  # same-day trough
+        leg = nr.us_leg(rows, night)
+        assert leg["offpeak_window_00_05_local"] == 20.0  # 999 ignored
+
+    def test_a_zone_with_no_usable_hours_is_no_leg_at_all(self):
+        assert nr.us_leg([], dt.date(2026, 8, 20)) is None
+
+    def test_half_a_zone_still_reports_what_it_has(self):
+        night = dt.date(2026, 8, 20)
+        leg = nr.us_leg(self._rows(night, [100.0], []), night)
+        assert leg["peak_window_17_21_local"] == 100.0
+        assert leg["offpeak_window_00_05_local"] is None
+        assert leg["window_spread"] is None
+
+    def test_missing_gridstatus_is_a_fetcherror_not_an_importerror(self, monkeypatch):
+        # US zones are an Action-only dependency; absence must cost the column,
+        # not the run.
+        import builtins
+
+        real_import = builtins.__import__
+
+        def no_gridstatus(name, *a, **k):
+            if name == "gridstatus":
+                raise ImportError("no module named gridstatus")
+            return real_import(name, *a, **k)
+
+        monkeypatch.setattr(builtins, "__import__", no_gridstatus)
+        with pytest.raises(nr.FetchError, match="gridstatus is not installed"):
+            nr._us_rows("caiso_sp15", dt.date(2026, 8, 20))
+
+    def test_us_legs_land_in_the_record_and_the_row(self):
+        night = dt.date(2026, 8, 20)
+        rec = nr.build_record(
+            mode="mark", night=night, now=utc(2026, 8, 21, 6, 30),
+            span=(utc(2026, 8, 20, 16), utc(2026, 8, 21, 7)),
+            carbon_series=None, power_series=None, errors={},
+            us_legs={"caiso_sp15": nr.us_leg(self._rows(night, [100.0], [25.0]), night)},
+        )
+        assert rec["power_caiso_sp15"]["window_spread"] == 4.0
+        assert "4.0x" in nr.render_row(rec)
