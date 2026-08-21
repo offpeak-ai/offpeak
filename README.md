@@ -33,6 +33,8 @@ prices    snapshot 2026-08 — override via offpeak.prices
 ───────────────────────────────────────────────
 ```
 
+**[Documentation](https://offpeak-ai.github.io/offpeak/)** · [Quickstart](https://offpeak-ai.github.io/offpeak/quickstart/) · [Spec](https://offpeak-ai.github.io/offpeak/spec/) · [Roadmap](https://offpeak-ai.github.io/offpeak/roadmap/)
+
 ## What it does
 
 - **Know the price before you spend it.** `quote(jobs, deadline=...)` prices a run against the published sheets with no API calls and no key — list versus batch, per venue, plus what the wait is worth.

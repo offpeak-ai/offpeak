@@ -1,0 +1,56 @@
+site_name: offpeak
+site_description: Deadline-priced inference — same model, same tokens, a different hour.
+site_url: https://offpeak-ai.github.io/offpeak/
+repo_url: https://github.com/offpeak-ai/offpeak
+repo_name: offpeak-ai/offpeak
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: black
+      accent: indigo
+      toggle: {icon: material/weather-night, name: Switch to dark mode}
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: black
+      accent: indigo
+      toggle: {icon: material/weather-sunny, name: Switch to light mode}
+  features:
+    - navigation.sections
+    - navigation.top
+    - content.code.copy
+
+nav:
+  - Home: index.md
+  - Quickstart: quickstart.md
+  - The night board: night-board.md
+  - Spec: spec.md
+  - API reference: reference.md
+  - Roadmap: roadmap.md
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: [src]
+          options:
+            show_source: true
+            show_root_heading: true
+            heading_level: 3
+            docstring_style: sphinx
+            members_order: source
+
+# SPEC.md lives at the repo root (it is the artifact people link to); this
+# copies it in at build time rather than keeping a second copy that drifts.
+hooks:
+  - mkdocs_hooks.py
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - toc: {permalink: true}
