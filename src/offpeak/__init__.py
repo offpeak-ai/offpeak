@@ -16,7 +16,7 @@ from .deadline import parse_deadline, seconds_until
 from .job import Job, Receipt, Result, Status, job
 from .venues.base import BatchState, Venue
 
-__version__ = "0.1.1"
+__version__ = "0.1.2"
 
 __all__ = [
     "job",

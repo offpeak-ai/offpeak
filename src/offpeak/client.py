@@ -8,6 +8,7 @@ own-GPU off-peak windows, and carbon-aware scheduling on the same interface.
 
 from __future__ import annotations
 
+import math
 import time
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -63,6 +64,13 @@ def run(
 
     Returns one :class:`Result` per job, in input order, each with a
     :class:`Receipt`.
+
+    Provider failures never escape: if a venue raises while submitting, polling
+    or running the sync fallback, the affected jobs are rescued through the
+    fallback where the deadline still allows it and otherwise come back as
+    failed :class:`Result` objects carrying the provider's message. Exceptions
+    out of ``run()`` are reserved for programming errors — a bad deadline, or a
+    model no configured venue supports.
     """
     job_list = [jobs] if isinstance(jobs, Job) else list(jobs)
     if not job_list:
@@ -80,8 +88,13 @@ def run(
 
     submitted_at = datetime.now().astimezone()
     pending: dict[str, str] = {}  # venue name -> batch handle
+    venue_errors: dict[str, str] = {}  # venue name -> why its batch path died
     for name, (venue, group_jobs) in groups.items():
-        pending[name] = venue.submit(group_jobs)
+        try:
+            pending[name] = venue.submit(group_jobs)
+        except Exception as exc:  # noqa: BLE001 — the provider failed, not us
+            venue_errors[name] = f"submit failed: {exc}"
+            continue
         for j in group_jobs:
             j.status = Status.SUBMITTED
 
@@ -90,25 +103,23 @@ def run(
 
     while pending:
         for name in list(pending):
-            venue, group_jobs = groups[name]
-            state = venue.status(pending[name])
-            if state.status == "completed":
-                collected.update(venue.collect(pending[name]))
+            venue = groups[name][0]
+            try:
+                state = venue.status(pending[name])
+                if state.status == "completed":
+                    collected.update(venue.collect(pending[name]))
+                    del pending[name]
+                elif state.status in ("failed", "cancelled"):
+                    venue_errors[name] = f"batch {state.status}"
+                    del pending[name]  # jobs surface below as fallback or errors
+            except Exception as exc:  # noqa: BLE001 — the provider failed, not us
+                venue_errors[name] = f"batch polling failed: {exc}"
                 del pending[name]
-            elif state.status in ("failed", "cancelled"):
-                del pending[name]  # jobs surface below as fallback or errors
 
         remaining = seconds_until(resolved)
         if not pending and not _missing(groups, collected):
             break
         if remaining <= risk_buffer or not pending:
-            for name in list(pending):
-                groups[name][0].cancel(pending.pop(name))
-            if fallback == "sync":
-                for j in _missing(groups, collected):
-                    result = groups[_venue_of(j, groups)][0].run_sync(j)
-                    collected[j.id] = result
-                    fell_back.add(j.id)
             break
         time.sleep(
             poll_interval
@@ -116,12 +127,31 @@ def run(
             else min(30.0, max(2.0, remaining / 50.0))
         )
 
+    # Settle stragglers outside the poll loop. A venue whose submit failed never
+    # got a handle, so it never entered `pending` — running the fallback inside
+    # the loop would skip exactly the jobs that most need rescuing.
+    for name in list(pending):
+        _cancel(groups[name][0], pending.pop(name))
+    stragglers = _missing(groups, collected)
+    if stragglers and fallback == "sync" and seconds_until(resolved) > 0:
+        for j in stragglers:
+            name = _venue_of(j, groups)
+            result = _run_sync(groups[name][0], j)
+            if result.ok:
+                fell_back.add(j.id)
+            elif name in venue_errors:
+                result.error = f"{venue_errors[name]}; sync fallback failed: {result.error}"
+            collected[j.id] = result
+
     completed_at = datetime.now().astimezone()
     results: list[Result] = []
     for j in job_list:
         result = collected.get(j.id)
         if result is None:
-            result = Result(job=j, error="not returned by venue before the deadline")
+            reason = venue_errors.get(
+                _venue_of(j, groups), "not returned by venue before the deadline"
+            )
+            result = Result(job=j, error=reason)
             j.status = Status.FAILED
         else:
             result.job = j
@@ -158,6 +188,33 @@ def _missing(
     return [j for _, (_, js) in groups.items() for j in js if j.id not in collected]
 
 
+def _cancel(venue: Venue, handle: str) -> None:
+    """Best-effort: a venue that cannot cancel must not sink the whole run."""
+    try:
+        venue.cancel(handle)
+    except Exception:  # noqa: BLE001 — the provider failed, not us
+        pass
+
+
+def _run_sync(venue: Venue, j: Job) -> Result:
+    """The rescue path must not raise — a venue that throws here would strand
+    the very job the fallback exists to save."""
+    try:
+        return venue.run_sync(j)
+    except Exception as exc:  # noqa: BLE001 — the provider failed, not us
+        return Result(job=j, error=str(exc))
+
+
+def _usd(amount: float) -> str:
+    """Money for humans: 2dp once there are cents to show, more significant
+    digits below that so a sub-cent run does not settle as a column of $0.00."""
+    if amount == 0:
+        return "0.00"
+    if abs(amount) >= 0.005:
+        return f"{amount:,.2f}"
+    return f"{amount:,.{-math.floor(math.log10(abs(amount))) + 2}f}"
+
+
 @dataclass
 class Settlement:
     """Aggregate receipt across a run."""
@@ -166,6 +223,7 @@ class Settlement:
     ok: int = 0
     sla_met: int = 0
     fell_back: int = 0
+    failed: int = 0
     input_tokens: int = 0
     output_tokens: int = 0
     list_usd: float = 0.0
@@ -185,13 +243,14 @@ class Settlement:
         venues = " · ".join(f"{k} {v}" for k, v in sorted(self.by_venue.items()))
         lines = [
             "OFFPEAK SETTLEMENT " + "─" * 28,
-            f"jobs      {self.total} ({self.ok} ok, {self.fell_back} sync fallback)",
+            f"jobs      {self.total} ({self.ok} ok, {self.fell_back} sync fallback, "
+            f"{self.failed} failed)",
             f"sla       {self.sla_met}/{self.total} met",
             f"venues    {venues or '—'}",
             f"tokens    {self.input_tokens:,} in · {self.output_tokens:,} out",
-            f"list      ${self.list_usd:,.2f}",
-            f"paid      ${self.paid_usd:,.2f}",
-            f"captured  ${self.captured_usd:,.2f} ({self.captured_pct:.1f}%)",
+            f"list      ${_usd(self.list_usd)}",
+            f"paid      ${_usd(self.paid_usd)}",
+            f"captured  ${_usd(self.captured_usd)} ({self.captured_pct:.1f}%)",
             f"prices    snapshot {PRICE_SHEET_DATE} — override via offpeak.prices",
         ]
         if self.unpriced:
@@ -207,6 +266,8 @@ def receipt(results: list[Result]) -> Settlement:
         settlement.total += 1
         if result.ok:
             settlement.ok += 1
+        else:
+            settlement.failed += 1
         r = result.receipt
         if r is None:
             continue

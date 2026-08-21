@@ -157,3 +157,137 @@ def test_anthropic_requests_hoist_system_and_default_max_tokens():
     j2 = job("claude-haiku-4-5", "hi", max_tokens=128)
     (request2,) = build_requests([j2])
     assert request2["params"]["max_tokens"] == 128
+
+
+class BrokenVenue(FakeVenue):
+    """A venue whose provider is having a bad day.
+
+    ``submit_error`` fires at submit time (auth, billing, rate limit, bad model
+    id); ``sync_error`` additionally kills the rescue path.
+    """
+
+    def __init__(self, *, sync_error=False, **kwargs):
+        super().__init__(**kwargs)
+        self.sync_error = sync_error
+        self.submit_attempts = 0
+
+    def submit(self, jobs):
+        self.submit_attempts += 1
+        raise RuntimeError("credit balance is too low")
+
+    def run_sync(self, j):
+        self.sync_runs.append(j.id)
+        if self.sync_error:
+            raise RuntimeError("sync is down too")
+        return Result(job=j, text="sync", raw={"input_tokens": 100, "output_tokens": 10})
+
+
+def test_submit_failure_falls_back_to_sync():
+    venue = BrokenVenue()
+    jobs = [job("claude-haiku-4-5", "x"), job("claude-haiku-4-5", "y")]
+    results = offpeak.run(jobs, "2h", venues=[venue], poll_interval=0)
+
+    assert venue.submit_attempts == 1
+    assert sorted(venue.sync_runs) == sorted(j.id for j in jobs)
+    assert all(r.ok for r in results)
+    assert all(r.job.status is Status.FELL_BACK for r in results)
+    assert all(r.receipt.fell_back for r in results)
+
+    settlement = offpeak.receipt(results)
+    assert (settlement.ok, settlement.fell_back, settlement.failed) == (2, 2, 0)
+
+
+def test_submit_and_sync_both_failing_report_failed_results_without_raising():
+    venue = BrokenVenue(sync_error=True)
+    jobs = [job("claude-haiku-4-5", "x"), job("claude-haiku-4-5", "y")]
+
+    results = offpeak.run(jobs, "2h", venues=[venue], poll_interval=0)  # must not raise
+
+    assert len(results) == len(jobs)  # a Result for every job
+    assert all(not r.ok for r in results)
+    assert all(r.job.status is Status.FAILED for r in results)
+    # Both failures are on the record, not just the last one.
+    assert all("credit balance is too low" in r.error for r in results)
+    assert all("sync is down too" in r.error for r in results)
+    assert all(not r.receipt.sla_met for r in results)
+
+    settlement = offpeak.receipt(results)
+    assert (settlement.ok, settlement.failed) == (0, 2)
+
+
+def test_one_venue_failing_at_submit_leaves_the_other_untouched():
+    broken = BrokenVenue(prefix="claude", name="fake:broken")
+    healthy = FakeVenue(prefix="gpt-", name="fake:healthy")
+    doomed = [job("claude-haiku-4-5", "a")]
+    fine = [job("gpt-5.6-luna", "b"), job("gpt-5.6-luna", "c")]
+
+    results = offpeak.run(doomed + fine, "2h", venues=[broken, healthy], poll_interval=0)
+
+    by_id = {r.job.id: r for r in results}
+    # The healthy venue settled on its batch tier — no rescue, no cancellation.
+    assert not healthy.sync_runs and not healthy.cancelled
+    for j in fine:
+        assert by_id[j.id].job.status is Status.SUCCEEDED
+        assert by_id[j.id].text == f"batch:{j.messages[-1]['content']}"
+        assert not by_id[j.id].receipt.fell_back
+        assert by_id[j.id].receipt.venue == "fake:healthy"
+    # The broken venue's job was rescued on its own venue only.
+    assert broken.sync_runs == [doomed[0].id]
+    assert by_id[doomed[0].id].job.status is Status.FELL_BACK
+
+    settlement = offpeak.receipt(results)
+    assert (settlement.total, settlement.ok, settlement.fell_back) == (3, 3, 1)
+    assert settlement.by_venue == {"fake:broken": 1, "fake:healthy": 2}
+
+
+def test_submit_failure_with_fallback_none_reports_the_provider_error():
+    venue = BrokenVenue()
+    results = offpeak.run(
+        [job("claude-haiku-4-5", "x")], "2h", venues=[venue], poll_interval=0, fallback="none"
+    )
+    assert not venue.sync_runs
+    assert results[0].job.status is Status.FAILED
+    assert "credit balance is too low" in results[0].error
+
+
+def test_sub_cent_totals_keep_significant_digits():
+    settlement = offpeak.Settlement(
+        total=3, ok=3, list_usd=0.0000238, paid_usd=0.0000119, by_venue={"fake:batch": 3}
+    )
+    rendered = str(settlement)
+    assert "list      $0.0000238" in rendered
+    assert "paid      $0.0000119" in rendered
+    assert "captured  $0.0000119" in rendered
+    assert "$0.00\n" not in rendered  # the bug this replaced
+
+
+def test_dollar_totals_keep_two_decimals():
+    settlement = offpeak.Settlement(total=1, ok=1, list_usd=2469.0, paid_usd=1234.5)
+    rendered = str(settlement)
+    assert "list      $2,469.00" in rendered
+    assert "paid      $1,234.50" in rendered
+    assert "captured  $1,234.50" in rendered
+
+
+@pytest.mark.parametrize(
+    "amount,expected",
+    [
+        (0.0, "0.00"),
+        (0.0000119, "0.0000119"),
+        (0.004, "0.00400"),
+        (0.005, "0.01"),  # 2dp already shows something
+        (0.5, "0.50"),
+        (1.0, "1.00"),
+        (1234.5, "1,234.50"),
+    ],
+)
+def test_usd_formatting_boundaries(amount, expected):
+    from offpeak.client import _usd
+
+    assert _usd(amount) == expected
+
+
+def test_settlement_line_reports_failed_count():
+    venue = BrokenVenue(sync_error=True)
+    results = offpeak.run([job("claude-haiku-4-5", "x")], "2h", venues=[venue], poll_interval=0)
+    assert "1 failed" in str(offpeak.receipt(results))
