@@ -1,0 +1,28 @@
+{
+  "run_id": "2026-08-22-mechanics-2",
+  "scale": "mechanics proof (24 jobs, OpenAI, ceiling too low)",
+  "settled_utc": "2026-08-21T21:39:39-07:00",
+  "deadline": "06:00",
+  "price_sheet": "2026-08-21",
+  "offpeak_version": "0.2.2.dev0",
+  "jobs": 24,
+  "ok": 24,
+  "failed": 0,
+  "fell_back": 0,
+  "sla_met": 24,
+  "input_tokens": 728,
+  "output_tokens": 374,
+  "list_usd": 0.0005943999999999998,
+  "paid_usd": 0.0002971999999999999,
+  "captured_usd": 0.0002971999999999999,
+  "captured_pct": 50.0,
+  "left_on_table_usd": 0.0,
+  "by_venue": {
+    "openai:batch": 24
+  },
+  "notes": [
+    "The OpenAI leg re-run after the driver learned to send max_completion_tokens for the gpt-5 family. It settled: 24/24, billed, SLA met.",
+    "It also returned twenty-four empty strings. gpt-5.6 reasons before it answers and the 16-token ceiling was spent entirely on reasoning, leaving nothing to say. The money here bought 374 output tokens of nothing.",
+    "Published rather than quietly dropped: a settlement that billed for no usable output is exactly the kind of thing a receipt exists to make visible."
+  ]
+}
