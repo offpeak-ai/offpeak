@@ -8,7 +8,11 @@ to ``None`` rather than a guess.
 
 Batch tiers at OpenAI, Anthropic, and Google are publicly priced at 50% of
 list, which is what :data:`BATCH_DISCOUNT` encodes. OpenAI's flex tier prices
-identically to its batch tier on the gpt-5.6 family.
+identically to its batch tier on the gpt-5.6 family, and its *fast* tier at
+twice list — the same model, priced for urgency. Fast is stored rather than
+derived (:func:`get_fast_price`), because unlike batch it is not a discount
+rule but its own published row; :func:`urgency_spread` divides the two so the
+price of an hour is a computed number and not a claim in prose.
 
 Some list prices are promotional and will step up on a published date. Those
 carry a :class:`PromoNote` in :data:`PROMO_NOTES` — the date and the post-promo
@@ -41,10 +45,13 @@ __all__ = [
     "format_usd",
     "register_price",
     "get_price",
+    "get_fast_price",
     "get_promo_note",
     "promo_decay",
     "list_cost_usd",
     "batch_cost_usd",
+    "fast_cost_usd",
+    "urgency_spread",
 ]
 
 PRICE_SHEET_DATE = "2026-08-21"
@@ -76,6 +83,19 @@ _PRICES: dict[str, tuple[float, float]] = {
     "gpt-5.6-sol": (4.00, 20.00),
     "gpt-5.6-terra": (2.00, 12.00),
     "gpt-5.6-luna": (0.20, 1.20),
+}
+
+# model -> (input, output) USD per 1M on a venue's *fast* tier: the same model,
+# priced for urgency instead of patience. Only OpenAI publishes one today, for
+# the gpt-5.6 family, at 2x standard (developers.openai.com/api/docs/pricing).
+#
+# This table is what makes the urgency spread a computed number rather than a
+# claim in prose: fast over batch on the same model is what a venue charges for
+# the hour, with the model held constant.
+_FAST_PRICES: dict[str, tuple[float, float]] = {
+    "gpt-5.6-sol": (8.00, 40.00),
+    "gpt-5.6-terra": (4.00, 24.00),
+    "gpt-5.6-luna": (0.40, 2.40),
 }
 
 
@@ -137,6 +157,17 @@ def get_price(model: str) -> tuple[float, float] | None:
     return _lookup(_PRICES, model)
 
 
+def get_fast_price(model: str) -> tuple[float, float] | None:
+    """Fast-tier price for *model*, USD per 1M tokens.
+
+    ``None`` where the venue publishes no fast tier — which is everywhere
+    except OpenAI's gpt-5.6 family today. Unlike batch, fast is not a discount
+    rule applied to list: it is its own published row, so it is stored, not
+    derived.
+    """
+    return _lookup(_FAST_PRICES, model)
+
+
 def get_promo_note(model: str) -> PromoNote | None:
     """The :class:`PromoNote` for *model*, if its list price is promotional.
 
@@ -170,6 +201,38 @@ def list_cost_usd(model: str, input_tokens: int, output_tokens: int) -> float | 
 def batch_cost_usd(model: str, input_tokens: int, output_tokens: int) -> float | None:
     cost = list_cost_usd(model, input_tokens, output_tokens)
     return None if cost is None else cost * BATCH_DISCOUNT
+
+
+def fast_cost_usd(model: str, input_tokens: int, output_tokens: int) -> float | None:
+    """What the same tokens cost on the venue's fast tier, where it has one."""
+    price = get_fast_price(model)
+    if price is None:
+        return None
+    return (input_tokens * price[0] + output_tokens * price[1]) / 1_000_000
+
+
+def urgency_spread(model: str) -> float | None:
+    """How much the same model costs at its most urgent published tier over its
+    most patient one: fast ÷ batch.
+
+    This is the intra-venue price of an hour with the model held constant — one
+    provider, one model, two deadlines. On gpt-5.6-sol that is $8/$40 per 1M
+    against $2/$10, a **4x** spread.
+
+    Both legs are checked and the *lower* is returned, so the figure can never
+    overstate what a venue publishes. ``None`` where the venue prices no fast
+    tier for the model, or the model is off the sheet.
+    """
+    fast = get_fast_price(model)
+    standard = get_price(model)
+    if fast is None or standard is None:
+        return None
+    legs = [
+        fast[i] / (standard[i] * BATCH_DISCOUNT)
+        for i in (0, 1)
+        if standard[i] * BATCH_DISCOUNT
+    ]
+    return min(legs) if legs else None
 
 
 def format_usd(amount: float | None) -> str:

@@ -100,3 +100,56 @@ class TestSheetHygiene:
         for model, note in prices.PROMO_NOTES.items():
             price = get_price(model)
             assert price[0] < note.post_promo[0] and price[1] < note.post_promo[1], model
+
+
+# The fast tab of the same sheet: the same models, priced for urgency.
+OPENAI_FAST = {
+    "gpt-5.6-sol": (8.00, 40.00),
+    "gpt-5.6-terra": (4.00, 24.00),
+    "gpt-5.6-luna": (0.40, 2.40),
+}
+
+
+class TestFastTier:
+    @pytest.mark.parametrize("model,published", sorted(OPENAI_FAST.items()))
+    def test_fast_rows_are_the_published_fast_rows(self, model, published):
+        assert prices.get_fast_price(model) == published
+
+    @pytest.mark.parametrize("model,published", sorted(OPENAI_FAST.items()))
+    def test_fast_is_twice_standard(self, model, published):
+        standard = get_price(model)
+        assert published == pytest.approx((standard[0] * 2, standard[1] * 2))
+
+    @pytest.mark.parametrize("model", sorted(OPENAI_FAST))
+    def test_the_urgency_spread_is_four_times_across_the_family(self, model):
+        # The citable claim, computed rather than asserted in prose: fast over
+        # batch on one model at one venue. $8/$40 against $2/$10 on sol.
+        assert prices.urgency_spread(model) == pytest.approx(4.0)
+
+    def test_the_spread_is_the_conservative_leg(self, monkeypatch):
+        # A sheet whose two legs disagree must report the smaller ratio: a
+        # published spread should never be flattered by the arithmetic.
+        monkeypatch.setitem(prices._FAST_PRICES, "gpt-5.6-luna", (0.40, 1.20))
+        assert prices.urgency_spread("gpt-5.6-luna") == pytest.approx(2.0)
+
+    def test_a_venue_with_no_fast_tier_has_no_spread(self):
+        assert prices.get_fast_price("claude-haiku-4-5") is None
+        assert prices.urgency_spread("claude-haiku-4-5") is None
+        assert prices.fast_cost_usd("claude-haiku-4-5", 1000, 1000) is None
+
+    def test_an_unknown_model_has_no_fast_price(self):
+        assert prices.get_fast_price("mistral-large") is None
+        assert prices.urgency_spread("mistral-large") is None
+
+    def test_a_date_pinned_model_inherits_its_family_fast_row(self):
+        assert prices.get_fast_price("gpt-5.6-sol-2026-08-01") == (8.00, 40.00)
+
+    def test_a_million_tokens_bills_the_published_fast_row(self):
+        assert prices.fast_cost_usd("gpt-5.6-sol", 1_000_000, 0) == pytest.approx(8.00)
+        assert prices.fast_cost_usd("gpt-5.6-sol", 0, 1_000_000) == pytest.approx(40.00)
+
+    def test_fast_and_batch_bracket_the_same_job(self):
+        args = ("gpt-5.6-sol", 1_000_000, 1_000_000)
+        assert prices.fast_cost_usd(*args) == pytest.approx(48.00)
+        assert list_cost_usd(*args) == pytest.approx(24.00)
+        assert batch_cost_usd(*args) == pytest.approx(12.00)
