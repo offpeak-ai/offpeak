@@ -14,6 +14,7 @@ on:
 permissions:
   contents: write
 
+# Shared with the night board: everything that pushes board-data queues here.
 concurrency:
   group: board-data
   cancel-in-progress: false

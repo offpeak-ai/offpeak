@@ -20,8 +20,11 @@ on:
 permissions:
   contents: write
 
+# Everything that pushes board-data shares one queue. Two workflows writing
+# different files on the same branch still race at the push, and a rejected
+# push loses a night's mark.
 concurrency:
-  group: night-board
+  group: board-data
   cancel-in-progress: false
 
 jobs:
