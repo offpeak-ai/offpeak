@@ -38,7 +38,9 @@ SETTLED_HEADER = (
     "book are both real settlements and are not the same evidence. Read the "
     "scale column before the money column.\n\n"
     "Written by `tools/settle_report.py` from the receipts in the main branch's "
-    "`receipts/`, never by hand.\n\n"
+    "`receipts/`, never by hand. Those receipts come from "
+    "`tools/mechanics_run.py`, which is in the tree for the same reason: a "
+    "number you cannot reproduce is a number you are asked to trust.\n\n"
     "| run | scale | jobs | venues | tokens | list | paid | captured | SLA |\n"
     "|---|---|---|---|---|---|---|---|---|\n"
 )
