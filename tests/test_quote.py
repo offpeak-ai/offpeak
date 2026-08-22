@@ -24,10 +24,10 @@ def counted(model, input_tokens, output_tokens, n=1):
 class TestQuoteArithmetic:
     def test_batch_is_exactly_the_published_discount_off_list(self):
         q = quote(counted("gpt-5.6-luna", 1_000_000, 1_000_000), "48h")
-        # gpt-5.6-luna: $0.10 in / $0.60 out per 1M.
-        assert q.list_usd == pytest.approx(0.70)
-        assert q.batch_usd == pytest.approx(0.70 * BATCH_DISCOUNT)
-        assert q.spread_usd == pytest.approx(0.35)
+        # gpt-5.6-luna: $0.20 in / $1.20 out per 1M, standard tier.
+        assert q.list_usd == pytest.approx(1.40)
+        assert q.batch_usd == pytest.approx(1.40 * BATCH_DISCOUNT)
+        assert q.spread_usd == pytest.approx(0.70)
         assert q.spread_pct == pytest.approx(50.0)
 
     def test_scales_with_job_count(self):
@@ -157,7 +157,7 @@ class TestQuoteCard:
 
     def test_dollar_quotes_keep_two_decimals(self):
         card = str(quote(counted("gpt-5.6-luna", 800, 200, n=5000), "48h"))
-        assert "$1.00" in card and "$0.50" in card
+        assert "$2.00" in card and "$1.00" in card
 
     def test_card_names_its_price_snapshot_and_disclaims_being_a_bill(self):
         card = str(quote(counted("gpt-5.6-luna", 100, 10), "48h"))
@@ -172,7 +172,7 @@ class TestCli:
         assert rc == 0
         assert "OFFPEAK QUOTE" in out
         assert "5000 job(s)" in out
-        assert "$1.00" in out and "$0.50" in out
+        assert "$2.00" in out and "$1.00" in out
 
     def test_defaults_to_one_job(self, capsys):
         cli.main(["quote", "--model", "gpt-5.6-luna", "--input-tokens", "1000",
