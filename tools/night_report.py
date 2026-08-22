@@ -39,9 +39,23 @@ AGILE = (
     "?period_from={f}&period_to={t}&page_size=1500"
 )
 
-# Published batch discount, both venues. Kept in sync with offpeak.prices by
-# test_night_report.py rather than by hand.
+# Published token spreads. Kept in sync with offpeak.prices by
+# test_night_report.py rather than by hand: the Action runs this script without
+# installing the SDK, so these are duplicated on purpose, not importable.
 BATCH_DISCOUNT = 0.5
+
+# The intra-venue urgency spread: the same model at one venue, priced for haste
+# against priced for patience. OpenAI's fast tier over its batch tier on
+# gpt-5.6-sol is $8/$40 per 1M tokens against $2/$10 — 4x for the hour alone.
+URGENCY_MODEL = "gpt-5.6-sol"
+URGENCY_SPREAD = 4.0
+URGENCY_LEGS = "$8/$40 vs $2/$10 per 1M"
+TOKEN_SOURCE = "developers.openai.com/api/docs/pricing"
+PROMO_CAVEAT = (
+    "gpt-5.6-sol's standard rate is promotional at least through 2026-11-21; "
+    "post-promo list is $5/$30 and both tiers move with it, so the ratio is the "
+    "durable figure, not the dollars"
+)
 
 NIGHT_START_HOUR_UTC = 16  # 17:00 BST — the evening peak opens
 NIGHT_HOURS = 15  # ...through 07:00Z
@@ -250,6 +264,13 @@ def build_record(
             "batch_discount": BATCH_DISCOUNT,
             "spread": round(1 / BATCH_DISCOUNT, 2),
             "note": "published batch tiers, OpenAI + Anthropic (50% of list)",
+            "urgency_spread": URGENCY_SPREAD,
+            "urgency_note": (
+                f"same model, fast tier over batch tier on {URGENCY_MODEL} "
+                f"({URGENCY_LEGS})"
+            ),
+            "source": TOKEN_SOURCE,
+            "caveat": PROMO_CAVEAT,
         },
         "sources": {
             "carbon": "api.carbonintensity.org.uk (NESO, keyless)",
@@ -282,6 +303,11 @@ BOARD_HEADER = (
     "# Offpeak night board — marked nights\n\n"
     "Quotes are open-data observation, not trade advice; settlements (real runs)\n"
     "live elsewhere. Generated nightly by `tools/night_report.py`.\n\n"
+    "Token spreads are published rather than observed: batch tiers are 50% of "
+    f"list, a {1 / BATCH_DISCOUNT:.1f}x spread for work that can wait, and the same "
+    f"model's fast tier is {URGENCY_SPREAD:.0f}x its batch tier — {URGENCY_MODEL} at "
+    f"{URGENCY_LEGS}, per {TOKEN_SOURCE}.\n"
+    f"Caveat: {PROMO_CAVEAT}.\n\n"
     "| night | power GB (p/kWh) | GB spread | carbon GB (g/kWh) | carbon spread "
     "| CAISO SP15 | ERCOT HOU | tokens |\n"
     "|---|---|---|---|---|---|---|---|\n"

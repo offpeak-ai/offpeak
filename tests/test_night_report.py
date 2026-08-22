@@ -8,6 +8,7 @@ from pathlib import Path
 import pytest
 
 from offpeak.prices import BATCH_DISCOUNT as SDK_BATCH_DISCOUNT
+from offpeak.prices import urgency_spread
 
 _spec = importlib.util.spec_from_file_location(
     "night_report", Path(__file__).resolve().parent.parent / "tools" / "night_report.py"
@@ -27,6 +28,13 @@ def series(*pairs):
 def test_board_discount_tracks_the_sdk_price_sheet():
     # The board prints a token spread; it must not drift from what offpeak bills.
     assert nr.BATCH_DISCOUNT == SDK_BATCH_DISCOUNT
+
+
+def test_board_urgency_spread_tracks_the_sdk_price_sheet():
+    # The 4x is a citable claim on a public page. It is duplicated here because
+    # the Action does not install the SDK — so it has to be pinned to the sheet
+    # the SDK settles receipts against, or the board could publish a stale one.
+    assert nr.URGENCY_SPREAD == urgency_spread(nr.URGENCY_MODEL)
 
 
 class TestNightSpan:
@@ -152,6 +160,20 @@ class TestBuildRecord:
 
     def test_token_spread_is_derived_from_the_discount(self):
         assert self._rec()["tokens"]["spread"] == 2.0
+
+    def test_the_urgency_spread_is_recorded_with_its_source_and_caveat(self):
+        # A published figure on the board has to carry where it came from and
+        # what will move it, or the record is a number without provenance.
+        tokens = self._rec()["tokens"]
+        assert tokens["urgency_spread"] == 4.0
+        assert nr.URGENCY_MODEL in tokens["urgency_note"]
+        assert tokens["source"] == "developers.openai.com/api/docs/pricing"
+        assert "2026-11-21" in tokens["caveat"]
+
+    def test_the_board_header_cites_the_spread_it_prints(self):
+        assert "4x its batch tier" in nr.BOARD_HEADER
+        assert "developers.openai.com/api/docs/pricing" in nr.BOARD_HEADER
+        assert "promotional at least through 2026-11-21" in nr.BOARD_HEADER
 
 
 class TestBoard:
