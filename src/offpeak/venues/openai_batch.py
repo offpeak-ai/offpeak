@@ -11,17 +11,44 @@ import json
 from ..job import Job, Result
 from .base import BatchState, Venue
 
-__all__ = ["OpenAIBatch", "build_jsonl", "parse_output_line"]
+__all__ = ["OpenAIBatch", "build_jsonl", "parse_output_line", "body_params"]
 
 _MODEL_PREFIXES = ("gpt-", "o1", "o3", "o4", "chatgpt-")
 _ENDPOINT = "/v1/chat/completions"
+
+# OpenAI's newer families reject ``max_tokens`` outright — "Unsupported
+# parameter: 'max_tokens' is not supported with this model. Use
+# 'max_completion_tokens' instead." — and a batch of a thousand jobs discovers
+# this one HTTP 400 at a time, hours after submission.
+#
+# Translating is the driver's job. A caller says ``max_tokens`` once and it
+# means the same thing at every venue; the venue that spells it differently is
+# the venue's problem, not the caller's.
+_MAX_COMPLETION_TOKENS_PREFIXES = ("o1", "o3", "o4", "gpt-5")
+
+
+def body_params(job: Job) -> dict:
+    """The job's params as this venue's API spells them.
+
+    An explicit ``max_completion_tokens`` always wins: the caller who reached
+    for the provider's own name for the field meant it, and sending both would
+    be rejected.
+    """
+    params = dict(job.params)
+    if "max_tokens" not in params:
+        return params
+    if not job.model.startswith(_MAX_COMPLETION_TOKENS_PREFIXES):
+        return params
+    ceiling = params.pop("max_tokens")
+    params.setdefault("max_completion_tokens", ceiling)
+    return params
 
 
 def build_jsonl(jobs: list[Job]) -> bytes:
     """Render *jobs* as OpenAI Batch API JSONL (one request per line)."""
     lines = []
     for j in jobs:
-        body = {"model": j.model, "messages": j.messages, **j.params}
+        body = {"model": j.model, "messages": j.messages, **body_params(j)}
         lines.append(
             json.dumps(
                 {"custom_id": j.id, "method": "POST", "url": _ENDPOINT, "body": body},
@@ -129,7 +156,7 @@ class OpenAIBatch(Venue):
     def run_sync(self, job: Job) -> Result:
         try:
             response = self.client.chat.completions.create(
-                model=job.model, messages=job.messages, **job.params
+                model=job.model, messages=job.messages, **body_params(job)
             )
         except Exception as exc:  # noqa: BLE001
             return Result(job=job, error=str(exc))
