@@ -60,6 +60,10 @@ jobs:
         run: pip install "gridstatus>=0.36"
 
       - name: Generate
+        # EIA_API_KEY is optional: absent, the US carbon columns are recorded
+        # unavailable and every other leg runs exactly as before.
+        env:
+          EIA_API_KEY: ${{ secrets.EIA_API_KEY }}
         run: |
           python tools/night_report.py \
             --mode "${{ steps.pick.outputs.mode }}" \
