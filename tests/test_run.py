@@ -7,7 +7,7 @@ from offpeak import Status, job
 from offpeak.job import Result
 from offpeak.venues.anthropic_batch import build_requests
 from offpeak.venues.base import BatchState, Venue
-from offpeak.venues.openai_batch import build_jsonl, parse_output_line
+from offpeak.venues.openai_batch import OpenAIBatch, build_jsonl, parse_output_line
 
 
 class FakeVenue(Venue):
@@ -144,6 +144,76 @@ def test_openai_jsonl_round_trip():
     err_line = json.dumps({"custom_id": "job_2", "error": {"message": "boom"}})
     job_id, text, usage, error = parse_output_line(err_line)
     assert job_id == "job_2" and text is None and "boom" in error
+
+
+class TestOpenAIMaxTokensSpelling:
+    """The venue speaks the provider's dialect so the caller does not have to.
+
+    Found by a real batch: every job in it came back HTTP 400 with "Unsupported
+    parameter: 'max_tokens' is not supported with this model. Use
+    'max_completion_tokens' instead." — hours after submission, one rejection
+    per job, nothing settled.
+    """
+
+    def _body(self, j):
+        import json
+
+        return json.loads(build_jsonl([j]).decode().strip())["body"]
+
+    @pytest.mark.parametrize("model", ["gpt-5.6-luna", "gpt-5.6-sol", "o1", "o3-mini", "o4"])
+    def test_the_newer_families_get_max_completion_tokens(self, model):
+        body = self._body(job(model, "hi", max_tokens=16))
+        assert body["max_completion_tokens"] == 16
+        assert "max_tokens" not in body
+
+    @pytest.mark.parametrize("model", ["gpt-4o-mini", "gpt-4.1", "chatgpt-4o-latest"])
+    def test_the_older_families_keep_max_tokens(self, model):
+        body = self._body(job(model, "hi", max_tokens=16))
+        assert body["max_tokens"] == 16
+        assert "max_completion_tokens" not in body
+
+    def test_an_explicit_provider_spelling_wins_and_is_never_doubled(self):
+        # Sending both is itself a 400, so the caller who used the provider's
+        # own name for the field keeps it.
+        j = job("gpt-5.6-luna", "hi", max_tokens=16, max_completion_tokens=99)
+        body = self._body(j)
+        assert body["max_completion_tokens"] == 99
+        assert "max_tokens" not in body
+
+    def test_other_params_are_untouched(self):
+        body = self._body(job("gpt-5.6-luna", "hi", temperature=0.2, max_tokens=8))
+        assert body["temperature"] == 0.2
+
+    def test_a_job_without_a_ceiling_is_left_alone(self):
+        body = self._body(job("gpt-5.6-luna", "hi"))
+        assert "max_tokens" not in body and "max_completion_tokens" not in body
+
+    def test_the_job_itself_is_not_mutated(self):
+        # The translation is a rendering, not a rewrite: the caller's Job still
+        # says what the caller said, and a retry through another venue is safe.
+        j = job("gpt-5.6-luna", "hi", max_tokens=16)
+        self._body(j)
+        assert j.params == {"max_tokens": 16}
+
+    def test_the_sync_fallback_speaks_the_same_dialect(self):
+        # The rescue path must not fail the way the batch path just did.
+        seen = {}
+
+        class FakeCompletions:
+            def create(self, **kwargs):
+                seen.update(kwargs)
+                raise RuntimeError("stop here — we only need the params")
+
+        class FakeChat:
+            completions = FakeCompletions()
+
+        class FakeClient:
+            chat = FakeChat()
+
+        venue = OpenAIBatch(client=FakeClient())
+        venue.run_sync(job("gpt-5.6-luna", "hi", max_tokens=16))
+        assert seen["max_completion_tokens"] == 16
+        assert "max_tokens" not in seen
 
 
 def test_anthropic_requests_hoist_system_and_default_max_tokens():
