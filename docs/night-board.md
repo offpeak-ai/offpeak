@@ -28,6 +28,13 @@ night of 2026-08-20 the ERCOT Houston hub marked **3.94x** between its evening
 peak and the trough that followed, against the 4x a venue charges for the same
 hour of impatience.
 
+The two sides of the grid do not move together, which is the point of marking
+both. On 2026-08-18 and 08-19, CAISO's carbon ran **cleaner at the evening peak
+than in the small hours** — spreads of 0.76x and 0.73x — because the sun that
+serves the California evening has set by midnight. Cheap hours are not
+automatically clean hours, and a board that only recorded price would have
+implied otherwise.
+
 **[→ Read the board](https://github.com/offpeak-ai/offpeak/blob/board-data/nightly/BOARD.md)**
 
 ## How it works
@@ -57,6 +64,10 @@ would reject a nightly bot push.
   rates, GB region C, keyless.
 - **Power, US** — CAISO SP15 and ERCOT Houston day-ahead hourly, via
   [gridstatus](https://github.com/gridstatus/gridstatus), keyless.
+- **Carbon, US** — [EIA-930](https://www.eia.gov/electricity/gridmonitor/)
+  hourly generation by fuel for the CAISO and ERCOT balancing authorities,
+  through the EIA Hourly Grid Monitor. Needs a free API key; without one the
+  column records itself unavailable and nothing else changes.
 - **Tokens** — the published price sheets, not a measurement:
   [OpenAI](https://developers.openai.com/api/docs/pricing) and
   [Anthropic](https://platform.claude.com/docs/en/about-claude/pricing).
@@ -66,9 +77,21 @@ any venue.
 
 ## Honest limits
 
-- **Four zones, two of them thin.** GB carbon and GB power are half-hourly and
+- **Four zones, unevenly covered.** GB carbon and GB power are half-hourly and
   complete. CAISO SP15 and ERCOT Houston are **day-ahead hourly** prices, not
-  settled real-time ones, and they are power only — no US carbon leg yet.
+  settled real-time ones.
+- **US carbon is derived, GB carbon is measured.** NESO publishes an intensity;
+  EIA does not. The US columns are computed from EIA-930's hourly generation
+  mix times EIA's own CO2 coefficients and fleet heat rates — every input
+  published, the product an estimate, and marked `"basis": "derived"` in the
+  record so it is never confused with a measurement. It counts generation, not
+  consumption: imports and the carbon already stored in a battery are outside
+  what the method can see, and the share of generation EIA files under "other"
+  is reported per night rather than averaged in.
+- **EIA runs about a day behind.** The 06:30Z mark usually lands before EIA has
+  published the night it is marking, so the US carbon columns are often empty
+  at first sight and fill in on a later re-mark. A column that is not there yet
+  is recorded as unavailable, never as zero.
 - **The token column is published, not observed.** The 2.0x and the 4x are read
   off price sheets; only the grid columns are measurements. A published number
   and a marked one are different kinds of claim, and the board should not blur

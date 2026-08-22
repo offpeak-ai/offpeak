@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
 """Offpeak night board generator — quotes at dusk, marks at dawn.
 
-Open, keyless data only; zero venue spend. GB legs v1: NESO carbon intensity
-(forecast at dusk, actual at dawn) and Octopus Agile day-ahead power. US zones
-(CAISO/ERCOT via gridstatus) and EIA carbon: TODO next rev.
+Open data, zero venue spend. GB legs: NESO carbon intensity (forecast at dusk,
+actual at dawn) and Octopus Agile day-ahead power, both keyless. US legs: CAISO
+SP15 and ERCOT Houston day-ahead power via gridstatus, keyless, and a derived
+carbon intensity from EIA-930's hourly generation mix, which wants a free
+EIA_API_KEY in the environment. Every leg is optional; a missing key or a late
+feed costs that column and nothing else.
 
 Run as two passes over the same night:
 
@@ -25,14 +28,17 @@ from __future__ import annotations
 import argparse
 import datetime as dt
 import json
+import os
 import re
 import statistics
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
 from pathlib import Path
 
 CI_API = "https://api.carbonintensity.org.uk/intensity/{f}/{t}"
+EIA_API = "https://api.eia.gov/v2/electricity/rto/fuel-type-data/data/"
 AGILE = (
     "https://api.octopus.energy/v1/products/AGILE-24-10-01/"
     "electricity-tariffs/E-1R-AGILE-24-10-01-C/standard-unit-rates/"
@@ -73,6 +79,44 @@ US_ZONES = {
     "caiso_sp15": {"iso": "CAISO", "node": "TH_SP15_GEN-APND", "unit": "$/MWh"},
     "ercot_houston": {"iso": "Ercot", "node": "HB_HOUSTON", "unit": "$/MWh"},
 }
+
+# The balancing authority behind each zone's price node, and the clock it keeps.
+# A hub prices congestion at a point; the fuel burned to serve it is the whole
+# BA's, so the carbon leg is BA-wide and says so. EIA's local-hourly feed wants
+# a UTC offset on the window, which is why the zone carries a timezone name
+# rather than a fixed offset — it moves with daylight saving like the grid does.
+EIA_BA = {
+    "caiso_sp15": {"ba": "CISO", "tz": "America/Los_Angeles"},
+    "ercot_houston": {"ba": "ERCO", "tz": "America/Chicago"},
+}
+
+# EIA does not publish hourly carbon, so this derives it: EIA's own CO2
+# emission coefficients (lb CO2 per MMBtu of fuel) times EIA fleet-average heat
+# rates (MMBtu of fuel per MWh generated). Both halves are published and both
+# are kept here rather than a single opaque factor, so the number can be
+# re-derived instead of trusted.
+LB_CO2_PER_MMBTU = {"COL": 205.7, "NG": 117.0, "OIL": 161.3}
+HEAT_RATE_MMBTU_PER_MWH = {"COL": 10.0, "NG": 8.0, "OIL": 10.8}
+KG_PER_LB = 0.45359237
+CO2_KG_PER_MWH = {
+    fuel: LB_CO2_PER_MMBTU[fuel] * HEAT_RATE_MMBTU_PER_MWH[fuel] * KG_PER_LB
+    for fuel in LB_CO2_PER_MMBTU
+}
+# Generation that burns nothing. BAT is grid storage: discharging carries the
+# carbon of whatever charged it, which this method cannot see, so it counts as
+# zero at the margin and the limitation is documented rather than hidden.
+ZERO_CARBON_FUELS = frozenset({"NUC", "WAT", "WND", "SUN", "GEO", "BAT"})
+# EIA's catch-all bucket. No fuel is named, and it is frequently negative
+# (storage charging, net imports), so it is excluded from the intensity and
+# reported as a share instead of quietly averaged in.
+UNCLASSIFIED_FUELS = frozenset({"OTH"})
+
+CARBON_METHOD = (
+    "derived: EIA-930 hourly generation mix x (EIA CO2 coefficients x EIA "
+    "fleet heat rates); generation-side only, imports and storage carry-over "
+    "not accounted"
+)
+
 HALF_HOURS_IN_5H = 10
 
 RETRIES = 3
@@ -176,7 +220,9 @@ def _us_rows(zone: str, night: dt.date) -> list[tuple[dt.datetime, float]]:
     return rows
 
 
-def us_leg(rows: list[tuple[dt.datetime, float]], night: dt.date) -> dict | None:
+def us_leg(
+    rows: list[tuple[dt.datetime, float]], night: dt.date, unit: str = "$/MWh"
+) -> dict | None:
     """Peak/offpeak windows for a US zone, in that zone's local clock."""
     following = night + dt.timedelta(days=1)
     peak = [
@@ -199,8 +245,124 @@ def us_leg(rows: list[tuple[dt.datetime, float]], night: dt.date) -> dict | None
         "window_spread": (
             round(peak_mean / offpeak_mean, 2) if peak_mean and offpeak_mean else None
         ),
-        "unit": "$/MWh",
+        "unit": unit,
     }
+
+
+_EIA_PERIOD = re.compile(r"^(\d{4})-(\d{2})-(\d{2})T(\d{2})([+-]\d{2})$")
+
+
+def hour_intensity(mix: dict[str, float]) -> tuple[float | None, float, float]:
+    """(kg CO2 per MWh, classified MWh, unclassified MWh) for one hour's mix.
+
+    Negative net generation is storage charging — load wearing a generator's
+    name — and is dropped from both sums rather than netted against real
+    output. An hour with nothing classified returns ``None``: a grid we cannot
+    characterise has no intensity, not an intensity of zero.
+    """
+    emitted = classified = unclassified = 0.0
+    for fuel, mwh in mix.items():
+        if mwh <= 0:
+            continue
+        if fuel in UNCLASSIFIED_FUELS:
+            unclassified += mwh
+            continue
+        if fuel in CO2_KG_PER_MWH:
+            emitted += mwh * CO2_KG_PER_MWH[fuel]
+            classified += mwh
+        elif fuel in ZERO_CARBON_FUELS:
+            classified += mwh
+        else:  # a fuel code EIA added since this table was written
+            unclassified += mwh
+    if not classified:
+        return None, classified, unclassified
+    return emitted / classified, classified, unclassified
+
+
+def utc_offset(tz_name: str, night: dt.date) -> str:
+    """The zone's UTC offset on *night*, as EIA wants it written (``-05:00``).
+
+    Read at local noon so a night that straddles a daylight-saving change is
+    stamped with the offset the grid actually ran on, not the one the clock
+    happened to show at midnight.
+    """
+    try:
+        from zoneinfo import ZoneInfo
+    except ImportError as exc:  # pragma: no cover - stdlib since 3.9
+        raise FetchError(f"no timezone database available: {exc}") from exc
+    try:
+        noon = dt.datetime(night.year, night.month, night.day, 12, tzinfo=ZoneInfo(tz_name))
+    except Exception as exc:  # noqa: BLE001 — a missing tzdata is a dead column
+        raise FetchError(f"{tz_name}: {type(exc).__name__}: {exc}") from exc
+    stamp = noon.strftime("%z")
+    return f"{stamp[:3]}:{stamp[3:]}"
+
+
+def eia_mix(
+    zone: str, night: dt.date, api_key: str
+) -> dict[tuple[dt.date, int], dict[str, float]]:
+    """Hourly generation by fuel for *zone*'s balancing authority, local clock.
+
+    Asks for the night's evening through the following morning in local hours,
+    which is the same span the price legs read. Raises :class:`FetchError` so a
+    missing key or a late EIA publication costs the column, not the run.
+    """
+    cfg = EIA_BA[zone]
+    offset = utc_offset(cfg["tz"], night)
+    following = night + dt.timedelta(days=1)
+    query = urllib.parse.urlencode(
+        [
+            ("api_key", api_key),
+            ("frequency", "local-hourly"),
+            ("data[]", "value"),
+            ("facets[respondent][]", cfg["ba"]),
+            ("start", f"{night}T00{offset}"),
+            ("end", f"{following}T23{offset}"),
+            ("length", "5000"),
+        ]
+    )
+    payload = get_json(f"{EIA_API}?{query}")
+    rows = (payload.get("response") or {}).get("data") or []
+    mix: dict[tuple[dt.date, int], dict[str, float]] = {}
+    for row in rows:
+        stamp = _EIA_PERIOD.match(str(row.get("period", "")))
+        if not stamp or row.get("value") is None:
+            continue
+        y, mo, d, hour, _offset = stamp.groups()
+        try:
+            value = float(row["value"])
+        except (TypeError, ValueError):
+            continue
+        key = (dt.date(int(y), int(mo), int(d)), int(hour))
+        mix.setdefault(key, {})[str(row.get("fueltype"))] = value
+    if not mix:
+        raise FetchError(
+            f"{cfg['ba']}: EIA-930 published no hours for {night} yet "
+            "(the feed runs about a day behind)"
+        )
+    return mix
+
+
+def us_carbon_leg(
+    mix: dict[tuple[dt.date, int], dict[str, float]], night: dt.date
+) -> dict | None:
+    """The carbon counterpart to :func:`us_leg`, on the same local windows."""
+    rows: list[tuple[dt.datetime, float]] = []
+    unclassified = classified = 0.0
+    for (day, hour), hour_mix in sorted(mix.items()):
+        intensity, ok_mwh, other_mwh = hour_intensity(hour_mix)
+        classified += ok_mwh
+        unclassified += other_mwh
+        if intensity is not None:
+            rows.append((dt.datetime(day.year, day.month, day.day, hour), intensity))
+    leg = us_leg(rows, night, unit="gCO2/kWh")
+    if leg is None:
+        return None
+    total = classified + unclassified
+    leg["basis"] = "derived"
+    leg["method"] = CARBON_METHOD
+    leg["unclassified_share"] = round(unclassified / total, 3) if total else None
+    return leg
 
 
 def best_worst_5h(series: list[tuple[str, float]]):
@@ -253,6 +415,7 @@ def build_record(
     power_series: list | None,
     errors: dict[str, str],
     us_legs: dict[str, dict] | None = None,
+    us_carbon_legs: dict[str, dict] | None = None,
 ) -> dict:
     """Assemble the night's record. Pure — no network, no clock, no filesystem."""
     rec = {
@@ -275,6 +438,7 @@ def build_record(
         "sources": {
             "carbon": "api.carbonintensity.org.uk (NESO, keyless)",
             "power": "api.octopus.energy Agile day-ahead (keyless, region C)",
+            "carbon_us": "api.eia.gov EIA-930 hourly generation mix (key required)",
         },
     }
     if carbon_series:
@@ -294,6 +458,9 @@ def build_record(
     for zone, leg in (us_legs or {}).items():
         if leg:
             rec[f"power_{zone}"] = leg
+    for zone, leg in (us_carbon_legs or {}).items():
+        if leg:
+            rec[f"carbon_{zone}"] = leg
     if errors:
         rec["unavailable"] = errors
     return rec
@@ -309,8 +476,8 @@ BOARD_HEADER = (
     f"{URGENCY_LEGS}, per {TOKEN_SOURCE}.\n"
     f"Caveat: {PROMO_CAVEAT}.\n\n"
     "| night | power GB (p/kWh) | GB spread | carbon GB (g/kWh) | carbon spread "
-    "| CAISO SP15 | ERCOT HOU | tokens |\n"
-    "|---|---|---|---|---|---|---|---|\n"
+    "| CAISO SP15 | CAISO CO2 | ERCOT HOU | ERCOT CO2 | tokens |\n"
+    "|---|---|---|---|---|---|---|---|---|---|\n"
 )
 
 
@@ -323,6 +490,8 @@ def render_row(rec: dict) -> str:
     cg = rec.get("carbon_gb", {})
     sp15 = rec.get("power_caiso_sp15", {})
     hou = rec.get("power_ercot_houston", {})
+    sp15_co2 = rec.get("carbon_caiso_sp15", {})
+    hou_co2 = rec.get("carbon_ercot_houston", {})
     return (
         f"| {rec['night_of']} "
         f"| {fmt(pg.get('peak_window_17_21_bst'))} / {fmt(pg.get('offpeak_window_00_05_bst'))} "
@@ -330,7 +499,9 @@ def render_row(rec: dict) -> str:
         f"| {fmt(cg.get('peak_window_17_21_bst'))} / {fmt(cg.get('offpeak_window_00_05_bst'))} "
         f"| {fmt(cg.get('window_spread'), 'x')} "
         f"| {fmt(sp15.get('window_spread'), 'x')} "
+        f"| {fmt(sp15_co2.get('window_spread'), 'x')} "
         f"| {fmt(hou.get('window_spread'), 'x')} "
+        f"| {fmt(hou_co2.get('window_spread'), 'x')} "
         f"| {rec['tokens']['spread']:.1f}x |\n"
     )
 
@@ -388,12 +559,24 @@ def main() -> int:
         errors["power"] = str(exc)
 
     us_legs: dict[str, dict] = {}
+    us_carbon_legs: dict[str, dict] = {}
     if a.us_zones:
+        night = span[0].date()
+        eia_key = os.environ.get("EIA_API_KEY")
         for zone in US_ZONES:
             try:
-                us_legs[zone] = us_leg(_us_rows(zone, span[0].date()), span[0].date())
+                us_legs[zone] = us_leg(_us_rows(zone, night), night)
             except FetchError as exc:
                 errors[zone] = str(exc)
+            if not eia_key:
+                errors[f"carbon_{zone}"] = "EIA_API_KEY is not set"
+                continue
+            try:
+                us_carbon_legs[zone] = us_carbon_leg(
+                    eia_mix(zone, night, eia_key), night
+                )
+            except FetchError as exc:
+                errors[f"carbon_{zone}"] = str(exc)
 
     rec = build_record(
         mode=a.mode,
@@ -404,6 +587,7 @@ def main() -> int:
         power_series=power_series,
         errors=errors,
         us_legs=us_legs,
+        us_carbon_legs=us_carbon_legs,
     )
 
     out = Path(a.outdir)
