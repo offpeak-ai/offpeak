@@ -177,28 +177,93 @@ class TestBuildRecord:
 
 
 class TestBoard:
-    def test_creates_header_then_appends(self, tmp_path):
-        board = tmp_path / "BOARD.md"
-        nr.upsert_board_row(board, "2026-08-19", "| 2026-08-19 | a |\n")
-        nr.upsert_board_row(board, "2026-08-20", "| 2026-08-20 | b |\n")
-        text = board.read_text()
+    def _record(self, night, **kw):
+        base = {"night_of": night, "tokens": {"spread": 2.0}}
+        base.update(kw)
+        return base
+
+    def _write(self, tmp_path, night, **kw):
+        (tmp_path / f"{night}-mark.json").write_text(json.dumps(self._record(night, **kw)))
+
+    def test_rebuilds_every_night_it_has_a_record_for(self, tmp_path):
+        self._write(tmp_path, "2026-08-19")
+        self._write(tmp_path, "2026-08-20")
+        n = nr.rebuild_board(tmp_path / "BOARD.md", tmp_path)
+        text = (tmp_path / "BOARD.md").read_text()
+        assert n == 2
         assert text.startswith("# Offpeak night board")
         assert text.count("| 2026-08-19 |") == 1
-        assert text.rstrip().endswith("| 2026-08-20 | b |")
+        assert text.rstrip().endswith("2.0x |")
+
+    def test_nights_are_ordered_by_date_not_by_arrival(self, tmp_path):
+        for night in ("2026-08-20", "2026-08-18", "2026-08-19"):
+            self._write(tmp_path, night)
+        nr.rebuild_board(tmp_path / "BOARD.md", tmp_path)
+        rows = [ln for ln in (tmp_path / "BOARD.md").read_text().splitlines()
+                if ln.startswith("| 2026-")]
+        assert [r.split("|")[1].strip() for r in rows] == [
+            "2026-08-18", "2026-08-19", "2026-08-20"]
 
     def test_re_marking_a_night_corrects_it_instead_of_duplicating(self, tmp_path):
-        board = tmp_path / "BOARD.md"
-        nr.upsert_board_row(board, "2026-08-20", "| 2026-08-20 | first |\n")
-        nr.upsert_board_row(board, "2026-08-20", "| 2026-08-20 | corrected |\n")
-        text = board.read_text()
+        self._write(tmp_path, "2026-08-20", power_gb_agile={"window_spread": 1.1})
+        nr.rebuild_board(tmp_path / "BOARD.md", tmp_path)
+        self._write(tmp_path, "2026-08-20", power_gb_agile={"window_spread": 9.9})
+        nr.rebuild_board(tmp_path / "BOARD.md", tmp_path)
+        text = (tmp_path / "BOARD.md").read_text()
         assert text.count("| 2026-08-20 |") == 1
-        assert "corrected" in text and "first" not in text
+        assert "9.9x" in text and "1.1x" not in text
+
+    def test_a_new_column_repairs_every_row_not_only_the_header(self, tmp_path):
+        # The failure this replaced a row-at-a-time upsert for: adding two
+        # columns rewrote the header and left the previous night's eight-cell
+        # row beneath it, shifting that night's ERCOT price into the CAISO
+        # carbon column. Every row is re-rendered, so every row lines up.
+        self._write(tmp_path, "2026-08-19")
+        self._write(tmp_path, "2026-08-20")
+        nr.rebuild_board(tmp_path / "BOARD.md", tmp_path)
+        header, rows = _split(tmp_path / "BOARD.md")
+        assert len({r.count("|") for r in rows}) == 1
+        assert all(r.count("|") == header.count("|") for r in rows)
+
+    def test_quote_records_are_not_rows_only_marks_are(self, tmp_path):
+        self._write(tmp_path, "2026-08-20")
+        (tmp_path / "2026-08-21-quote.json").write_text(
+            json.dumps(self._record("2026-08-21")))
+        assert nr.rebuild_board(tmp_path / "BOARD.md", tmp_path) == 1
+        assert "2026-08-21" not in (tmp_path / "BOARD.md").read_text()
+
+    def test_a_night_with_no_record_loses_its_row(self, tmp_path):
+        # A row that cannot be re-derived from a record is not evidence.
+        self._write(tmp_path, "2026-08-19")
+        self._write(tmp_path, "2026-08-20")
+        nr.rebuild_board(tmp_path / "BOARD.md", tmp_path)
+        (tmp_path / "2026-08-19-mark.json").unlink()
+        nr.rebuild_board(tmp_path / "BOARD.md", tmp_path)
+        assert "2026-08-19" not in (tmp_path / "BOARD.md").read_text()
+
+    def test_one_unreadable_record_costs_its_row_not_the_board(self, tmp_path, capsys):
+        self._write(tmp_path, "2026-08-19")
+        (tmp_path / "2026-08-20-mark.json").write_text("{ this is not json")
+        assert nr.rebuild_board(tmp_path / "BOARD.md", tmp_path) == 1
+        assert "skipping unreadable record" in capsys.readouterr().out
+        assert "| 2026-08-19 |" in (tmp_path / "BOARD.md").read_text()
+
+    def test_no_records_leaves_a_header_and_no_rows(self, tmp_path):
+        assert nr.rebuild_board(tmp_path / "BOARD.md", tmp_path) == 0
+        assert (tmp_path / "BOARD.md").read_text() == nr.BOARD_HEADER
 
     def test_missing_values_render_as_a_dash_not_a_crash(self):
         row = nr.render_row({"night_of": "2026-08-20", "tokens": {"spread": 2.0}})
         # 2 windows x 2 GB legs, 2 GB spreads, 2 US price spreads, 2 US carbon
         assert row.count("—") == 10
         assert row.endswith("2.0x |\n")
+
+
+def _split(board):
+    lines = board.read_text().splitlines()
+    header = next(ln for ln in lines if ln.startswith("| night |"))
+    rows = [ln for ln in lines if ln.startswith("| 2026-")]
+    return header, rows
 
 
 class TestUsZones:
@@ -403,25 +468,21 @@ class TestUtcOffset:
 
 
 class TestBoardHeaderHealing:
-    def test_a_stale_header_is_repaired_and_rows_are_kept(self, tmp_path):
-        # Adding a column to the generator must repair an existing board, not
-        # leave rows that no longer line up with the header above them.
+    def test_a_stale_header_and_its_stale_rows_are_both_replaced(self, tmp_path):
+        # Adding a column to the generator must repair an existing board, rows
+        # included — a repaired header over unrepaired rows is worse than
+        # either, because the columns then lie about what they hold.
         board = tmp_path / "BOARD.md"
         board.write_text(
             "# Offpeak night board — marked nights\n\n"
             "| night | old | columns |\n|---|---|---|\n"
             "| 2026-08-19 | a | b |\n"
         )
-        nr.upsert_board_row(board, "2026-08-20", "| 2026-08-20 | new |\n")
+        (tmp_path / "2026-08-20-mark.json").write_text(
+            json.dumps({"night_of": "2026-08-20", "tokens": {"spread": 2.0}})
+        )
+        nr.rebuild_board(board, tmp_path)
         text = board.read_text()
         assert text.startswith(nr.BOARD_HEADER)
         assert "| old | columns |" not in text
-        assert "| 2026-08-19 | a | b |" in text  # history survives the repair
-        assert "| 2026-08-20 | new |" in text
-
-    def test_repair_is_idempotent(self, tmp_path):
-        board = tmp_path / "BOARD.md"
-        for _ in range(3):
-            nr.upsert_board_row(board, "2026-08-20", "| 2026-08-20 | x |\n")
-        assert board.read_text().count("| 2026-08-20 |") == 1
-        assert board.read_text().count("# Offpeak night board") == 1
+        assert "| 2026-08-19 | a | b |" not in text
