@@ -1,0 +1,55 @@
+name: Settled runs
+
+# Publishes the receipts in `receipts/` onto the board-data branch as
+# `nightly/SETTLED.md`. Manual only: a settlement is a deliberate act, and the
+# ledger should move when someone decides it moves, not on every push.
+#
+# board-data is written by CI and never by hand — the same rule the night board
+# follows, for the same reason: main is protected and a bot push there would be
+# rejected, and a ledger anyone can hand-edit is not a ledger.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: board-data
+  cancel-in-progress: false
+
+jobs:
+  settle:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the generator and the receipts (main)
+        uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: Check out the ledger (board-data)
+        uses: actions/checkout@v7
+        with:
+          ref: board-data
+          path: board
+
+      - name: Render
+        run: |
+          python tools/settle_report.py \
+            --receipts receipts \
+            --outdir board/nightly
+
+      - name: Commit to board-data
+        working-directory: board
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add nightly
+          if git diff --staged --quiet; then
+            echo "nothing changed — the ledger already says this"
+            exit 0
+          fi
+          git commit -m "board: settled runs $(date -u +%Y-%m-%d)"
+          git push

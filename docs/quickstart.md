@@ -60,6 +60,22 @@ print(q.spread_usd, q.spread_pct)
 
     `Quote.basis` reports the provenance of every figure.
 
+!!! warning "Reasoning models spend the ceiling before they speak"
+    On models that reason before answering — OpenAI's gpt-5 family, the
+    o-series — `max_tokens` caps **reasoning plus visible output**, and the
+    reasoning goes first. Set it too low and the job bills a full ceiling of
+    reasoning tokens and returns an empty string: a `Result` that is
+    technically ok, costs real money, and says nothing.
+
+    This is not hypothetical. A real batch here ran 24 jobs at
+    `max_tokens=16`, billed 374 output tokens, and returned 24 empty strings.
+    Give a reasoning model room — hundreds of tokens, not dozens — and price
+    the ceiling you actually set, which is what `quote()` does.
+
+    `offpeak` sends the ceiling under whichever name the venue wants
+    (`max_completion_tokens` where the model demands it), but it cannot make a
+    ceiling large enough to answer in.
+
 ### If you know roughly what it will write
 
 A floor is honest but not always useful. When you do have a sense of the output
