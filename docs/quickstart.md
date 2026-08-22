@@ -60,6 +60,32 @@ print(q.spread_usd, q.spread_pct)
 
     `Quote.basis` reports the provenance of every figure.
 
+### If you know roughly what it will write
+
+A floor is honest but not always useful. When you do have a sense of the output
+size, say so — and the quote prices it, marked `EST` rather than `FLOOR`:
+
+```python
+# Across the run: assume each job writes a quarter of what it reads.
+offpeak.quote(jobs, deadline="06:00", assumed_output_ratio=0.25)
+
+# Or per job, which wins over a ratio and over max_tokens:
+offpeak.Job(model=..., messages=[...],
+            metadata={"expected_output_tokens": 300})
+```
+
+```
+EST       5000 job(s) priced on an assumed output size, not a measured one
+          the assumption is yours; the bill moves with what the model actually writes
+```
+
+Both are opt-in. Without one, nothing is assumed on your behalf: the default
+stays the floor. The two marks mean different things and a quote can carry both
+— `FLOOR` is understated by construction, `EST` can land either side of the
+bill. `Quote.is_floor` and `Quote.is_estimated` are the same distinction in
+code, and a ratio applies only to jobs with no signal of their own, so explicit
+counts and `max_tokens` are never overridden by it.
+
 ## 2. Run — against a deadline
 
 ```python

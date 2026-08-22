@@ -9,6 +9,15 @@ same thing a receipt is — just before the trade instead of after.
 Token counts come from the job where the job knows them and are estimated where
 it does not. Every quote says which, per figure, in :attr:`Quote.basis`: a
 number you cannot trace back to its source is not a quote.
+
+Output size is the one figure a pre-trade quote cannot know. Left alone, an
+unknown output is priced at zero and the whole quote is marked a ``FLOOR`` —
+understated on purpose, and saying so. A caller who does know roughly what the
+model will write can say so and get a usable number instead, per job with
+``metadata={"expected_output_tokens": n}`` or across the run with
+``quote(..., assumed_output_ratio=r)``. Those quotes are marked ``EST``. The
+assumption is always the caller's, never the library's: nothing here invents an
+output size on your behalf.
 """
 
 from __future__ import annotations
@@ -48,12 +57,26 @@ def _text_len(content: object) -> int:
     return 0
 
 
-def estimate_tokens(j: Job) -> tuple[int, int, str, str]:
+def estimate_tokens(
+    j: Job, *, assumed_output_ratio: float | None = None
+) -> tuple[int, int, str, str]:
     """(input, output, input_basis, output_basis) for one job.
 
-    Explicit counts on ``job.metadata`` win; then ``max_tokens`` as an output
-    ceiling; then a chars/4 estimate for input. Each figure reports its own
-    provenance so a quote never launders an estimate into a fact.
+    Input: an explicit count on ``job.metadata`` wins, else a chars/4 estimate.
+
+    Output, in order — a count, then the caller's own expectation, then a
+    ceiling, then the run-wide ratio if one was opted into, then nothing:
+
+    1. ``metadata["output_tokens"]`` — a count someone measured.
+    2. ``metadata["expected_output_tokens"]`` — what the caller expects this job
+       to write. More specific than a ceiling set for safety, so it outranks
+       one, and labeled an assumption either way.
+    3. ``params["max_tokens"]`` — an upper bound, priced as one.
+    4. *assumed_output_ratio* × the input tokens, when the caller passed one.
+    5. Nothing: zero, labeled unknown, which is what makes a quote a floor.
+
+    Each figure reports its own provenance so a quote never launders an
+    estimate into a fact.
     """
     meta = j.metadata or {}
 
@@ -66,8 +89,14 @@ def estimate_tokens(j: Job) -> tuple[int, int, str, str]:
 
     if isinstance(meta.get("output_tokens"), int):
         output_tokens, output_basis = int(meta["output_tokens"]), "explicit"
+    elif isinstance(meta.get("expected_output_tokens"), int):
+        output_tokens = int(meta["expected_output_tokens"])
+        output_basis = "assumed (expected_output_tokens)"
     elif isinstance(j.params.get("max_tokens"), int):
         output_tokens, output_basis = int(j.params["max_tokens"]), "ceiling (max_tokens)"
+    elif assumed_output_ratio is not None:
+        output_tokens = max(0, round(input_tokens * assumed_output_ratio))
+        output_basis = f"assumed (ratio {assumed_output_ratio:g} x input)"
     else:
         output_tokens, output_basis = 0, "unknown (no max_tokens, none given)"
 
@@ -86,6 +115,7 @@ class VenueQuote:
     batch_usd: float = 0.0
     unpriced: int = 0
     unknown_output: int = 0
+    assumed_output: int = 0
 
     @property
     def spread_usd(self) -> float:
@@ -142,6 +172,10 @@ class Quote:
         return sum(v.unknown_output for v in self.by_venue.values())
 
     @property
+    def assumed_output(self) -> int:
+        return sum(v.assumed_output for v in self.by_venue.values())
+
+    @property
     def is_floor(self) -> bool:
         """True when some job's output tokens were unknown and priced at zero.
 
@@ -150,6 +184,17 @@ class Quote:
         a floor, and says so.
         """
         return self.unknown_output > 0
+
+    @property
+    def is_estimated(self) -> bool:
+        """True when some job's output size was assumed rather than known.
+
+        Distinct from :attr:`is_floor`. A floor is understated by construction —
+        output priced at zero. An estimate is priced on an assumption the caller
+        supplied, so it can land either side of the bill. Both are marked on the
+        card; neither is silent.
+        """
+        return self.assumed_output > 0
 
     @property
     def within_batch_window(self) -> bool:
@@ -191,6 +236,15 @@ class Quote:
                 "          output costs more than input on every model here — "
                 "pass max_tokens or metadata to quote it properly"
             )
+        if self.is_estimated:
+            lines.append(
+                f"EST       {self.assumed_output} job(s) priced on an assumed output size, "
+                "not a measured one"
+            )
+            lines.append(
+                "          the assumption is yours; the bill moves with what the "
+                "model actually writes"
+            )
         if self.unpriced:
             lines.append(f"note      {self.unpriced} job(s) had no price sheet entry")
         lines += [
@@ -206,14 +260,31 @@ def quote(
     deadline: object,
     *,
     venues: list[Venue] | None = None,
+    assumed_output_ratio: float | None = None,
 ) -> Quote:
     """Price *jobs* against *deadline* without calling any provider.
 
     Routes each job to the venue that would run it, then settles list versus
-    batch cost from the bundled price sheet. Raises ``ValueError`` for a
-    deadline in the past or a model no venue supports — the same programming
-    errors :func:`offpeak.run` reserves exceptions for.
+    batch cost from the bundled price sheet.
+
+    *assumed_output_ratio* is an explicit opt-in: for jobs that carry no output
+    signal at all, assume they write ``ratio x`` their input tokens. ``0.25``
+    suits summarization; a long-form generator writes more than it reads and
+    wants a ratio above 1. Without it, such jobs price at zero output and the
+    quote is a ``FLOOR`` — the library does not guess on your behalf. With it,
+    the quote is marked ``EST`` and :attr:`Quote.is_estimated` is true. Per-job
+    expectations (``metadata={"expected_output_tokens": n}``) take precedence
+    and are marked the same way.
+
+    Raises ``ValueError`` for a deadline in the past, a model no venue supports,
+    or a non-positive ratio — the same programming errors :func:`offpeak.run`
+    reserves exceptions for.
     """
+    if assumed_output_ratio is not None and assumed_output_ratio <= 0:
+        raise ValueError(
+            f"assumed_output_ratio must be positive, got {assumed_output_ratio!r} "
+            "(omit it to price unknown output at zero and get a FLOOR quote)"
+        )
     job_list = [jobs] if isinstance(jobs, Job) else list(jobs)
     resolved = parse_deadline(deadline)
     q = Quote(deadline=resolved, window_seconds=seconds_until(resolved))
@@ -226,7 +297,9 @@ def quote(
     for j in job_list:
         venue = _pick_venue(j.model, venue_list)
         vq = q.by_venue.setdefault(venue.name, VenueQuote(venue=venue.name))
-        input_tokens, output_tokens, input_basis, output_basis = estimate_tokens(j)
+        input_tokens, output_tokens, input_basis, output_basis = estimate_tokens(
+            j, assumed_output_ratio=assumed_output_ratio
+        )
         bases["input"].add(input_basis)
         bases["output"].add(output_basis)
 
@@ -235,6 +308,8 @@ def quote(
         vq.output_tokens += output_tokens
         if output_basis.startswith("unknown"):
             vq.unknown_output += 1
+        elif output_basis.startswith("assumed"):
+            vq.assumed_output += 1
 
         price = get_price(j.model)
         if price is None:
