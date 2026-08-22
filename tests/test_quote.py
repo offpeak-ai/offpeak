@@ -129,6 +129,82 @@ class TestFloorWarning:
         assert priced.list_usd > floor.list_usd
 
 
+class TestAssumedOutput:
+    """Opt-in only. The library never invents an output size on its own."""
+
+    def test_the_default_is_still_a_floor_not_an_assumption(self):
+        q = quote([job("gpt-5.6-luna", "x" * 400)], "48h")
+        assert q.is_floor and not q.is_estimated
+        assert q.output_tokens == 0
+
+    def test_a_ratio_prices_output_and_marks_the_quote_an_estimate(self):
+        q = quote([job("gpt-5.6-luna", "x" * 400)], "48h", assumed_output_ratio=0.25)
+        assert q.input_tokens == 100 and q.output_tokens == 25
+        assert q.is_estimated and not q.is_floor
+        assert q.assumed_output == 1
+        assert "ratio 0.25" in q.basis["output"]
+
+    def test_est_and_floor_are_different_markers(self):
+        card = str(quote([job("gpt-5.6-luna", "x" * 400)], "48h", assumed_output_ratio=0.5))
+        assert "EST" in card and "FLOOR" not in card
+        floor_card = str(quote([job("gpt-5.6-luna", "x" * 400)], "48h"))
+        assert "FLOOR" in floor_card and "EST" not in floor_card
+
+    def test_a_quote_can_be_part_floor_and_part_estimate(self):
+        # One job says what it expects, the other says nothing and no ratio was
+        # given: the card has to carry both marks rather than pick one.
+        expecting = Job(
+            model="gpt-5.6-luna", messages=[{"role": "user", "content": "x" * 400}],
+            metadata={"expected_output_tokens": 50},
+        )
+        q = quote([expecting, job("gpt-5.6-luna", "x" * 400)], "48h")
+        assert q.is_estimated and q.is_floor
+        assert q.assumed_output == 1 and q.unknown_output == 1
+        card = str(q)
+        assert "EST" in card and "FLOOR" in card
+
+    def test_an_expectation_outranks_a_ceiling_set_for_safety(self):
+        j = job("gpt-5.6-luna", "hi", max_tokens=4096)
+        j.metadata = {"expected_output_tokens": 300}
+        tokens, basis = estimate_tokens(j)[1], estimate_tokens(j)[3]
+        assert tokens == 300
+        assert basis == "assumed (expected_output_tokens)"
+
+    def test_a_measured_count_outranks_an_expectation(self):
+        j = Job(model="gpt-5.6-luna", messages=[], metadata={
+            "input_tokens": 10, "output_tokens": 7, "expected_output_tokens": 999})
+        assert estimate_tokens(j)[1] == 7
+        assert estimate_tokens(j)[3] == "explicit"
+
+    def test_a_ceiling_outranks_the_run_wide_ratio(self):
+        # max_tokens is this job's own signal; the ratio is a blanket default.
+        j = job("gpt-5.6-luna", "x" * 400, max_tokens=64)
+        assert estimate_tokens(j, assumed_output_ratio=10.0)[1] == 64
+
+    def test_the_ratio_only_touches_jobs_with_no_signal_at_all(self):
+        q = quote(
+            counted("gpt-5.6-luna", 1000, 100) + [job("gpt-5.6-luna", "x" * 400)],
+            "48h",
+            assumed_output_ratio=1.0,
+        )
+        assert q.output_tokens == 100 + 100  # the counted job kept its own count
+        assert q.assumed_output == 1
+
+    def test_a_ratio_above_one_is_allowed_generators_write_more_than_they_read(self):
+        q = quote([job("gpt-5.6-luna", "x" * 400)], "48h", assumed_output_ratio=4.0)
+        assert q.output_tokens == 400
+
+    @pytest.mark.parametrize("bad", [0, -0.5])
+    def test_a_non_positive_ratio_is_a_programming_error(self, bad):
+        with pytest.raises(ValueError, match="must be positive"):
+            quote([job("gpt-5.6-luna", "hi")], "48h", assumed_output_ratio=bad)
+
+    def test_an_assumption_costs_money_which_is_the_point(self):
+        floor = quote([job("claude-haiku-4-5", "x" * 4000)], "48h")
+        est = quote([job("claude-haiku-4-5", "x" * 4000)], "48h", assumed_output_ratio=0.5)
+        assert est.list_usd > floor.list_usd
+
+
 class TestDeadlineRisk:
     def test_a_deadline_inside_the_batch_window_is_flagged(self):
         q = quote(counted("gpt-5.6-luna", 100, 10), "30m")

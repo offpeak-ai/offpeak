@@ -81,6 +81,8 @@ prices    snapshot 2026-08-21 — estimate only, not a bill
 
 From Python, `offpeak.quote(jobs, deadline="06:00")` takes the same jobs you would pass to `run()`. Token counts come from the job where it knows them (`metadata={"input_tokens": ..., "output_tokens": ...}`, or `max_tokens` as an output ceiling) and are a labeled chars/4 estimate where it does not — every figure reports its provenance in `basis`, and a quote with no output signal is marked a **floor**, not an estimate.
 
+If you do know roughly what the model will write, say so and get a priced number instead — `quote(jobs, deadline=..., assumed_output_ratio=0.25)`, or `metadata={"expected_output_tokens": 300}` on a single job. Those quotes are marked **EST**, distinct from a floor. Both are opt-in: absent one, `offpeak` assumes nothing on your behalf.
+
 ## Deadlines
 
 Deadlines are how software says "this can wait" — the full semantics live in [SPEC.md](SPEC.md).
