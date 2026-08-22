@@ -29,7 +29,7 @@ tokens    12,410,332 in · 3,104,551 out
 list      $27.93
 paid      $14.02
 captured  $13.91 (49.8%)
-prices    snapshot 2026-08 — override via offpeak.prices
+prices    snapshot 2026-08-21 — override via offpeak.prices
 ───────────────────────────────────────────────
 ```
 
@@ -68,13 +68,14 @@ jobs      5000 across 1 venue(s)
 deadline  2026-08-21 21:11 PDT (24.0h out)
 tokens    4,000,000 in · 1,000,000 out
 
-  openai:batch      5000 job(s)  list $1.00  batch $0.50  save $0.50 (50.0%)
+  openai:batch      5000 job(s)  list $2.00  batch $1.00  save $1.00 (50.0%)
 
-list      $1.00   (run now, synchronously)
-batch     $0.50   (run by the deadline)
-save      $0.50 (50.0%)
+list      $2.00   (run now, synchronously)
+batch     $1.00   (run by the deadline)
+save      $1.00 (50.0%)
+risk      deadline is inside the 24h batch window — the SLA rests on the sync fallback, which pays list
 basis     input explicit; output explicit
-prices    snapshot 2026-08 — estimate only, not a bill
+prices    snapshot 2026-08-21 — estimate only, not a bill
 ───────────────────────────────────────────────
 ```
 

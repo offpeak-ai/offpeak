@@ -7,24 +7,47 @@ prices, so verify against their published sheets and override at runtime with
 to ``None`` rather than a guess.
 
 Batch tiers at OpenAI, Anthropic, and Google are publicly priced at 50% of
-list, which is what :data:`BATCH_DISCOUNT` encodes.
+list, which is what :data:`BATCH_DISCOUNT` encodes. OpenAI's flex tier prices
+identically to its batch tier on the gpt-5.6 family.
+
+Some list prices are promotional and will step up on a published date. Those
+carry a :class:`PromoNote` in :data:`PROMO_NOTES` — the date and the post-promo
+list — so a quote or a docs page can flag the decay instead of reading a
+temporary number as permanent.
+
+Corrections
+-----------
+
+**2026-08-21** — the OpenAI block through 0.2.0 held that provider's *batch*
+sheet in the standard-price table (gpt-5.6-sol 2.50/15.00, terra 1.00/6.00,
+luna 0.10/0.60). The published short-context standard rates are 4.00/20.00,
+2.00/12.00 and 0.20/1.20; the batch rows are 2.00/10.00, 1.00/6.00 and
+0.10/0.60. Receipts for OpenAI models in 0.1.1–0.2.0 therefore understated both
+the list cost they compared against and the batch price actually billed — the
+wrong sheet derived $1.25/$7.50 for a batched sol job against a true $2.00 /
+$10.00. Anthropic's block was unaffected.
 """
 
 from __future__ import annotations
 
 import math
+from dataclasses import dataclass
 
 __all__ = [
     "PRICE_SHEET_DATE",
     "BATCH_DISCOUNT",
+    "PROMO_NOTES",
+    "PromoNote",
     "format_usd",
     "register_price",
     "get_price",
+    "get_promo_note",
+    "promo_decay",
     "list_cost_usd",
     "batch_cost_usd",
 ]
 
-PRICE_SHEET_DATE = "2026-08"
+PRICE_SHEET_DATE = "2026-08-21"
 
 # Fraction of list price paid on provider batch tiers (published: 50%).
 BATCH_DISCOUNT = 0.5
@@ -46,10 +69,49 @@ _PRICES: dict[str, tuple[float, float]] = {
     "claude-sonnet-4-6": (3.00, 15.00),
     "claude-sonnet-4-5": (3.00, 15.00),
     "claude-haiku-4-5": (1.00, 5.00),
-    # OpenAI (per developers.openai.com/api/docs/pricing; ≤272k-token context)
-    "gpt-5.6-sol": (2.50, 15.00),
-    "gpt-5.6-terra": (1.00, 6.00),
-    "gpt-5.6-luna": (0.10, 0.60),
+    # OpenAI (per developers.openai.com/api/docs/pricing; standard tier,
+    # ≤272k-token context). Long context is 2x input / 1.5x output; the batch
+    # and flex tiers are both 50% of these. gpt-5.6-sol is promotional — see
+    # PROMO_NOTES.
+    "gpt-5.6-sol": (4.00, 20.00),
+    "gpt-5.6-terra": (2.00, 12.00),
+    "gpt-5.6-luna": (0.20, 1.20),
+}
+
+
+@dataclass(frozen=True)
+class PromoNote:
+    """A list price that is promotional, and what it decays to.
+
+    A promotional rate is a real price today and a wrong one later. Carrying the
+    step-up here keeps the sheet honest in both directions: receipts settle at
+    the price actually charged, while a quote or a docs page can say — from data
+    rather than prose — that the number has an expiry and what replaces it.
+    """
+
+    #: The date the provider guarantees the promo through (ISO 8601). It may run
+    #: longer: the sheet says "at least through" this date, never "until".
+    through: str
+    #: (input, output) USD per 1M tokens once the promo lapses.
+    post_promo: tuple[float, float]
+    #: Where the claim is checkable.
+    source: str
+    #: The provider's own wording, verbatim.
+    note: str
+
+
+# model -> PromoNote. Prefix-matched the same way prices are, so a date-pinned
+# model name inherits its family's note.
+PROMO_NOTES: dict[str, PromoNote] = {
+    "gpt-5.6-sol": PromoNote(
+        through="2026-11-21",
+        post_promo=(5.00, 30.00),
+        source="developers.openai.com/api/docs/pricing",
+        note=(
+            "GPT-5.6 Sol's promotional pricing is available at least through "
+            "November 21, 2026."
+        ),
+    ),
 }
 
 
@@ -58,16 +120,44 @@ def register_price(model: str, input_per_m: float, output_per_m: float) -> None:
     _PRICES[model] = (float(input_per_m), float(output_per_m))
 
 
-def get_price(model: str) -> tuple[float, float] | None:
+def _lookup(table: dict, model: str):
     """Exact match first, then longest registered prefix (handles date-pinned
     model names like ``claude-sonnet-4-5-20250929``)."""
-    if model in _PRICES:
-        return _PRICES[model]
+    if model in table:
+        return table[model]
     best = None
-    for name, price in _PRICES.items():
+    for name, value in table.items():
         if model.startswith(name) and (best is None or len(name) > best[0]):
-            best = (len(name), price)
+            best = (len(name), value)
     return best[1] if best else None
+
+
+def get_price(model: str) -> tuple[float, float] | None:
+    """Standard (synchronous) list price for *model*, USD per 1M tokens."""
+    return _lookup(_PRICES, model)
+
+
+def get_promo_note(model: str) -> PromoNote | None:
+    """The :class:`PromoNote` for *model*, if its list price is promotional.
+
+    ``None`` means "no published promotion", which is also what a model
+    registered at runtime with :func:`register_price` returns — an override is
+    a price we were told, not a price we can date.
+    """
+    return _lookup(PROMO_NOTES, model)
+
+
+def promo_decay(model: str) -> tuple[float, float] | None:
+    """Multiple the (input, output) price steps up by when the promo lapses.
+
+    ``(1.25, 1.5)`` on gpt-5.6-sol: $4/$20 today, $5/$30 after. ``None`` where
+    the price is not promotional or the model is off the sheet.
+    """
+    note = get_promo_note(model)
+    price = get_price(model)
+    if note is None or price is None or not price[0] or not price[1]:
+        return None
+    return (note.post_promo[0] / price[0], note.post_promo[1] / price[1])
 
 
 def list_cost_usd(model: str, input_tokens: int, output_tokens: int) -> float | None:
