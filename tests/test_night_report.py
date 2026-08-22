@@ -196,7 +196,8 @@ class TestBoard:
 
     def test_missing_values_render_as_a_dash_not_a_crash(self):
         row = nr.render_row({"night_of": "2026-08-20", "tokens": {"spread": 2.0}})
-        assert row.count("—") == 8  # 2 windows x 2 GB legs, 2 GB spreads, 2 US spreads
+        # 2 windows x 2 GB legs, 2 GB spreads, 2 US price spreads, 2 US carbon
+        assert row.count("—") == 10
         assert row.endswith("2.0x |\n")
 
 
@@ -264,6 +265,141 @@ class TestUsZones:
         )
         assert rec["power_caiso_sp15"]["window_spread"] == 4.0
         assert "4.0x" in nr.render_row(rec)
+
+
+class TestHourIntensity:
+    def test_a_gas_only_hour_is_the_gas_factor(self):
+        intensity, classified, unclassified = nr.hour_intensity({"NG": 1000.0})
+        assert intensity == pytest.approx(nr.CO2_KG_PER_MWH["NG"])
+        assert (classified, unclassified) == (1000.0, 0.0)
+
+    def test_zero_carbon_generation_dilutes_it(self):
+        # Half gas, half wind: the fleet factor, halved.
+        intensity, _, _ = nr.hour_intensity({"NG": 500.0, "WND": 500.0})
+        assert intensity == pytest.approx(nr.CO2_KG_PER_MWH["NG"] / 2)
+
+    def test_a_carbon_free_hour_is_zero_not_none(self):
+        intensity, _, _ = nr.hour_intensity({"WND": 100.0, "SUN": 50.0})
+        assert intensity == 0.0
+
+    def test_an_hour_with_nothing_classified_has_no_intensity(self):
+        # A grid we cannot characterise has no intensity, not one of zero.
+        intensity, classified, unclassified = nr.hour_intensity({"OTH": 900.0})
+        assert intensity is None
+        assert (classified, unclassified) == (0.0, 900.0)
+
+    def test_storage_charging_is_load_not_negative_generation(self):
+        # BAT at -400 is demand wearing a generator's name. Netting it against
+        # gas would invent carbon-free MWh that nobody generated.
+        with_charge, _, _ = nr.hour_intensity({"NG": 1000.0, "BAT": -400.0})
+        assert with_charge == pytest.approx(nr.CO2_KG_PER_MWH["NG"])
+
+    def test_an_unknown_fuel_code_is_unclassified_not_assumed_clean(self):
+        _, classified, unclassified = nr.hour_intensity({"NG": 100.0, "XYZ": 900.0})
+        assert (classified, unclassified) == (100.0, 900.0)
+
+    def test_the_factors_are_derived_from_their_published_halves(self):
+        # Coal: 205.7 lb CO2/MMBtu x 10 MMBtu/MWh, in kg. Roughly 933.
+        assert nr.CO2_KG_PER_MWH["COL"] == pytest.approx(933.0, abs=1.0)
+        assert nr.CO2_KG_PER_MWH["NG"] == pytest.approx(424.6, abs=1.0)
+        assert nr.CO2_KG_PER_MWH["COL"] > nr.CO2_KG_PER_MWH["NG"]
+
+
+class TestUsCarbonLeg:
+    def _mix(self, night, peak_ng, offpeak_ng):
+        nxt = night + dt.timedelta(days=1)
+        mix = {}
+        for i, ng in enumerate(peak_ng):
+            mix[(night, 17 + i)] = {"NG": ng, "WND": 1000.0 - ng}
+        for i, ng in enumerate(offpeak_ng):
+            mix[(nxt, i)] = {"NG": ng, "WND": 1000.0 - ng}
+        return mix
+
+    def test_windows_match_the_price_legs_and_carry_their_unit(self):
+        night = dt.date(2026, 8, 20)
+        leg = nr.us_carbon_leg(self._mix(night, [800.0], [200.0]), night)
+        assert leg["unit"] == "gCO2/kWh"
+        assert leg["window_spread"] == 4.0  # 0.8 gas vs 0.2 gas
+        assert leg["basis"] == "derived"
+        assert "EIA-930" in leg["method"]
+
+    def test_the_unclassified_share_is_reported_not_buried(self):
+        night = dt.date(2026, 8, 20)
+        mix = {(night, 17): {"NG": 750.0, "OTH": 250.0}}
+        leg = nr.us_carbon_leg(mix, night)
+        assert leg["unclassified_share"] == 0.25
+
+    def test_a_night_with_no_usable_hours_is_no_leg(self):
+        assert nr.us_carbon_leg({}, dt.date(2026, 8, 20)) is None
+
+    def test_the_leg_lands_in_the_record_and_the_row(self):
+        night = dt.date(2026, 8, 20)
+        rec = nr.build_record(
+            mode="mark", night=night, now=utc(2026, 8, 21, 6, 30),
+            span=(utc(2026, 8, 20, 16), utc(2026, 8, 21, 7)),
+            carbon_series=None, power_series=None, errors={},
+            us_carbon_legs={
+                "ercot_houston": nr.us_carbon_leg(self._mix(night, [900.0], [300.0]), night)
+            },
+        )
+        assert rec["carbon_ercot_houston"]["window_spread"] == 3.0
+        assert "3.0x" in nr.render_row(rec)
+        assert "EIA-930" in rec["sources"]["carbon_us"]
+
+
+class TestEiaMix:
+    def test_periods_are_parsed_on_the_zones_own_clock(self, monkeypatch):
+        payload = {"response": {"data": [
+            {"period": "2026-08-20T17-05", "fueltype": "NG", "value": "500"},
+            {"period": "2026-08-20T17-05", "fueltype": "WND", "value": "500"},
+            {"period": "2026-08-21T02-05", "fueltype": "NG", "value": "100"},
+        ]}}
+        monkeypatch.setattr(nr, "get_json", lambda url, **kw: payload)
+        mix = nr.eia_mix("ercot_houston", dt.date(2026, 8, 20), "k")
+        assert mix[(dt.date(2026, 8, 20), 17)] == {"NG": 500.0, "WND": 500.0}
+        assert mix[(dt.date(2026, 8, 21), 2)] == {"NG": 100.0}
+
+    def test_null_and_malformed_rows_are_skipped_not_fatal(self, monkeypatch):
+        payload = {"response": {"data": [
+            {"period": "2026-08-20T17-05", "fueltype": "NG", "value": None},
+            {"period": "garbage", "fueltype": "NG", "value": "5"},
+            {"period": "2026-08-20T17-05", "fueltype": "COL", "value": "7"},
+        ]}}
+        monkeypatch.setattr(nr, "get_json", lambda url, **kw: payload)
+        assert nr.eia_mix("ercot_houston", dt.date(2026, 8, 20), "k") == {
+            (dt.date(2026, 8, 20), 17): {"COL": 7.0}
+        }
+
+    def test_an_empty_feed_says_it_runs_behind_rather_than_marking_zero(self, monkeypatch):
+        monkeypatch.setattr(nr, "get_json", lambda url, **kw: {"response": {"data": []}})
+        with pytest.raises(nr.FetchError, match="about a day behind"):
+            nr.eia_mix("caiso_sp15", dt.date(2026, 8, 20), "k")
+
+    def test_the_api_key_never_reaches_an_error_message(self, monkeypatch):
+        # get_json already strips query strings; this pins that the key rides
+        # in one, so a failed EIA call cannot leak it into a public Action log.
+        seen = {}
+
+        def capture(url, **kw):
+            seen["url"] = url
+            raise nr.FetchError("boom")
+
+        monkeypatch.setattr(nr, "get_json", capture)
+        with pytest.raises(nr.FetchError):
+            nr.eia_mix("caiso_sp15", dt.date(2026, 8, 20), "hunter2")
+        assert "hunter2" in seen["url"].split("?", 1)[1]
+        assert "hunter2" not in seen["url"].split("?", 1)[0]
+
+
+class TestUtcOffset:
+    def test_summer_and_winter_offsets_differ_like_the_grid_does(self):
+        assert nr.utc_offset("America/Chicago", dt.date(2026, 8, 20)) == "-05:00"
+        assert nr.utc_offset("America/Chicago", dt.date(2026, 1, 20)) == "-06:00"
+        assert nr.utc_offset("America/Los_Angeles", dt.date(2026, 8, 20)) == "-07:00"
+
+    def test_an_unknown_zone_costs_the_column_not_the_run(self):
+        with pytest.raises(nr.FetchError):
+            nr.utc_offset("Mars/Olympus_Mons", dt.date(2026, 8, 20))
 
 
 class TestBoardHeaderHealing:
