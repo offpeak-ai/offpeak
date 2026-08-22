@@ -1,0 +1,27 @@
+{
+  "run_id": "2026-08-22-mechanics-3",
+  "scale": "mechanics proof (24 jobs, OpenAI, ceiling sized to the model)",
+  "settled_utc": "2026-08-21T21:42:51-07:00",
+  "deadline": "06:00",
+  "price_sheet": "2026-08-21",
+  "offpeak_version": "0.2.2.dev0",
+  "jobs": 24,
+  "ok": 24,
+  "failed": 0,
+  "fell_back": 0,
+  "sla_met": 24,
+  "input_tokens": 728,
+  "output_tokens": 971,
+  "list_usd": 0.0013108,
+  "paid_usd": 0.0006554,
+  "captured_usd": 0.0006554,
+  "captured_pct": 50.0,
+  "left_on_table_usd": 0.0,
+  "by_venue": {
+    "openai:batch": 24
+  },
+  "notes": [
+    "The same twenty-four lines once more, with a 256-token ceiling that leaves a reasoning model room to answer in.",
+    "24/24 settled with real one-word answers, 971 output tokens, zero fallbacks, every SLA met."
+  ]
+}

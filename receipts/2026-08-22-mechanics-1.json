@@ -1,0 +1,32 @@
+{
+  "run_id": "2026-08-22-mechanics-1",
+  "scale": "mechanics proof (48 jobs, two venues)",
+  "settled_utc": "2026-08-21T21:35:46-07:00",
+  "deadline": "06:00",
+  "price_sheet": "2026-08-21",
+  "offpeak_version": "0.2.2.dev0",
+  "jobs": 48,
+  "ok": 24,
+  "failed": 24,
+  "fell_back": 0,
+  "sla_met": 24,
+  "input_tokens": 787,
+  "output_tokens": 155,
+  "list_usd": 0.001562,
+  "paid_usd": 0.000781,
+  "captured_usd": 0.000781,
+  "captured_pct": 50.0,
+  "left_on_table_usd": 0.0,
+  "by_venue": {
+    "anthropic:batch": 24,
+    "openai:batch": 24
+  },
+  "failure_kinds": [
+    "HTTP 400"
+  ],
+  "notes": [
+    "The first genuine settlement. Twenty-four short public-domain lines, classified in one word each, through both venues' cheapest lanes on a 06:00 deadline.",
+    "The Anthropic leg settled 24/24 at the batch tier. The OpenAI leg was rejected job by job with HTTP 400 'max_tokens is not supported with this model; use max_completion_tokens instead' - no tokens were processed, so nothing was billed there.",
+    "The sync fallback did not rescue those jobs: it rescues jobs that never came back, and these came back as failures. Fixed in the driver; run 2 is the same book re-run."
+  ]
+}

@@ -56,6 +56,23 @@ Output lands on the
 `nightly/BOARD.md` plus the raw JSON per night — because `main` is protected and
 would reject a nightly bot push.
 
+## Settled runs are a different ledger
+
+`BOARD.md` observes; it spends nothing at any venue. Runs that actually
+executed and actually billed go in `nightly/SETTLED.md` on the same branch,
+written by
+[`tools/settle_report.py`](https://github.com/offpeak-ai/offpeak/blob/main/tools/settle_report.py)
+from the receipts in
+[`receipts/`](https://github.com/offpeak-ai/offpeak/tree/main/receipts) — never
+by hand — and published by a manual workflow, because a settlement is a
+deliberate act.
+
+Every settled row carries its **scale**, and the column is not decoration. A
+few dozen jobs proving the mechanics end to end and a production book are both
+real settlements and are not the same evidence. A ledger that lets a reader
+confuse them is doing marketing rather than accounting, so the scale is printed
+before the money is.
+
 ## Sources
 
 - **Carbon** — [NESO carbon intensity](https://api.carbonintensity.org.uk),
