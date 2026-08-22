@@ -4,7 +4,7 @@ Every row here is a run that executed and billed: list price, price paid, and th
 
 **Scale is on every row on purpose.** A mechanics proof and a production book are both real settlements and are not the same evidence. Read the scale column before the money column.
 
-Written by `tools/settle_report.py` from the receipts in the main branch's `receipts/`, never by hand.
+Written by `tools/settle_report.py` from the receipts in the main branch's `receipts/`, never by hand. Those receipts come from `tools/mechanics_run.py`, which is in the tree for the same reason: a number you cannot reproduce is a number you are asked to trust.
 
 | run | scale | jobs | venues | tokens | list | paid | captured | SLA |
 |---|---|---|---|---|---|---|---|---|
