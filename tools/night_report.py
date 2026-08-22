@@ -506,30 +506,32 @@ def render_row(rec: dict) -> str:
     )
 
 
-_DATA_ROW = re.compile(r"^\| \d{4}-\d{2}-\d{2} \|")
+def rebuild_board(board: Path, records: Path) -> int:
+    """Rewrite the whole board from the stored records. Returns rows written.
 
+    The board is a **projection**, not an accumulation: every row is rendered
+    fresh from that night's ``<date>-mark.json`` on every run. A re-run
+    therefore corrects the night it re-marks rather than appending a second
+    opinion, and — the reason this replaced a row-at-a-time upsert — adding a
+    column repairs *every* row instead of only the header above them.
 
-def upsert_board_row(board: Path, night: str, row: str) -> None:
-    """Write *row* for *night*, replacing any existing row for the same night.
-
-    A re-run must correct the night it re-marks, not append a second opinion.
-
-    The header is rewritten from :data:`BOARD_HEADER` every time, so adding a
-    column to the generator repairs an existing board instead of leaving rows
-    that no longer line up with the header they were written under.
+    The failure that taught this: a two-column addition rewrote the header and
+    left the previous night's eight-cell row beneath it, which silently shifted
+    that night's ERCOT price spread into the CAISO carbon column. A row that
+    cannot be re-derived from a record is not evidence, so a night whose record
+    has gone missing loses its row rather than keeping a number nobody can
+    check.
     """
-    existing = board.read_text().splitlines(keepends=True) if board.exists() else []
-    rows = [ln for ln in existing if _DATA_ROW.match(ln)]
-
-    marker = f"| {night} |"
-    for i, line in enumerate(rows):
-        if line.startswith(marker):
-            rows[i] = row
-            break
-    else:
-        rows.append(row)
-
+    rows = []
+    for path in sorted(records.glob("*-mark.json")):
+        try:
+            rec = json.loads(path.read_text())
+        except (OSError, ValueError) as exc:
+            print(f"skipping unreadable record {path.name}: {exc}")
+            continue
+        rows.append(render_row(rec))
     board.write_text(BOARD_HEADER + "".join(rows))
+    return len(rows)
 
 
 def main() -> int:
@@ -594,7 +596,8 @@ def main() -> int:
     out.mkdir(parents=True, exist_ok=True)
     (out / f"{rec['night_of']}-{a.mode}.json").write_text(json.dumps(rec, indent=2) + "\n")
     if a.mode == "mark":
-        upsert_board_row(out / "BOARD.md", rec["night_of"], render_row(rec))
+        written = rebuild_board(out / "BOARD.md", out)
+        print(f"board rebuilt from {written} record(s)")
 
     print(json.dumps(rec, indent=2))
     if not carbon_series and not power_series:
