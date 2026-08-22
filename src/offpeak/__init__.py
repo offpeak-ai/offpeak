@@ -18,7 +18,7 @@ from .prices import format_usd
 from .quote import Quote, VenueQuote, quote
 from .venues.base import BatchState, Venue
 
-__version__ = "0.2.1.dev0"
+__version__ = "0.2.1"
 
 __all__ = [
     "job",
