@@ -486,3 +486,129 @@ class TestBoardHeaderHealing:
         assert text.startswith(nr.BOARD_HEADER)
         assert "| old | columns |" not in text
         assert "| 2026-08-19 | a | b |" not in text
+
+
+class TestCarbonBackfill:
+    """The reason the CAISO and ERCOT carbon columns wereempty."""
+
+    def _mark(self, tmp_path, date, *, carbon=None, unavailable=True):
+        rec = {"night_of": date, "mode": "mark", "tokens": {"spread": 2.0}}
+        if carbon:
+            rec["carbon_caiso_sp15"] = carbon
+        if unavailable:
+            rec["unavailable"] = {
+                "carbon_caiso_sp15": "CISO: EIA-930 has published no hours yet",
+                "carbon_ercot_houston": "ERCO: EIA-930 has published no hours yet",
+            }
+        (tmp_path / f"{date}-mark.json").write_text(json.dumps(rec))
+        return tmp_path / f"{date}-mark.json"
+
+    def _leg(self, spread=0.8):
+        return {
+            "n_hours": 48,
+            "peak_window_17_21_local": 210.27,
+            "offpeak_window_00_05_local": 262.87,
+            "window_spread": spread,
+            "unit": "gCO2/kWh",
+            "basis": "derived",
+        }
+
+    def test_a_leg_without_a_trough_is_not_a_partial_answer(self):
+        # The board's column *is* the spread. Publishing the half we have would
+        # put a number in a cell that means something else.
+        assert not nr.carbon_is_complete(
+            {"peak_window_17_21_local": 197.9, "offpeak_window_00_05_local": None,
+             "window_spread": None}
+        )
+        assert nr.carbon_is_complete(self._leg())
+        assert not nr.carbon_is_complete(None)
+
+    def test_late_arriving_carbon_is_written_into_the_old_record(self, tmp_path):
+        today = dt.date.today().isoformat()
+        path = self._mark(tmp_path, today)
+        filled = nr.backfill_carbon(tmp_path, "key", fetch=lambda z, n: self._leg())
+        assert sorted(filled) == [f"{today} caiso_sp15", f"{today} ercot_houston"]
+        rec = json.loads(path.read_text())
+        assert rec["carbon_caiso_sp15"]["window_spread"] == 0.8
+        assert "unavailable" not in rec, "a filled leg drops its excuse"
+
+    def test_a_session_still_too_early_keeps_its_reason(self, tmp_path):
+        today = dt.date.today().isoformat()
+        path = self._mark(tmp_path, today)
+        peak_only = {"peak_window_17_21_local": 197.9, "window_spread": None}
+        assert nr.backfill_carbon(tmp_path, "key", fetch=lambda z, n: peak_only) == []
+        rec = json.loads(path.read_text())
+        assert "carbon_caiso_sp15" not in rec
+        assert "not yet the 00:00-05:00 local hours" in rec["unavailable"]["carbon_caiso_sp15"]
+
+    def test_the_reason_names_the_day_the_trough_falls_on(self, tmp_path):
+        # The old message blamed a one-day lag. The real requirement is the
+        # *following* morning, which is a day further out again.
+        today = dt.date.today()
+        self._mark(tmp_path, today.isoformat())
+        nr.backfill_carbon(tmp_path, "key", fetch=lambda z, n: {"window_spread": None})
+        rec = json.loads((tmp_path / f"{today}-mark.json").read_text())
+        assert str(today + dt.timedelta(days=1)) in rec["unavailable"]["carbon_caiso_sp15"]
+
+    def test_a_session_already_carrying_carbon_is_not_refetched(self, tmp_path):
+        today = dt.date.today().isoformat()
+        self._mark(tmp_path, today, carbon=self._leg(), unavailable=False)
+        asked = []
+
+        def fetch(zone, night):
+            asked.append(zone)
+            return self._leg()
+
+        nr.backfill_carbon(tmp_path, "key", fetch=fetch)
+        assert "caiso_sp15" not in asked, "a complete leg is left alone"
+
+    def test_it_does_not_reach_back_past_the_lookback(self, tmp_path):
+        old = (dt.date.today() - dt.timedelta(days=30)).isoformat()
+        self._mark(tmp_path, old)
+        asked = []
+        nr.backfill_carbon(
+            tmp_path, "key", lookback=5,
+            fetch=lambda z, n: asked.append(z) or self._leg(),
+        )
+        assert asked == []
+
+    def test_a_fetch_failure_costs_the_leg_and_not_the_backfill(self, tmp_path):
+        today = dt.date.today().isoformat()
+        self._mark(tmp_path, today)
+
+        def fetch(zone, night):
+            raise nr.FetchError("EIA is down")
+
+        assert nr.backfill_carbon(tmp_path, "key", fetch=fetch) == []
+        rec = json.loads((tmp_path / f"{today}-mark.json").read_text())
+        assert rec["unavailable"]["carbon_caiso_sp15"] == "EIA is down"
+
+    def test_an_unexpected_error_does_not_break_the_mark(self, tmp_path):
+        today = dt.date.today().isoformat()
+        self._mark(tmp_path, today)
+
+        def fetch(zone, night):
+            raise RuntimeError("something else entirely")
+
+        assert nr.backfill_carbon(tmp_path, "key", fetch=fetch) == []
+
+    def test_an_unreadable_record_is_skipped_not_fatal(self, tmp_path):
+        (tmp_path / "2026-08-20-mark.json").write_text("{not json")
+        assert nr.backfill_carbon(tmp_path, "key", fetch=lambda z, n: self._leg()) == []
+
+    def test_a_record_with_no_date_is_skipped(self, tmp_path):
+        (tmp_path / "x-mark.json").write_text(json.dumps({"mode": "mark"}))
+        assert nr.backfill_carbon(tmp_path, "key", fetch=lambda z, n: self._leg()) == []
+
+    def test_the_backfilled_leg_reaches_the_board(self, tmp_path):
+        # The projection is what publishes it, so the two have to work together:
+        # backfill rewrites the record, rebuild_board re-renders every row.
+        today = dt.date.today().isoformat()
+        self._mark(tmp_path, today)
+        nr.backfill_carbon(tmp_path, "key", fetch=lambda z, n: self._leg())
+        nr.rebuild_board(tmp_path / "BOARD.md", tmp_path)
+        row = [
+            ln for ln in (tmp_path / "BOARD.md").read_text().splitlines()
+            if ln.startswith(f"| {today} ")
+        ][0]
+        assert "0.8x" in row, row

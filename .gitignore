@@ -15,6 +15,10 @@ venv/
 .coverage
 htmlcov/
 
+# Local environment. Never committed: these are where keys live.
+.env
+.envrc
+
 # Editors / OS
 .idea/
 .vscode/

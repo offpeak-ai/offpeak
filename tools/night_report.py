@@ -337,7 +337,7 @@ def eia_mix(
         mix.setdefault(key, {})[str(row.get("fueltype"))] = value
     if not mix:
         raise FetchError(
-            f"{cfg['ba']}: EIA-930 published no hours for {night} yet "
+            f"{cfg['ba']}: EIA-930 has published no hours for {night} yet "
             "(the feed runs about a day behind)"
         )
     return mix
@@ -506,6 +506,93 @@ def render_row(rec: dict) -> str:
     )
 
 
+def carbon_is_complete(leg: dict | None) -> bool:
+    """Whether a carbon leg has both windows and therefore a spread.
+
+    A leg with a peak but no trough is not a partial answer, it is no answer:
+    the board's column *is* the spread. Publishing the half we have would put a
+    number in a cell that means something else.
+    """
+    return bool(leg) and leg.get("window_spread") is not None
+
+
+def backfill_carbon(records: Path, api_key: str, *, lookback: int = 5, fetch=None) -> list[str]:
+    """Re-fetch the US carbon legs for recent sessions that are still missing them.
+
+    **This is the whole reason the carbon columns were empty**, and it is worth
+    stating precisely, because the wiring was never wrong.
+
+    A session's carbon spread compares its own evening peak against the trough
+    of *the following morning* — 00:00–05:00 local, which falls on the next
+    calendar day. So marking the session of day D needs EIA to have published
+    through D+1 05:00 local, and EIA runs about a day behind. At 06:30Z on D+1
+    the feed has not published D at all, let alone D+1. The column was therefore
+    unfillable **at mark time, always** — not occasionally, and not because of
+    the balancing-authority codes or the intensity method, both of which
+    reproduce their published figures exactly.
+
+    And nothing ever came back for it. ``rebuild_board`` is a projection of the
+    *records* (#21), so a record written with a null carbon leg re-renders as a
+    null carbon leg forever. The data arrives about two days later and no run
+    was ever looking.
+
+    This is the run that looks. Every mark pass re-fetches the sessions inside
+    *lookback* whose carbon is still missing, rewrites those records where the
+    data has since landed, and lets the projection do the rest. A session that
+    is still too recent is left exactly as it was, with its reason intact.
+    """
+    fetch = fetch or (lambda zone, night: us_carbon_leg(eia_mix(zone, night, api_key), night))
+    cutoff = dt.date.today() - dt.timedelta(days=lookback)
+    filled: list[str] = []
+    for path in sorted(records.glob("*-mark.json")):
+        try:
+            rec = json.loads(path.read_text())
+        except (OSError, ValueError):
+            continue
+        night = _record_date(rec)
+        if night is None or night < cutoff:
+            continue
+        changed = False
+        for zone in US_ZONES:
+            key = f"carbon_{zone}"
+            if carbon_is_complete(rec.get(key)):
+                continue
+            try:
+                leg = fetch(zone, night)
+            except FetchError as exc:
+                rec.setdefault("unavailable", {})[key] = str(exc)
+                changed = True
+                continue
+            except Exception as exc:  # noqa: BLE001 — a backfill never breaks a mark
+                print(f"backfill {night} {zone}: {type(exc).__name__}: {exc}")
+                continue
+            if not carbon_is_complete(leg):
+                rec.setdefault("unavailable", {})[key] = (
+                    f"{EIA_BA[zone]['ba']}: EIA-930 has {night} but not yet the "
+                    f"00:00-05:00 local hours of {night + dt.timedelta(days=1)}, "
+                    "which is the trough this session's spread is measured "
+                    "against"
+                )
+                changed = True
+                continue
+            rec[key] = leg
+            (rec.get("unavailable") or {}).pop(key, None)
+            if not rec.get("unavailable"):
+                rec.pop("unavailable", None)
+            filled.append(f"{night} {zone}")
+            changed = True
+        if changed:
+            path.write_text(json.dumps(rec, indent=2) + "\n")
+    return filled
+
+
+def _record_date(rec: dict) -> dt.date | None:
+    try:
+        return dt.date.fromisoformat(str(rec.get("night_of")))
+    except (TypeError, ValueError):
+        return None
+
+
 def rebuild_board(board: Path, records: Path) -> int:
     """Rewrite the whole board from the stored records. Returns rows written.
 
@@ -539,6 +626,12 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--mode", choices=["quote", "mark"], required=True)
     ap.add_argument("--outdir", default="nightly")
+    ap.add_argument(
+        "--backfill-days",
+        type=int,
+        default=5,
+        help="how many recent sessions a mark re-checks for late-arriving carbon",
+    )
     ap.add_argument(
         "--us-zones",
         action="store_true",
@@ -597,6 +690,13 @@ def main() -> int:
     out.mkdir(parents=True, exist_ok=True)
     (out / f"{rec['night_of']}-{a.mode}.json").write_text(json.dumps(rec, indent=2) + "\n")
     if a.mode == "mark":
+        eia_key = os.environ.get("EIA_API_KEY")
+        if eia_key:
+            # Before the projection re-renders: the carbon a session needs
+            # lands about two days after it, so every mark goes back for the
+            # ones that were too early last time.
+            filled = backfill_carbon(out, eia_key, lookback=a.backfill_days)
+            print(f"carbon backfill: filled {len(filled)} leg(s) {filled}")
         written = rebuild_board(out / "BOARD.md", out)
         print(f"board rebuilt from {written} record(s)")
 
