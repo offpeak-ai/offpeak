@@ -6,7 +6,7 @@ Status: draft. The spec is versioned with the library; breaking changes bump the
 
 ## 1. Why a spec
 
-Every inference API today has exactly one urgency: now. Venues already price patience (public batch tiers at 50% of list), but no annotation exists for a caller to express it. This spec defines that annotation — the *deadline* — so that any client, gateway, queue, or scheduler can carry it, and any venue can honor it.
+Every inference API today has exactly one urgency: now. Venues already price patience (public batch tiers at 50% off list), but no annotation exists for a caller to express it. This spec defines that annotation — the *deadline* — so that any client, gateway, queue, or scheduler can carry it, and any venue can honor it.
 
 ## 2. The deadline
 

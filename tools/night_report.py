@@ -1,19 +1,19 @@
 #!/usr/bin/env python3
-"""Offpeak night board generator — quotes at dusk, marks at dawn.
+"""Offpeak Spread Board generator — quotes at the open, marks at the close.
 
-Open data, zero venue spend. GB legs: NESO carbon intensity (forecast at dusk,
-actual at dawn) and Octopus Agile day-ahead power, both keyless. US legs: CAISO
+Open data, zero venue spend. GB legs: NESO carbon intensity (forecast at the
+open, actual at the close) and Octopus Agile day-ahead power, both keyless. US legs: CAISO
 SP15 and ERCOT Houston day-ahead power via gridstatus, keyless, and a derived
 carbon intensity from EIA-930's hourly generation mix, which wants a free
 EIA_API_KEY in the environment. Every leg is optional; a missing key or a late
 feed costs that column and nothing else.
 
-Run as two passes over the same night:
+Run as two passes over the same session:
 
-    night_report.py --mode quote   # ~19:00Z, the night ahead, carbon forecast
-    night_report.py --mode mark    # ~06:30Z, the night just finished, actuals
+    night_report.py --mode quote   # ~19:00Z, the session ahead, carbon forecast
+    night_report.py --mode mark    # ~06:30Z, the session just finished, actuals
 
-A "night" is 16:00Z-07:00Z — it opens with the 17:00 BST evening peak and
+A "session" is 16:00Z-07:00Z — it opens with the 17:00 BST evening peak and
 closes after the 00-05 BST trough, so a single span carries both windows the
 board compares. Anchoring to the clock rather than to "now + 12h" is what keeps
 the peak column populated: a quote fired at 19:00Z with a forward-only window
@@ -69,7 +69,7 @@ PEAK_WINDOW_UTC = (16, 20)  # 17-21 BST
 OFFPEAK_WINDOW_UTC = (23, 4)  # 00-05 BST, wraps midnight
 
 # US zones price in their own clock, so their windows are local hours rather
-# than UTC ones: the evening peak of the night's date, and the small hours of
+# than UTC ones: the evening peak of the session's date, and the trough of
 # the morning after — the same shape as the GB legs, read off a different clock.
 PEAK_WINDOW_LOCAL = (17, 21)
 OFFPEAK_WINDOW_LOCAL = (0, 5)
@@ -146,7 +146,7 @@ def z(t: dt.datetime) -> str:
 
 
 def night_span(now: dt.datetime, mode: str) -> tuple[dt.datetime, dt.datetime]:
-    """The (from, to) UTC span of the night this run is about.
+    """The (from, to) UTC span of the session this run is about.
 
     ``mark`` truncates at *now* — actuals do not exist for the future.
     """
@@ -177,7 +177,7 @@ def agile(f: dt.datetime, t: dt.datetime) -> list[tuple[str, float]]:
 
 
 def _us_rows(zone: str, night: dt.date) -> list[tuple[dt.datetime, float]]:
-    """Day-ahead hourly prices for *zone*, covering the night and the morning
+    """Day-ahead hourly prices for *zone*, covering the session and the morning
     after. Raises :class:`FetchError` when gridstatus is absent or the ISO is
     unreachable — the caller degrades that into a missing column.
     """
@@ -282,7 +282,7 @@ def hour_intensity(mix: dict[str, float]) -> tuple[float | None, float, float]:
 def utc_offset(tz_name: str, night: dt.date) -> str:
     """The zone's UTC offset on *night*, as EIA wants it written (``-05:00``).
 
-    Read at local noon so a night that straddles a daylight-saving change is
+    Read at local noon so a session that straddles a daylight-saving change is
     stamped with the offset the grid actually ran on, not the one the clock
     happened to show at midnight.
     """
@@ -303,7 +303,7 @@ def eia_mix(
 ) -> dict[tuple[dt.date, int], dict[str, float]]:
     """Hourly generation by fuel for *zone*'s balancing authority, local clock.
 
-    Asks for the night's evening through the following morning in local hours,
+    Asks for the session's evening through the following morning in local hours,
     which is the same span the price legs read. Raises :class:`FetchError` so a
     missing key or a late EIA publication costs the column, not the run.
     """
@@ -417,7 +417,7 @@ def build_record(
     us_legs: dict[str, dict] | None = None,
     us_carbon_legs: dict[str, dict] | None = None,
 ) -> dict:
-    """Assemble the night's record. Pure — no network, no clock, no filesystem."""
+    """Assemble the session's record. Pure — no network, no clock, no filesystem."""
     rec = {
         "night_of": str(night),
         "mode": mode,
@@ -426,7 +426,7 @@ def build_record(
         "tokens": {
             "batch_discount": BATCH_DISCOUNT,
             "spread": round(1 / BATCH_DISCOUNT, 2),
-            "note": "published batch tiers, OpenAI + Anthropic (50% of list)",
+            "note": "published batch tiers, OpenAI + Anthropic (50% off list)",
             "urgency_spread": URGENCY_SPREAD,
             "urgency_note": (
                 f"same model, fast tier over batch tier on {URGENCY_MODEL} "
@@ -467,15 +467,15 @@ def build_record(
 
 
 BOARD_HEADER = (
-    "# Offpeak night board — marked nights\n\n"
+    "# Offpeak Spread Board — marked sessions\n\n"
     "Quotes are open-data observation, not trade advice; settlements (real runs)\n"
-    "live elsewhere. Generated nightly by `tools/night_report.py`.\n\n"
-    "Token spreads are published rather than observed: batch tiers are 50% of "
+    "live elsewhere. Generated daily by `tools/night_report.py`.\n\n"
+    "Token spreads are published rather than observed: batch tiers are 50% off "
     f"list, a {1 / BATCH_DISCOUNT:.1f}x spread for work that can wait, and the same "
     f"model's fast tier is {URGENCY_SPREAD:.0f}x its batch tier — {URGENCY_MODEL} at "
     f"{URGENCY_LEGS}, per {TOKEN_SOURCE}.\n"
     f"Caveat: {PROMO_CAVEAT}.\n\n"
-    "| night | power GB (p/kWh) | GB spread | carbon GB (g/kWh) | carbon spread "
+    "| session | power GB (p/kWh) | GB spread | carbon GB (g/kWh) | carbon spread "
     "| CAISO SP15 | CAISO CO2 | ERCOT HOU | ERCOT CO2 | tokens |\n"
     "|---|---|---|---|---|---|---|---|---|---|\n"
 )
@@ -510,15 +510,16 @@ def rebuild_board(board: Path, records: Path) -> int:
     """Rewrite the whole board from the stored records. Returns rows written.
 
     The board is a **projection**, not an accumulation: every row is rendered
-    fresh from that night's ``<date>-mark.json`` on every run. A re-run
-    therefore corrects the night it re-marks rather than appending a second
+    fresh from that session's ``<date>-mark.json`` on every run. A re-run
+    therefore corrects the session it re-marks rather than appending a second
     opinion, and — the reason this replaced a row-at-a-time upsert — adding a
     column repairs *every* row instead of only the header above them.
 
     The failure that taught this: a two-column addition rewrote the header and
-    left the previous night's eight-cell row beneath it, which silently shifted
-    that night's ERCOT price spread into the CAISO carbon column. A row that
-    cannot be re-derived from a record is not evidence, so a night whose record
+    left the previous session's eight-cell row beneath it, which silently
+    shifted that session's ERCOT price spread into the CAISO carbon column. A
+    row that cannot be re-derived from a record is not evidence, so a session
+    whose record
     has gone missing loses its row rather than keeping a number nobody can
     check.
     """
