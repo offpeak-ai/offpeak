@@ -1,10 +1,10 @@
-# The night board
+# The Spread Board
 
 `offpeak` rests on a claim: **intelligence has a time value.** The token side of
 that claim is already settled, and it is wider than the headline discount.
 
-- **Patience is priced at −50%.** OpenAI and Anthropic both publish batch tiers
-  at half of list: a flat **2.0x** spread for work that can wait.
+- **Patience is priced at 50% off.** OpenAI and Anthropic both publish batch
+  tiers at half price: a flat **2.0x** spread for work that can wait.
 - **Haste is priced too.** Hold the model and the venue constant and read the
   same sheet across its urgency tiers: `gpt-5.6-sol` is **$8.00 / $40.00** per
   1M tokens on OpenAI's fast tier against **$2.00 / $10.00** on its batch tier
@@ -20,17 +20,17 @@ that claim is already settled, and it is wider than the headline discount.
     `offpeak.prices.urgency_spread("gpt-5.6-sol")` returns `4.0`, and
     `promo_decay()` returns the step-up the date will bring.
 
-The night board marks the same claim against the other side of the trade: the
-grid the compute runs on. Every night it records what power and carbon actually
-did between the evening peak and the small hours, from open, keyless sources.
-The grid's spread is not published anywhere — it has to be observed — and on the
-night of 2026-08-20 the ERCOT Houston hub marked **3.94x** between its evening
-peak and the trough that followed, against the 4x a venue charges for the same
-hour of impatience.
+The Spread Board marks the same claim against the other side of the trade: the
+grid the compute runs on. Each session it records what power and carbon actually
+did between the evening peak and the trough that follows, from open, keyless
+sources. The grid's spread is not published anywhere — it has to be observed —
+and in the session of 2026-08-20 the ERCOT Houston hub marked **3.94x** between
+its evening peak and the trough that followed, against the 4x a venue charges
+for the same hour of impatience.
 
 The two sides of the grid do not move together, which is the point of marking
 both. On 2026-08-18 and 08-19, CAISO's carbon ran **cleaner at the evening peak
-than in the small hours** — spreads of 0.76x and 0.73x — because the sun that
+than in the trough** — spreads of 0.76x and 0.73x — because the sun that
 serves the California evening has set by midnight. Cheap hours are not
 automatically clean hours, and a board that only recorded price would have
 implied otherwise.
@@ -39,22 +39,22 @@ implied otherwise.
 
 ## How it works
 
-Two passes over the same night, run by
+Two passes over the same session, run by
 [a scheduled workflow](https://github.com/offpeak-ai/offpeak/blob/main/.github/workflows/nightly.yml):
 
 | Pass | When | What it records |
 |---|---|---|
-| `quote` | 19:00Z | The night ahead — carbon **forecast**, day-ahead power |
-| `mark` | 06:30Z | The night just finished — carbon **actuals** |
+| `quote` | 19:00Z | The session ahead — carbon **forecast**, day-ahead power |
+| `mark` | 06:30Z | The session just finished — carbon **actuals** |
 
-A night runs **16:00Z–07:00Z**: it opens with the 17:00 BST evening peak and
+A session runs **16:00Z–07:00Z**: it opens with the 17:00 BST evening peak and
 closes after the 00–05 BST trough, so one span carries both windows the board
 compares.
 
 Output lands on the
 [`board-data` branch](https://github.com/offpeak-ai/offpeak/tree/board-data) —
-`nightly/BOARD.md` plus the raw JSON per night — because `main` is protected and
-would reject a nightly bot push.
+`nightly/BOARD.md` plus the raw JSON per session — because `main` is protected
+and would reject a scheduled bot push.
 
 ## Settled runs are a different ledger
 
@@ -104,9 +104,9 @@ any venue.
   record so it is never confused with a measurement. It counts generation, not
   consumption: imports and the carbon already stored in a battery are outside
   what the method can see, and the share of generation EIA files under "other"
-  is reported per night rather than averaged in.
-- **EIA runs about a day behind.** The 06:30Z mark usually lands before EIA has
-  published the night it is marking, so the US carbon columns are often empty
+  is reported per session rather than averaged in.
+- **EIA runs about a day behind.** The 06:30Z mark can land before EIA has
+  published the session it is marking, so the US carbon columns may be empty
   at first sight and fill in on a later re-mark. A column that is not there yet
   is recorded as unavailable, never as zero.
 - **The token column is published, not observed.** The 2.0x and the 4x are read
@@ -117,7 +117,7 @@ any venue.
   forecast, and `offpeak` does not currently schedule against it — the SDK
   routes on published token prices alone.
 - **Carbon actuals lag** roughly two hours. The 06:30Z mark clears the 00–05 BST
-  trough comfortably; the tail of the night can still be sparse.
+  trough comfortably; the tail of the session can still be sparse.
 - **A dead source costs its column, not the run.** Legs degrade independently,
-  and a night where both sources are down is recorded as unavailable rather than
+  and a session where both sources are down is recorded as unavailable rather than
   guessed at.

@@ -12,7 +12,7 @@ checkable — if something here is not true yet, it says so.
   fallback left on the table, as arithmetic against published price sheets.
 - **A `Venue` interface** — the extension point. A venue is anywhere deferred
   work can run.
-- **[The night board](night-board.md)** — GB power and carbon, marked nightly.
+- **[The Spread Board](night-board.md)** — GB power and carbon, marked daily.
 
 ## What does not exist yet
 
@@ -24,7 +24,7 @@ misleading one:
   watches the clock and falls back.
 - **No cross-venue portfolio placement.** Jobs route to the first venue that
   supports the model, not to the cheapest or fastest across a portfolio.
-- **No carbon-aware scheduling.** The night board observes the grid; the
+- **No carbon-aware scheduling.** The Spread Board observes the grid; the
   scheduler does not read it.
 - **No venues beyond the two batch tiers.** Google batch, spot capacity, and
   off-peak windows on your own GPUs are interface-shaped but unwritten. A

@@ -44,7 +44,7 @@ class TestNightSpan:
 
     def test_span_covers_both_windows_the_board_compares(self):
         # The bug this replaced: a forward-only window from 19:00Z missed the
-        # 16-20Z peak entirely, so the peak column was null every night.
+        # 16-20Z peak entirely, so the peak column was null in every session.
         f, t = nr.night_span(utc(2026, 8, 20, 19), "quote")
         span_hours = int((t - f).total_seconds() // 3600)
         hours = {(f + dt.timedelta(hours=i)).hour for i in range(span_hours)}
@@ -191,7 +191,7 @@ class TestBoard:
         n = nr.rebuild_board(tmp_path / "BOARD.md", tmp_path)
         text = (tmp_path / "BOARD.md").read_text()
         assert n == 2
-        assert text.startswith("# Offpeak night board")
+        assert text.startswith("# Offpeak Spread Board")
         assert text.count("| 2026-08-19 |") == 1
         assert text.rstrip().endswith("2.0x |")
 
@@ -261,7 +261,7 @@ class TestBoard:
 
 def _split(board):
     lines = board.read_text().splitlines()
-    header = next(ln for ln in lines if ln.startswith("| night |"))
+    header = next(ln for ln in lines if ln.startswith("| session |"))
     rows = [ln for ln in lines if ln.startswith("| 2026-")]
     return header, rows
 

@@ -1,7 +1,8 @@
 """offpeak — deadline-priced inference.
 
-Same model, same tokens, a different hour. Give AI work a deadline and run it
-on the cheapest venue that keeps the SLA — provider batch tiers (−50%) today.
+The deadline is the input; the discount follows. Give AI work a deadline and
+run it on the cheapest venue that keeps the SLA — provider batch tiers, 50%
+off, today.
 
     import offpeak
 
@@ -18,7 +19,7 @@ from .prices import format_usd
 from .quote import Quote, VenueQuote, quote
 from .venues.base import BatchState, Venue
 
-__version__ = "0.2.2"
+__version__ = "0.2.3.dev0"
 
 __all__ = [
     "job",

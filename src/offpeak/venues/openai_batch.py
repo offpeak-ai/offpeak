@@ -1,4 +1,4 @@
-"""OpenAI Batch API venue (−50% vs list, 24h completion window).
+"""OpenAI Batch API venue (50% off list, 24h completion window).
 
 Uses your own ``OPENAI_API_KEY``. Requires the ``openai`` extra:
 ``pip install "offpeak[openai]"``.

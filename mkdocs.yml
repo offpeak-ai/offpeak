@@ -1,5 +1,5 @@
 site_name: offpeak
-site_description: Deadline-priced inference — same model, same tokens, a different hour.
+site_description: Deadline-priced inference — the deadline is the input; the discount follows.
 site_url: https://offpeak-ai.github.io/offpeak/
 repo_url: https://github.com/offpeak-ai/offpeak
 repo_name: offpeak-ai/offpeak
@@ -26,7 +26,7 @@ theme:
 nav:
   - Home: index.md
   - Quickstart: quickstart.md
-  - The night board: night-board.md
+  - The Spread Board: night-board.md
   - Spec: spec.md
   - API reference: reference.md
   - Roadmap: roadmap.md

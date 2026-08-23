@@ -1,4 +1,4 @@
-"""Anthropic Message Batches venue (−50% vs list, 24h completion window).
+"""Anthropic Message Batches venue (50% off list, 24h completion window).
 
 Uses your own ``ANTHROPIC_API_KEY``. Requires the ``anthropic`` extra:
 ``pip install "offpeak[anthropic]"``.

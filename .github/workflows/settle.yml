@@ -4,7 +4,7 @@ name: Settled runs
 # `nightly/SETTLED.md`. Manual only: a settlement is a deliberate act, and the
 # ledger should move when someone decides it moves, not on every push.
 #
-# board-data is written by CI and never by hand — the same rule the night board
+# board-data is written by CI and never by hand — the same rule the Spread Board
 # follows, for the same reason: main is protected and a bot push there would be
 # rejected, and a ledger anyone can hand-edit is not a ledger.
 
@@ -14,7 +14,7 @@ on:
 permissions:
   contents: write
 
-# Shared with the night board: everything that pushes board-data queues here.
+# Shared with the Spread Board: everything that pushes board-data queues here.
 concurrency:
   group: board-data
   cancel-in-progress: false

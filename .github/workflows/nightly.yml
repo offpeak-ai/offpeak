@@ -1,13 +1,13 @@
-name: Night board
+name: Spread Board
 
-# Quotes at dusk, marks at dawn. Output is committed to the `board-data`
+# Quotes at the open, marks at the close. Output is committed to the `board-data`
 # branch, not to main: main is protected (PR + four required checks), so a
-# nightly bot push there would be rejected every night.
+# scheduled bot push there would be rejected on every run.
 
 on:
   schedule:
-    - cron: "0 19 * * *"   # quote — the night ahead, carbon forecast
-    - cron: "30 6 * * *"   # mark  — the night just finished, carbon actuals
+    - cron: "0 19 * * *"   # quote — the session ahead, carbon forecast
+    - cron: "30 6 * * *"   # mark  — the session just finished, carbon actuals
   workflow_dispatch:
     inputs:
       mode:

@@ -6,7 +6,7 @@ Accepted forms:
 - ``timedelta`` — relative to now.
 - ``int`` / ``float`` — seconds from now.
 - ``"06:00"`` — the next occurrence of that wall-clock time (today if it is
-  still ahead, otherwise tomorrow). This is the canonical overnight form.
+  still ahead, otherwise tomorrow). This is the canonical session form.
 - ``"6h"``, ``"90m"``, ``"45s"``, ``"2d"`` — relative to now.
 - ISO 8601 strings — ``"2026-08-21T06:00:00-07:00"``, including the
   ``Z`` (UTC) suffix on every supported Python.
