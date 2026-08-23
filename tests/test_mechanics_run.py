@@ -124,6 +124,40 @@ class TestCancelPath:
         assert "no venue to cancel with" in capsys.readouterr().out
 
 
+class TestVenueSelection:
+    def test_the_default_lanes_are_the_two_verified_batch_tiers(self, tmp_path, capsys):
+        rc = mr.main(["--out", str(tmp_path / "run"), "--dry-run"])
+        assert rc == 0
+        assert "anthropic:batch" in capsys.readouterr().out
+
+    def test_groq_is_opt_in_and_never_arrives_by_default(self, tmp_path, capsys):
+        # Groq needs its own key and its own extra. No run should start
+        # spending at a venue nobody named.
+        mr.main(["--out", str(tmp_path / "run"), "--dry-run"])
+        assert "groq:batch" not in capsys.readouterr().out
+
+    def test_an_unknown_venue_aborts_before_the_book_is_priced(self, tmp_path, capsys):
+        rc = mr.main(["--out", str(tmp_path / "run"), "--venues", "azure"])
+        assert rc == 4
+        assert "unknown venue" in capsys.readouterr().out
+
+    def test_the_gate_prices_against_the_venues_that_will_run_it(self, tmp_path, capsys):
+        # The quote is the cap's only input, so it has to be priced against the
+        # venues actually chosen — a gate that quotes a different run from the
+        # one it admits is not a gate.
+        rc = mr.main(
+            [
+                "--out", str(tmp_path / "run"),
+                "--venues", "groq",
+                "--models", "openai/gpt-oss-20b",
+                "--dry-run",
+            ]
+        )
+        out = capsys.readouterr().out
+        assert rc == 0
+        assert "groq:batch" in out
+
+
 @pytest.mark.parametrize("flag,attr,value", [
     ("--cap", "cap", 0.25),
     ("--max-tokens", "max_tokens", 32),

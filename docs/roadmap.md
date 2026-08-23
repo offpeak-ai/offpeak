@@ -27,10 +27,15 @@ misleading one:
 - **No carbon-aware scheduling.** The Spread Board observes the grid; the
   scheduler does not read it.
 - **No venues beyond the two batch tiers.** Google batch, spot capacity, and
-  off-peak windows on your own GPUs are interface-shaped but unwritten. A
-  Groq batch driver exists in the tree but is **untested against the live
-  API** — it is opt-in, excluded from the `all` extra, and not in
-  `default_venues()`.
+  off-peak windows on your own GPUs are interface-shaped but unwritten. A Groq
+  batch driver exists in the tree, opt-in, excluded from the `all` extra and
+  not in `default_venues()`. Its routing, request dialect, price rows and sync
+  fallback are verified against the live API; its **batch tier is not**, and
+  cannot be from here — Groq answers `403 not_available_for_plan` to the entire
+  Batch API on an unentitled key. The receipt for that attempt is
+  [`2026-08-23-groq-1.json`](https://github.com/offpeak-ai/offpeak/blob/main/receipts/2026-08-23-groq-1.json):
+  24 real jobs, all of them through the sync fallback at list price, nothing
+  captured.
 
 ## The hosted desk
 

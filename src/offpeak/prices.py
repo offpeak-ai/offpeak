@@ -6,8 +6,8 @@ prices, so verify against their published sheets and override at runtime with
 :func:`register_price` where they have moved. Costs for unknown models resolve
 to ``None`` rather than a guess.
 
-Batch tiers at OpenAI, Anthropic, and Google are publicly priced at 50% of
-list, which is what :data:`BATCH_DISCOUNT` encodes. OpenAI's flex tier prices
+Batch tiers at OpenAI, Anthropic, Google and Groq are publicly priced at 50%
+of list, which is what :data:`BATCH_DISCOUNT` encodes. OpenAI's flex tier prices
 identically to its batch tier on the gpt-5.6 family, and its *fast* tier at
 twice list — the same model, priced for urgency. Fast is stored rather than
 derived (:func:`get_fast_price`), because unlike batch it is not a discount
@@ -83,6 +83,13 @@ _PRICES: dict[str, tuple[float, float]] = {
     "gpt-5.6-sol": (4.00, 20.00),
     "gpt-5.6-terra": (2.00, 12.00),
     "gpt-5.6-luna": (0.20, 1.20),
+    # Groq (per groq.com/pricing), on-demand standard rates for the open-weight
+    # gpt-oss models it serves. Groq's batch tier is the same 50%-of-standard
+    # rule the other venues publish, so BATCH_DISCOUNT covers it and there is no
+    # separate batch row. Groq publishes no fast tier, so no _FAST_PRICES entry:
+    # an urgency spread it does not sell is not one this sheet should imply.
+    "openai/gpt-oss-120b": (0.15, 0.60),
+    "openai/gpt-oss-20b": (0.075, 0.30),
 }
 
 # model -> (input, output) USD per 1M on a venue's *fast* tier: the same model,
