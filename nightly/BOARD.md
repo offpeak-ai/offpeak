@@ -1,12 +1,13 @@
-# Offpeak night board — marked nights
+# Offpeak Spread Board — marked sessions
 
 Quotes are open-data observation, not trade advice; settlements (real runs)
-live elsewhere. Generated nightly by `tools/night_report.py`.
+live elsewhere. Generated daily by `tools/night_report.py`.
 
-Token spreads are published rather than observed: batch tiers are 50% of list, a 2.0x spread for work that can wait, and the same model's fast tier is 4x its batch tier — gpt-5.6-sol at $8/$40 vs $2/$10 per 1M, per developers.openai.com/api/docs/pricing.
+Token spreads are published rather than observed: batch tiers are 50% off list, a 2.0x spread for work that can wait, and the same model's fast tier is 4x its batch tier — gpt-5.6-sol at $8/$40 vs $2/$10 per 1M, per developers.openai.com/api/docs/pricing.
 Caveat: gpt-5.6-sol's standard rate is promotional at least through 2026-11-21; post-promo list is $5/$30 and both tiers move with it, so the ratio is the durable figure, not the dollars.
 
-| night | power GB (p/kWh) | GB spread | carbon GB (g/kWh) | carbon spread | CAISO SP15 | CAISO CO2 | ERCOT HOU | ERCOT CO2 | tokens |
+| session | power GB (p/kWh) | GB spread | carbon GB (g/kWh) | carbon spread | CAISO SP15 | CAISO CO2 | ERCOT HOU | ERCOT CO2 | tokens |
 |---|---|---|---|---|---|---|---|---|---|
-| 2026-08-20 | 35.4 / 24.7 | 1.4x | 170.6 / 166.1 | 1.0x | 1.3x | — | 3.9x | — | 2.0x |
+| 2026-08-20 | 35.4 / 24.7 | 1.4x | 170.6 / 166.1 | 1.0x | 1.3x | 0.8x | 3.9x | 0.8x | 2.0x |
 | 2026-08-21 | 37.2 / 24.8 | 1.5x | 144.5 / 68.7 | 2.1x | 1.6x | — | 4.0x | — | 2.0x |
+| 2026-08-22 | 34.9 / 25.2 | 1.4x | 119.5 / 110.9 | 1.1x | 1.5x | — | 3.0x | — | 2.0x |
