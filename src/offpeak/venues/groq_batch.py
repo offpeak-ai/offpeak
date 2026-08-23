@@ -48,7 +48,19 @@ __all__ = [
     "MAX_INPUT_BYTES",
 ]
 
-# Published range, shortest first. Groq accepts 24h through 7d.
+# Groq documents "durations from 24h to 7d" and never enumerates what lies
+# between, so these seven strings are **guesses** and are still guesses.
+#
+# `tools/queue_probe.py --mode windows` exists to replace them with measured
+# truth: an invalid completion_window is refused at batch-create, before
+# anything is queued, so asking the venue costs nothing. It was run on
+# **2026-08-23** and could not answer — Groq returned
+# ``403 not_available_for_plan`` to all seven candidates alike, which is a
+# statement about the account and not about the strings.
+#
+# Recorded as unverified rather than quietly promoted to fact. Re-run the probe
+# on an entitled key and this list becomes measured; until then the only two
+# values with any evidence behind them are the documented endpoints, 24h and 7d.
 COMPLETION_WINDOWS: tuple[str, ...] = ("24h", "48h", "72h", "96h", "120h", "144h", "7d")
 
 _WINDOW_SECONDS: dict[str, int] = {
