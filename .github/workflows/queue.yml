@@ -1,0 +1,87 @@
+name: Queue latency
+
+# Measures how long a batch tier actually takes to land, and writes the
+# observations to `board-data`. This one spends real money, which is why it is
+# its own workflow, its own table and its own cap — the Spread Board next door
+# observes open grid data and spends nothing, and the two must not be confused.
+#
+# Runs on the mark cron, once a day. The cap is a hard one cent per run and it
+# is enforced inside the tool, not here: a workflow-level guard protects the
+# workflow, and what needs protecting is the spend.
+
+on:
+  schedule:
+    - cron: "30 6 * * *"   # once a day, alongside the mark pass
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "series (measure latency) or windows (probe Groq's window strings)"
+        required: true
+        default: series
+        type: choice
+        options: [series, windows]
+      cap:
+        description: "hard USD cap for this run"
+        required: false
+        default: "0.01"
+
+permissions:
+  contents: write
+
+# Everything that pushes board-data shares one queue (#19). Two workflows
+# writing different files on the same branch still race at the push.
+concurrency:
+  group: board-data
+  cancel-in-progress: false
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the tool (main)
+        uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: Install the venue SDKs
+        run: pip install "openai>=1.50" "anthropic>=0.40"
+
+      - name: Check out the ledger (board-data)
+        uses: actions/checkout@v7
+        with:
+          ref: board-data
+          path: board
+
+      - name: Measure
+        # Groq is deliberately absent. Its batch tier is plan-gated (403) so
+        # there is nothing to measure, and its key stays out of this workflow:
+        # the window probe is a manual, local act.
+        #
+        # A venue whose key is not set records itself skipped, with the reason,
+        # and every other leg runs exactly as before — the same degradation rule
+        # the Spread Board uses for EIA.
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          python tools/queue_probe.py \
+            --mode "${{ inputs.mode || 'series' }}" \
+            --venues anthropic,openai \
+            --cap "${{ inputs.cap || '0.01' }}" \
+            --max-wait 1800 \
+            --outdir board/nightly
+
+      - name: Commit to board-data
+        working-directory: board
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add nightly
+          if git diff --staged --quiet; then
+            echo "nothing changed — not committing an empty session"
+            exit 0
+          fi
+          git commit -m "queue: $(date -u +%Y-%m-%d)"
+          git push
