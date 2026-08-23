@@ -1,10 +1,10 @@
 # offpeak
 
-**Deadline-priced inference.** Same model, same tokens, a different hour.
+**Deadline-priced inference.** The deadline is the input; the discount follows.
 
 A large share of AI work — embeddings, evals, backfills, report generation,
-overnight agents — has no human waiting on it. The providers already price that
-patience: OpenAI and Anthropic both publish their batch tiers at **50% of
+daily agent runs — has no human waiting on it. The providers already price that
+patience: OpenAI and Anthropic both publish their batch tiers at **50% off
 list**. `offpeak` is the workflow that collects the difference.
 
 ```python
@@ -18,7 +18,7 @@ print(offpeak.receipt(results))                # what it actually cost
 ```
 
 - **[Quickstart](quickstart.md)** — install, quote, run, read the receipt.
-- **[The night board](night-board.md)** — the same claim, marked nightly against open grid data.
+- **[The Spread Board](night-board.md)** — the same claim, marked daily against open grid data.
 - **[Spec](spec.md)** — deadline semantics, statuses, receipts.
 - **[API reference](reference.md)** — every public symbol.
 - **[Roadmap](roadmap.md)** — what exists, what does not, and what is being built.

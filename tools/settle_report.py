@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Render settled runs onto the board — the ledger of real money, not observation.
 
-The night board (`BOARD.md`) marks open grid data and spends nothing. This
+The Spread Board (`BOARD.md`) marks open grid data and spends nothing. This
 writes a second, deliberately separate ledger (`SETTLED.md`) for runs that
 actually executed and actually billed. Both live on `board-data`; neither is
 ever edited by hand.
@@ -98,7 +98,7 @@ def render_row(record: dict) -> str:
 def upsert_settled_row(board: Path, run_id: str, row: str) -> None:
     """Write *row* for *run_id*, replacing any existing row for the same run.
 
-    Same contract as the night board's: a re-render corrects a run rather than
+    Same contract as the Spread Board's: a re-render corrects a run rather than
     appending a second opinion, and the header is rewritten every time so a new
     column repairs the file instead of orphaning the rows beneath it.
     """

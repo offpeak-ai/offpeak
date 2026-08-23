@@ -1,6 +1,6 @@
 # offpeak
 
-**Deadline-priced inference.** Same model, same tokens, a different hour — for half the price.
+**Deadline-priced inference.** Same model, same tokens, a later deadline — for half price.
 
 [![CI](https://github.com/offpeak-ai/offpeak/actions/workflows/ci.yml/badge.svg)](https://github.com/offpeak-ai/offpeak/actions/workflows/ci.yml)
 [![PyPI](https://img.shields.io/pypi/v/offpeak)](https://pypi.org/project/offpeak/)
@@ -89,14 +89,14 @@ Deadlines are how software says "this can wait" — the full semantics live in [
 
 | Form | Meaning |
 | --- | --- |
-| `"06:00"` | the next 6am, local time (the canonical overnight form) |
+| `"06:00"` | the next 6am, local time (the canonical session form) |
 | `"4h"`, `"90m"`, `"2d"` | relative to now |
 | `"2026-08-21T06:00:00-07:00"` | ISO 8601, absolute |
 | `datetime` / `timedelta` / seconds | native Python forms |
 
 ## How a run works
 
-1. Jobs are grouped by venue (`claude-*` → Anthropic Message Batches, `gpt-*`/`o*` → OpenAI Batch) and submitted at the batch tier — 50% of list.
+1. Jobs are grouped by venue (`claude-*` → Anthropic Message Batches, `gpt-*`/`o*` → OpenAI Batch) and submitted at the batch tier — 50% off list.
 2. `offpeak` polls the venues, backing off while the window is long.
 3. When remaining time reaches the **risk buffer** (default: 15% of the window, clamped to 1–10 minutes), unfinished jobs are cancelled and re-run synchronously so the deadline holds. Set `fallback="none"` to report them instead.
 4. Results come back in input order, each with a per-job `Receipt`; `offpeak.receipt(results)` settles the run.
@@ -112,7 +112,7 @@ results = offpeak.run(
 
 ## Receipts and prices
 
-Receipts are computed against a bundled snapshot of public list prices (batch = 50% of list, as published). Providers change prices — verify and override at runtime:
+Receipts are computed against a bundled snapshot of public list prices (batch = 50% off list, as published). Providers change prices — verify and override at runtime:
 
 ```python
 import offpeak
@@ -124,11 +124,11 @@ Unknown models settle with `cost = None` rather than a guess. The sheet also car
 
 ## What this is (and the roadmap)
 
-`offpeak` is the open client and spec for a simple claim: **intelligence has a time value**. A large share of AI work — embeddings, evals, backfills, report generation, overnight agents — has no human waiting on it, and the venues already price that patience at −50%. This library is the missing workflow.
+`offpeak` is the open client and spec for a simple claim: **intelligence has a time value**. A large share of AI work — embeddings, evals, backfills, report generation, daily agent runs — has no human waiting on it, and the venues already sell that patience at 50% off. This library is the missing workflow.
 
-The token side is wider than the headline discount. Patience is priced at −50% — a 2.0x spread — and haste is priced too: hold the model and venue constant and `gpt-5.6-sol` costs **$8.00 / $40.00** per 1M on OpenAI's fast tier against **$2.00 / $10.00** on its batch tier, a **4x intra-venue urgency spread** for the hour alone ([source](https://developers.openai.com/api/docs/pricing); sol's standard rate is promotional at least through 2026-11-21, and both tiers are defined off it, so the ratio outlives the prices). It is data, not prose: `offpeak.prices.urgency_spread("gpt-5.6-sol")` returns `4.0`.
+The token side is wider than the headline discount. Patience sells at 50% off — a 2.0x spread — and haste is priced too: hold the model and venue constant and `gpt-5.6-sol` costs **$8.00 / $40.00** per 1M on OpenAI's fast tier against **$2.00 / $10.00** on its batch tier, a **4x intra-venue urgency spread** for the hour alone ([source](https://developers.openai.com/api/docs/pricing); sol's standard rate is promotional at least through 2026-11-21, and both tiers are defined off it, so the ratio outlives the prices). It is data, not prose: `offpeak.prices.urgency_spread("gpt-5.6-sol")` returns `4.0`.
 
-The **[night board](https://github.com/offpeak-ai/offpeak/blob/board-data/nightly/BOARD.md)** marks the same claim against open grid data every night — GB power and carbon plus CAISO SP15 and ERCOT Houston peak/off-peak spreads, alongside the published token spreads. ERCOT Houston marked 3.94x on the night of 2026-08-20; a venue charges 4x for the same impatience.
+The **[Spread Board](https://github.com/offpeak-ai/offpeak/blob/board-data/nightly/BOARD.md)** marks the same claim against open grid data daily — GB power and carbon plus CAISO SP15 and ERCOT Houston peak/off-peak spreads, alongside the published token spreads. ERCOT Houston marked 3.94x on the session of 2026-08-20; a venue charges 4x for the same impatience.
 
 The roadmap follows the same interface upward: more venues (Google batch, spot capacity, off-peak windows on your own GPUs), queue-latency forecasting instead of a fixed risk buffer, portfolio placement across venues, energy- and carbon-aware scheduling with per-job receipts. The venue interface (`offpeak.Venue`) is deliberately the extension point — a venue is anywhere deferred work can run.
 
