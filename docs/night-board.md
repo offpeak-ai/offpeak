@@ -73,6 +73,31 @@ real settlements and are not the same evidence. A ledger that lets a reader
 confuse them is doing marketing rather than accounting, so the scale is printed
 before the money is.
 
+## Queue latency is a third table
+
+`offpeak` abandons a slow batch on a **fixed** risk buffer — 15% of the window,
+clamped to 1–10 minutes — because nobody had the number. `nightly/QUEUE.md`
+collects the number: a couple of tiny jobs submitted daily at each venue's
+declared window, timed from submit to completion, written by
+[`tools/queue_probe.py`](https://github.com/offpeak-ai/offpeak/blob/main/tools/queue_probe.py).
+
+It spends real money, so it is a separate table from the board for the same
+reason `SETTLED.md` is — and it is capped at **one cent per run**, enforced
+inside the tool rather than in a runbook. A leg that would carry the run past
+the cap does not run, and the record says which one and by how much.
+
+Every row is one submission. There is no percentile and no fitted curve: a
+handful of observations does not have a distribution, and a model over them
+would read as knowledge rather than as the few numbers it came from. A row
+marked *censored* was still open when the run stopped waiting and was
+cancelled — a lower bound, never a completion time.
+
+First observations, 2026-08-23: Anthropic Message Batches landed a 2-job book
+in **85s** and OpenAI Batch in **2m26s** — **0.098%** and **0.169%** of the 24h
+window each declares. Groq is absent, and not by choice: its Batch API answers
+`403 not_available_for_plan` without an entitled plan, so there is nothing to
+time and its seven completion-window strings remain unconfirmed.
+
 ## Sources
 
 - **Carbon** — [NESO carbon intensity](https://api.carbonintensity.org.uk),
