@@ -40,6 +40,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
 import offpeak  # noqa: E402
 from offpeak.venues.anthropic_batch import AnthropicBatch  # noqa: E402
+from offpeak.venues.groq_batch import GroqBatch  # noqa: E402
 from offpeak.venues.openai_batch import OpenAIBatch  # noqa: E402
 
 DEFAULT_CAP_USD = 0.05  # on total list exposure, not per run
@@ -115,6 +116,20 @@ class RecordingOpenAI(Recording, OpenAIBatch):
     pass
 
 
+class RecordingGroq(Recording, GroqBatch):
+    pass
+
+
+# Groq is opt-in here for the same reason it is opt-in in the library: it wants
+# its own key and its own extra, and no run should start spending at a venue
+# nobody named.
+VENUES = {
+    "anthropic": (RecordingAnthropic, AnthropicBatch),
+    "openai": (RecordingOpenAI, OpenAIBatch),
+    "groq": (RecordingGroq, GroqBatch),
+}
+
+
 def build_book(models, max_tokens=DEFAULT_MAX_TOKENS) -> list[offpeak.Job]:
     """The same twenty-four lines through each venue's cheapest model."""
     jobs = []
@@ -133,6 +148,11 @@ def parse_args(argv=None):
         "--models",
         default="claude-haiku-4-5,gpt-5.6-luna",
         help="comma-separated models, one lane each",
+    )
+    ap.add_argument(
+        "--venues",
+        default="anthropic,openai",
+        help=f"comma-separated venues to offer the book to ({', '.join(VENUES)})",
     )
     ap.add_argument("--max-tokens", type=int, default=DEFAULT_MAX_TOKENS)
     ap.add_argument("--deadline", default=DEFAULT_DEADLINE)
@@ -168,8 +188,16 @@ def main(argv=None) -> int:
     OUT = Path(a.out).expanduser().resolve()
     handles = OUT / "handles.jsonl"
 
+    chosen = [v.strip() for v in a.venues.split(",") if v.strip()]
+    unknown = [v for v in chosen if v not in VENUES]
+    if unknown:
+        print(f"ABORT: unknown venue(s) {unknown} — known: {sorted(VENUES)}", flush=True)
+        return 4
+
     if a.cancel:
-        cancel_all(handles, [AnthropicBatch(), OpenAIBatch()])
+        # Plain venues, not recording ones: cancelling reads the log, it does
+        # not append to it.
+        cancel_all(handles, [VENUES[v][1]() for v in chosen])
         return 0
 
     OUT.mkdir(parents=True, exist_ok=True)
@@ -183,8 +211,15 @@ def main(argv=None) -> int:
     )
     print(f"book: {len(jobs)} jobs\n", flush=True)
 
+    # The venues are built before the gate, not after: the quote has to be
+    # priced against the venues that will actually run the book, or the gate is
+    # guarding a different run from the one that gets submitted.
+    venues = [VENUES[v][0]() for v in chosen]
+    for v in venues:
+        v.log = handles
+
     # --- Gate 1: price it before spending anything. No API calls here. ---
-    q = offpeak.quote(jobs, a.deadline)
+    q = offpeak.quote(jobs, a.deadline, venues=venues)
     card = str(q)
     print(card, flush=True)
     (OUT / "quote.txt").write_text(card + "\n")
@@ -203,10 +238,6 @@ def main(argv=None) -> int:
         print("--dry-run: under cap, stopping before submit.", flush=True)
         return 0
     print("under cap — proceeding to submit\n", flush=True)
-
-    venues = [RecordingAnthropic(), RecordingOpenAI()]
-    for v in venues:
-        v.log = handles
 
     started = datetime.now().astimezone()
     try:

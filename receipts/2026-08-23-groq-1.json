@@ -1,0 +1,28 @@
+{
+  "run_id": "2026-08-23-groq-1",
+  "scale": "venue probe (24 jobs, Groq, sync fallback only \u2014 batch tier 403)",
+  "settled_utc": "2026-08-23T03:13:00+00:00",
+  "deadline": "06:00",
+  "price_sheet": "2026-08-21",
+  "offpeak_version": "0.2.3.dev0",
+  "jobs": 24,
+  "ok": 24,
+  "failed": 0,
+  "fell_back": 24,
+  "sla_met": 24,
+  "input_tokens": 2288,
+  "output_tokens": 7307,
+  "list_usd": 0.0023636999999999994,
+  "paid_usd": 0.0023636999999999994,
+  "captured_usd": 0.0,
+  "captured_pct": 0.0,
+  "left_on_table_usd": 0.0011818499999999997,
+  "by_venue": {
+    "groq:batch": 24
+  },
+  "notes": [
+    "Nothing here settled at a batch tier. Groq's Batch API answers 403 {\"code\": \"not_available_for_plan\"} on this account for the whole surface \u2014 POST /openai/v1/files with purpose=batch, GET /openai/v1/batches, everything. submit() therefore raised, no handle was ever recorded, and run() put all 24 jobs through the sync fallback, which is why captured is $0.00 and the full list price was paid. The 50% spread this venue exists to capture remains unverified against Groq; the blocker is plan entitlement, not code.",
+    "What the run does verify, with real money: the model routes to groq:batch, the request body renders in Groq's dialect, the new openai/gpt-oss price rows settle a real receipt instead of an unpriced one, and the SLA held \u2014 24/24 met via the fallback.",
+    "openai/gpt-oss-20b reasons far past a one-word answer. At a 512-token ceiling it averaged 304 output tokens and still returned 4 empty strings of 24 (finish_reason=length); at 256, 10 of 24 came back empty. Size a gpt-oss ceiling in the high hundreds at least."
+  ]
+}
