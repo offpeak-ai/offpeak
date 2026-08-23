@@ -130,10 +130,16 @@ any venue.
   consumption: imports and the carbon already stored in a battery are outside
   what the method can see, and the share of generation EIA files under "other"
   is reported per session rather than averaged in.
-- **EIA runs about a day behind.** The 06:30Z mark can land before EIA has
-  published the session it is marking, so the US carbon columns may be empty
-  at first sight and fill in on a later re-mark. A column that is not there yet
-  is recorded as unavailable, never as zero.
+- **US carbon arrives about two days late, and every mark goes back for it.**
+  A session's carbon spread compares its evening peak against the trough of the
+  *following* morning, 00:00–05:00 local — the next calendar day. So marking the
+  session of day D needs EIA published through D+1, and EIA itself runs about a
+  day behind. At 06:30Z the column is therefore never fillable for the session
+  just ended: not sometimes, always. Each mark pass re-fetches the last few
+  sessions whose carbon is still missing and rewrites those records, so the
+  column fills itself roughly two days later and the projection republishes the
+  whole history. A column that has not arrived yet is recorded as unavailable
+  with the reason, never as zero.
 - **The token column is published, not observed.** The 2.0x and the 4x are read
   off price sheets; only the grid columns are measurements. A published number
   and a marked one are different kinds of claim, and the board should not blur
