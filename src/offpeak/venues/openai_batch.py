@@ -24,7 +24,11 @@ _ENDPOINT = "/v1/chat/completions"
 # Translating is the driver's job. A caller says ``max_tokens`` once and it
 # means the same thing at every venue; the venue that spells it differently is
 # the venue's problem, not the caller's.
-_MAX_COMPLETION_TOKENS_PREFIXES = ("o1", "o3", "o4", "gpt-5")
+# ``openai/gpt-oss`` is Groq's spelling of the open-weight gpt-oss models, and
+# Groq marks ``max_tokens`` "Deprecated in favor of max_completion_tokens" on
+# them. The translation table is shared because the venue is: GroqBatch is this
+# driver with a different client, so a rule added here reaches both.
+_MAX_COMPLETION_TOKENS_PREFIXES = ("o1", "o3", "o4", "gpt-5", "openai/gpt-oss")
 
 
 def body_params(job: Job) -> dict:
