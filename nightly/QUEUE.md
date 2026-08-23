@@ -1,0 +1,14 @@
+# Offpeak queue latency — observed, not modelled
+
+How long a batch tier actually takes to land, measured by submitting a couple of tiny jobs and watching the clock. This table spends real money at real venues and is therefore **not** the Spread Board: that one marks open grid data and spends nothing. Same separation, and the same reason, as `SETTLED.md`.
+
+`offpeak` currently abandons a slow batch on a fixed risk buffer — 15% of the window, clamped to 1–10 minutes — because nobody had the number. These are the observations that would replace it.
+
+**Every row is one submission.** There is no percentile here and no fitted curve: a handful of observations does not have a distribution, and a model over them would read as knowledge rather than as the few numbers it came from. A row marked *censored* was still open when the run stopped waiting and was cancelled — a lower bound, never a completion time.
+
+Written by `tools/queue_probe.py`, never by hand.
+
+| session | venue | model | declared | jobs | elapsed | % of window | status | paid |
+|---|---|---|---|---|---|---|---|---|
+| 2026-08-23 | anthropic | claude-haiku-4-5 | 24h | 2 | — | — | skipped — no ANTHROPIC_API_KEY in the environment | — |
+| 2026-08-23 | openai | gpt-5.6-luna | 24h | 2 | — | — | skipped — no OPENAI_API_KEY in the environment | — |

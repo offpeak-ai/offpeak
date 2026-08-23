@@ -1,0 +1,47 @@
+{
+  "date": "2026-08-23",
+  "started_utc": "2026-08-23T07:55:53+00:00",
+  "cap_usd": 0.01,
+  "legs": [
+    {
+      "venue": "anthropic",
+      "model": "claude-haiku-4-5",
+      "declared_window": "24h",
+      "declared_window_seconds": 86400,
+      "jobs": 2,
+      "submitted_utc": null,
+      "completed_utc": null,
+      "elapsed_seconds": null,
+      "fraction_of_window_used": null,
+      "status": "skipped",
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "paid_usd": null,
+      "quoted_list_usd": 0.00034,
+      "skipped_reason": "no ANTHROPIC_API_KEY in the environment",
+      "note": null
+    },
+    {
+      "venue": "openai",
+      "model": "gpt-5.6-luna",
+      "declared_window": "24h",
+      "declared_window_seconds": 86400,
+      "jobs": 2,
+      "submitted_utc": null,
+      "completed_utc": null,
+      "elapsed_seconds": null,
+      "fraction_of_window_used": null,
+      "status": "skipped",
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "paid_usd": null,
+      "quoted_list_usd": 0.0006184,
+      "skipped_reason": "no OPENAI_API_KEY in the environment",
+      "note": null
+    }
+  ],
+  "window_probe": [],
+  "spent_usd": 0.0,
+  "offpeak_version": "0.2.3.dev0",
+  "price_sheet": "2026-08-21"
+}
