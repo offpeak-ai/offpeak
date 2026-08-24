@@ -12,3 +12,5 @@ Written by `tools/settle_report.py` from the receipts in the main branch's `rece
 | 2026-08-22-mechanics-2 | mechanics proof (24 jobs, OpenAI, ceiling too low) | 24 | openai:batch 24 | 728 in · 374 out | $0.000594 | $0.000297 | $0.000297 (50.0%) | 24/24 |
 | 2026-08-22-mechanics-3 | mechanics proof (24 jobs, OpenAI, ceiling sized to the model) | 24 | openai:batch 24 | 728 in · 971 out | $0.00131 | $0.000655 | $0.000655 (50.0%) | 24/24 |
 | 2026-08-23-groq-1 | venue probe (24 jobs, Groq, sync fallback only — batch tier 403) | 24 | groq:batch 24 | 2,288 in · 7,307 out | $0.00236 | $0.00236 | $0.00 (0.0%) | 24/24 (24 fell back) |
+| 2026-08-24-gemini-1 | venue proof (5 jobs, Gemini, batch tier — first third venue to capture) | 5 | gemini:batch 5 | 124 in · 2,427 out | $0.01 | $0.00460 | $0.00460 (50.0%) | 5/5 |
+| 2026-08-24-mistral-1 | venue probe (24 jobs, Mistral, sync fallback only — batch tier 402) | 24 | mistral:batch 24 | 948 in · 94 out | $0.000199 | $0.000199 | $0.00 (0.0%) | 24/24 (24 fell back) |
