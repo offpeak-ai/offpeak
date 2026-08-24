@@ -200,3 +200,46 @@ class TestMistralSheet:
         # prefix would price one at the other's rate.
         assert prices.get_price("mistral-code-latest") is None
         assert prices.get_price("codestral-2508") == (0.30, 0.90)
+
+
+class TestGoogleSheet:
+    def test_the_flash_rates_are_the_introductory_ones(self):
+        assert prices.get_price("gemini-3.7-flash") == (0.75, 3.75)
+        assert prices.get_price("gemini-3.6-flash") == (0.75, 3.75)
+
+    def test_the_flash_promo_carries_its_step_up(self):
+        for model in ("gemini-3.7-flash", "gemini-3.6-flash"):
+            note = prices.get_promo_note(model)
+            assert note is not None and note.through == "2026-12-31", model
+            assert note.post_promo == (1.50, 7.50)
+            # The dollars double on both legs; the batch ratio does not move.
+            assert prices.promo_decay(model) == (2.0, 2.0)
+
+    def test_flash_lite_keeps_its_own_rate_under_the_flash_prefix(self):
+        # "gemini-3.5-flash" is a prefix of "gemini-3.5-flash-lite"; _lookup
+        # takes the longest match, so the lite model must not inherit the
+        # larger model's rate.
+        assert prices.get_price("gemini-3.5-flash") == (1.50, 9.00)
+        assert prices.get_price("gemini-3.5-flash-lite") == (0.30, 2.50)
+
+    def test_the_pro_preview_prices_with_its_tools_variant(self):
+        assert prices.get_price("gemini-3.1-pro-preview") == (2.00, 12.00)
+        assert prices.get_price("gemini-3.1-pro-preview-customtools") == (2.00, 12.00)
+
+    def test_the_image_variants_are_not_priced_at_text_rates(self):
+        # gemini-3.1-flash-lite has a published *text* rate, but its id is a
+        # prefix of gemini-3.1-flash-lite-image, whose rate is not on the text
+        # sheet. Registering the family would silently price an image model as
+        # text, so the family is left off and both resolve to None.
+        assert prices.get_price("gemini-3.1-flash-lite") is None
+        assert prices.get_price("gemini-3.1-flash-lite-image") is None
+        assert prices.get_price("gemini-3-pro-image") is None
+
+    def test_batch_is_the_standard_half(self):
+        listed = prices.list_cost_usd("gemini-3.7-flash", 1_000_000, 1_000_000)
+        batched = prices.batch_cost_usd("gemini-3.7-flash", 1_000_000, 1_000_000)
+        assert batched == listed * 0.5
+
+    def test_google_publishes_no_fast_tier_so_none_is_implied(self):
+        assert prices.get_fast_price("gemini-3.7-flash") is None
+        assert prices.urgency_spread("gemini-3.7-flash") is None
