@@ -22,8 +22,9 @@ temporary number as permanent.
 Corrections
 -----------
 
-**2026-08-23** — the Mistral block was read off mistral.ai/pricing/api on this
-date and the snapshot date moved with it. The Anthropic, OpenAI and Groq blocks
+**2026-08-23** — the Mistral and Google blocks were read off
+mistral.ai/pricing/api and ai.google.dev/pricing on this date, and the snapshot
+date moved with them. The Anthropic, OpenAI and Groq blocks
 are carried forward unchanged from the 2026-08-21 reading; the date on the sheet
 is when it was last *touched*, not a claim that every row was re-verified.
 
@@ -120,6 +121,29 @@ _PRICES: dict[str, tuple[float, float]] = {
     # Embeddings bill input only — the sheet lists no output rate, and zero is
     # the rate rather than a guess at one.
     "mistral-embed": (0.10, 0.00),
+    # Google (per ai.google.dev/pricing, read 2026-08-23; paid tier). Batch is
+    # 50% of standard, so BATCH_DISCOUNT covers it. No fast tier.
+    #
+    # 3.7 and 3.6 Flash are introductory — see PROMO_NOTES for the step-up.
+    #
+    # ``gemini-3.5-flash`` is a prefix of ``gemini-3.5-flash-lite``; both are
+    # registered and _lookup takes the longest match, so the lite model keeps
+    # its own rate rather than inheriting the larger one.
+    "gemini-3.7-flash": (0.75, 3.75),
+    "gemini-3.6-flash": (0.75, 3.75),
+    "gemini-3.5-flash": (1.50, 9.00),
+    "gemini-3.5-flash-lite": (0.30, 2.50),
+    # Short-context rate. Prompts over 200k tokens are $4.00 / $18.00; the sheet
+    # has no long-context dimension, so the shorter rate is the one stored and
+    # a long-context run under-states. Same convention as the OpenAI block.
+    "gemini-3.1-pro-preview": (2.00, 12.00),
+    #
+    # ``gemini-3.1-flash-lite`` is deliberately absent. Its text rate is
+    # published ($0.25 / $1.50) but the id is a prefix of
+    # ``gemini-3.1-flash-lite-image``, whose rate is not on the text sheet —
+    # registering the family would silently price an image model at text rates.
+    # Under-covering resolves to None, which is correct; over-covering invents a
+    # number. Add it the day the image rate is on the sheet too.
 }
 
 # model -> (input, output) USD per 1M on a venue's *fast* tier: the same model,
@@ -160,6 +184,24 @@ class PromoNote:
 # model -> PromoNote. Prefix-matched the same way prices are, so a date-pinned
 # model name inherits its family's note.
 PROMO_NOTES: dict[str, PromoNote] = {
+    "gemini-3.7-flash": PromoNote(
+        through="2026-12-31",
+        post_promo=(1.50, 7.50),
+        source="ai.google.dev/pricing",
+        note=(
+            "Gemini 3.7 Flash is $0.75 input / $3.75 output through "
+            "December 31, 2026, and $1.50 / $7.50 starting January 1, 2027."
+        ),
+    ),
+    "gemini-3.6-flash": PromoNote(
+        through="2026-12-31",
+        post_promo=(1.50, 7.50),
+        source="ai.google.dev/pricing",
+        note=(
+            "Gemini 3.6 Flash is $0.75 input / $3.75 output through "
+            "December 31, 2026, and $1.50 / $7.50 starting January 1, 2027."
+        ),
+    ),
     "gpt-5.6-sol": PromoNote(
         through="2026-11-21",
         post_promo=(5.00, 30.00),

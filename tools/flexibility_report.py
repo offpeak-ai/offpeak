@@ -210,14 +210,11 @@ class Caveat:
     source: str
 
 
+# Only what the sheet cannot supply. Gemini's Flash decay used to be restated
+# here and is now a PromoNote in offpeak.prices, which is where it belongs: read
+# from the sheet, it disappears from the report the day the price stops being
+# promotional, instead of outliving it in a hardcoded tuple.
 DECAY_CAVEATS: tuple[Caveat, ...] = (
-    Caveat(
-        "Gemini 3.7 Flash introductory pricing", "2026-12-31",
-        "Introductory rates. Anything priced off them — including the batch "
-        "half — steps up when they lapse, so a Google-heavy annualised figure "
-        "is the optimistic one.",
-        "ai.google.dev/pricing",
-    ),
     Caveat(
         "Qwen night-hours promotion", "see Alibaba Cloud Model Studio",
         "Qwen's off-peak saving is promotional, not a standing tier. It is the "
