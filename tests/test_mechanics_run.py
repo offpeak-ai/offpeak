@@ -31,6 +31,14 @@ class TestBook:
         # A ceiling smaller than the reasoning buys a bill and an empty string.
         assert mr.DEFAULT_MAX_TOKENS >= 128
 
+    def test_a_limit_shortens_the_book_per_model(self):
+        # The quote gate prices output at the ceiling, so an expensive model can
+        # break the cap on the worst case alone. A shorter book is how a run
+        # stays under it without lowering a ceiling the model needs.
+        assert len(mr.build_book(["m"], limit=5)) == 5
+        assert len(mr.build_book(["a", "b"], limit=5)) == 10
+        assert len(mr.build_book(["m"])) == len(mr.LINES)
+
     def test_the_lines_are_the_work_not_filler(self):
         jobs = mr.build_book(["gpt-5.6-luna"])
         assert mr.LINES[0] in jobs[0].messages[0]["content"]

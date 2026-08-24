@@ -1,0 +1,29 @@
+{
+  "run_id": "2026-08-24-gemini-1",
+  "scale": "venue proof (5 jobs, Gemini, batch tier \u2014 first third venue to capture)",
+  "settled_utc": "2026-08-24T02:33:04+00:00",
+  "deadline": "06:00",
+  "price_sheet": "2026-08-23",
+  "offpeak_version": "0.2.4.dev0",
+  "jobs": 5,
+  "ok": 5,
+  "failed": 0,
+  "fell_back": 0,
+  "sla_met": 5,
+  "input_tokens": 124,
+  "output_tokens": 2427,
+  "list_usd": 0.00919425,
+  "paid_usd": 0.004597125,
+  "captured_usd": 0.004597125,
+  "captured_pct": 50.0,
+  "left_on_table_usd": 0.0,
+  "by_venue": {
+    "gemini:batch": 5
+  },
+  "notes": [
+    "The first venue outside OpenAI and Anthropic to actually settle at a batch tier. 5/5 ok, zero sync fallbacks, 50.0% captured, 2m36s end to end including polling. Groq (403) and Mistral (402) both gate batch behind a plan; this one was gated too until billing was enabled, and the same probe that returned FAILED_PRECONDITION then returns a validation error now.",
+    "Small on purpose. The quote gate prices output at the ceiling, and a reasoning model at a 512-token ceiling puts a 24-line book over the one-cent cap on the worst case alone. Five lines is what fits: worst case quoted $0.009696 against a $0.01 cap, actual list $0.009194.",
+    "Ceiling sized from the failure, not from hope. An earlier one-request probe at max_output_tokens=16 spent 13 tokens on thoughtsTokenCount and returned finishReason MAX_TOKENS with empty content \u2014 billed, no answer. At 512 the five jobs averaged 485 output tokens for a one-word answer, so even this ceiling was close to the wall: gemini-3.7-flash thinks hard about very little.",
+    "Thinking tokens are billed as output and are counted as output here. A receipt that read only candidatesTokenCount would have reported roughly a tenth of this bill."
+  ]
+}

@@ -26,13 +26,17 @@ misleading one:
   supports the model, not to the cheapest or fastest across a portfolio.
 - **No carbon-aware scheduling.** The Spread Board observes the grid; the
   scheduler does not read it.
-- **Three venues are written and none of them can batch.** Groq, Mistral and
-  Google all have drivers in the tree, and all three gate the batch tier behind
-  a plan this account does not have: Groq answers `403 not_available_for_plan`,
-  Mistral answers `402 ... enable billing via the console`. Each has a receipt
-  recording the attempt and what it cost through the sync fallback. The drivers
-  are exercised; the tiers are not.
-- **No venues beyond the two batch tiers.** Google batch, spot capacity, and
+- **A third venue settles: Google Gemini.** 5 jobs, batch tier, **50.0%
+  captured, zero fallbacks**
+  ([receipt](https://github.com/offpeak-ai/offpeak/blob/main/receipts/2026-08-24-gemini-1.json)).
+  Opt-in, like the rest.
+- **Two more venues are written and cannot batch.** Groq answers
+  `403 not_available_for_plan`; Mistral answers `402 ... enable billing via the
+  console`. Both drivers are exercised end to end and both have a receipt
+  recording the attempt and what the sync fallback cost. Gemini was gated the
+  same way until billing was enabled, so these are plan problems rather than
+  code ones.
+- **No venues beyond the batch tiers.** Google batch, spot capacity, and
   off-peak windows on your own GPUs are interface-shaped but unwritten. A Groq
   batch driver exists in the tree, opt-in, excluded from the `all` extra and
   not in `default_venues()`. Its routing, request dialect, price rows and sync
