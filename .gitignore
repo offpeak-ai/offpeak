@@ -31,3 +31,5 @@ HANDOFF.md
 # Docs build output; docs/spec.md is copied from SPEC.md at build time
 site/
 docs/spec.md
+# The site lives here but is deployed from Vercel, not shipped with the SDK.
+web/

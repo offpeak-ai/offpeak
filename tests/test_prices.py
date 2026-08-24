@@ -153,3 +153,50 @@ class TestFastTier:
         assert prices.fast_cost_usd(*args) == pytest.approx(48.00)
         assert list_cost_usd(*args) == pytest.approx(24.00)
         assert batch_cost_usd(*args) == pytest.approx(12.00)
+
+
+class TestMistralSheet:
+    def test_the_family_prefix_covers_the_date_pinned_skus(self):
+        # _lookup takes the longest registered prefix, so one row per family
+        # keeps covering the next dated release without a code change.
+        for sku in ("mistral-medium-latest", "mistral-medium-2604", "mistral-medium-3.5"):
+            assert prices.get_price(sku) == (1.50, 7.50), sku
+        assert prices.get_price("mistral-large-2512") == (0.50, 1.50)
+        assert prices.get_price("mistral-small-2603") == (0.15, 0.60)
+        assert prices.get_price("codestral-latest") == (0.30, 0.90)
+
+    def test_the_ministral_sizes_do_not_collide(self):
+        assert prices.get_price("ministral-3b-latest") == (0.10, 0.10)
+        assert prices.get_price("ministral-8b-latest") == (0.15, 0.15)
+        assert prices.get_price("ministral-14b-latest") == (0.20, 0.20)
+
+    def test_glm_is_priced_under_both_ids_mistral_serves_it_as(self):
+        assert prices.get_price("glm-5-2") == (1.40, 4.40)
+        assert prices.get_price("zai-glm-5-2") == (1.40, 4.40)
+
+    def test_batch_is_the_standard_half(self):
+        listed = prices.list_cost_usd("mistral-large-latest", 1_000_000, 1_000_000)
+        assert prices.batch_cost_usd("mistral-large-latest", 1_000_000, 1_000_000) == listed * 0.5
+
+    def test_mistral_publishes_no_fast_tier_so_none_is_implied(self):
+        assert prices.get_fast_price("mistral-large-latest") is None
+        assert prices.urgency_spread("mistral-large-latest") is None
+
+    def test_families_off_the_published_table_stay_unpriced(self):
+        # magistral, devstral, mistral-code, mistral-vibe and labs-leanstral are
+        # served by the API and are not on the price sheet. None is the correct
+        # answer for a rate nobody published — never zero, never a guess.
+        for model in (
+            "magistral-medium-latest",
+            "devstral-latest",
+            "mistral-code-latest",
+            "mistral-vibe-cli-latest",
+            "labs-leanstral-1-5",
+        ):
+            assert prices.get_price(model) is None, model
+
+    def test_mistral_code_is_not_swallowed_by_the_codestral_prefix(self):
+        # "codestral" and "mistral-code-*" are different products; a sloppy
+        # prefix would price one at the other's rate.
+        assert prices.get_price("mistral-code-latest") is None
+        assert prices.get_price("codestral-2508") == (0.30, 0.90)
