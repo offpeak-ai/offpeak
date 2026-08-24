@@ -52,6 +52,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 import offpeak  # noqa: E402
 from offpeak import prices  # noqa: E402
 from offpeak.venues.anthropic_batch import AnthropicBatch  # noqa: E402
+from offpeak.venues.gemini_batch import GeminiBatch  # noqa: E402
 from offpeak.venues.groq_batch import COMPLETION_WINDOWS, GroqBatch  # noqa: E402
 from offpeak.venues.mistral_batch import MistralBatch  # noqa: E402
 from offpeak.venues.openai_batch import OpenAIBatch  # noqa: E402
@@ -86,6 +87,9 @@ PROBE_JOBS_PER_LEG = 2
 CEILINGS: dict[str, int] = {
     "openai/gpt-oss-20b": 768,
     "mistral-small-latest": 32,
+    # Reasoning model: the first live batch spent 13 of a 16-token ceiling
+    # thinking and returned nothing. Give it room.
+    "gemini-3.7-flash": 512,
     "gpt-5.6-luna": 256,
     "claude-haiku-4-5": 32,
 }
@@ -98,6 +102,7 @@ VENUE_SPECS: dict[str, dict] = {
     "openai": {"model": "gpt-5.6-luna", "key": "OPENAI_API_KEY", "windows": ["24h"]},
     "groq": {"model": "openai/gpt-oss-20b", "key": "GROQ_API_KEY", "windows": None},
     "mistral": {"model": "mistral-small-latest", "key": "MISTRAL_API_KEY", "windows": ["24h"]},
+    "gemini": {"model": "gemini-3.7-flash", "key": "GEMINI_API_KEY", "windows": ["24h"]},
 }
 
 
@@ -108,6 +113,8 @@ def _venue(name: str, window: str):
         return OpenAIBatch()
     if name == "groq":
         return GroqBatch(completion_window=window)
+    if name == "gemini":
+        return GeminiBatch()
     if name == "mistral":
         # Mistral's window is a number of hours rather than a string, so the
         # shared "24h" spelling is translated at the boundary.

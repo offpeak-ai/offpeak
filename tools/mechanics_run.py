@@ -40,6 +40,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
 import offpeak  # noqa: E402
 from offpeak.venues.anthropic_batch import AnthropicBatch  # noqa: E402
+from offpeak.venues.gemini_batch import GeminiBatch  # noqa: E402
 from offpeak.venues.groq_batch import GroqBatch  # noqa: E402
 from offpeak.venues.mistral_batch import MistralBatch  # noqa: E402
 from offpeak.venues.openai_batch import OpenAIBatch  # noqa: E402
@@ -125,6 +126,10 @@ class RecordingMistral(Recording, MistralBatch):
     pass
 
 
+class RecordingGemini(Recording, GeminiBatch):
+    pass
+
+
 # Groq is opt-in here for the same reason it is opt-in in the library: it wants
 # its own key and its own extra, and no run should start spending at a venue
 # nobody named.
@@ -133,14 +138,21 @@ VENUES = {
     "openai": (RecordingOpenAI, OpenAIBatch),
     "groq": (RecordingGroq, GroqBatch),
     "mistral": (RecordingMistral, MistralBatch),
+    "gemini": (RecordingGemini, GeminiBatch),
 }
 
 
-def build_book(models, max_tokens=DEFAULT_MAX_TOKENS) -> list[offpeak.Job]:
-    """The same twenty-four lines through each venue's cheapest model."""
+def build_book(models, max_tokens=DEFAULT_MAX_TOKENS, limit=None) -> list[offpeak.Job]:
+    """The same twenty-four lines through each venue's cheapest model.
+
+    *limit* takes the first N lines instead of all of them. The quote gate
+    prices output at the ceiling, so an expensive model can put a full book over
+    the cap on the worst case alone; a shorter book is how a run stays under it
+    without lowering a ceiling the model needs.
+    """
     jobs = []
     for model in models:
-        for line in LINES:
+        for line in (LINES if limit is None else LINES[:limit]):
             jobs.append(
                 offpeak.job(model, PROMPT.format(line=line), max_tokens=max_tokens)
             )
@@ -161,6 +173,11 @@ def parse_args(argv=None):
         help=f"comma-separated venues to offer the book to ({', '.join(VENUES)})",
     )
     ap.add_argument("--max-tokens", type=int, default=DEFAULT_MAX_TOKENS)
+    ap.add_argument(
+        "--limit",
+        type=int,
+        help=f"use only the first N of the {len(LINES)} lines, per model",
+    )
     ap.add_argument("--deadline", default=DEFAULT_DEADLINE)
     ap.add_argument(
         "--cap",
@@ -213,7 +230,7 @@ def main(argv=None) -> int:
         return 3
 
     jobs = build_book(
-        [m.strip() for m in a.models.split(",") if m.strip()], a.max_tokens
+        [m.strip() for m in a.models.split(",") if m.strip()], a.max_tokens, a.limit
     )
     print(f"book: {len(jobs)} jobs\n", flush=True)
 
