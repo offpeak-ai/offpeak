@@ -6,8 +6,8 @@ prices, so verify against their published sheets and override at runtime with
 :func:`register_price` where they have moved. Costs for unknown models resolve
 to ``None`` rather than a guess.
 
-Batch tiers at OpenAI, Anthropic, Google and Groq are publicly priced at 50%
-of list, which is what :data:`BATCH_DISCOUNT` encodes. OpenAI's flex tier prices
+Batch tiers at OpenAI, Anthropic, Google, Groq and Mistral are publicly priced
+at 50% of list, which is what :data:`BATCH_DISCOUNT` encodes. OpenAI's flex tier prices
 identically to its batch tier on the gpt-5.6 family, and its *fast* tier at
 twice list — the same model, priced for urgency. Fast is stored rather than
 derived (:func:`get_fast_price`), because unlike batch it is not a discount
@@ -21,6 +21,11 @@ temporary number as permanent.
 
 Corrections
 -----------
+
+**2026-08-23** — the Mistral block was read off mistral.ai/pricing/api on this
+date and the snapshot date moved with it. The Anthropic, OpenAI and Groq blocks
+are carried forward unchanged from the 2026-08-21 reading; the date on the sheet
+is when it was last *touched*, not a claim that every row was re-verified.
 
 **2026-08-21** — the OpenAI block through 0.2.0 held that provider's *batch*
 sheet in the standard-price table (gpt-5.6-sol 2.50/15.00, terra 1.00/6.00,
@@ -54,7 +59,7 @@ __all__ = [
     "urgency_spread",
 ]
 
-PRICE_SHEET_DATE = "2026-08-21"
+PRICE_SHEET_DATE = "2026-08-23"
 
 # Fraction of list price paid on provider batch tiers (published: 50%).
 BATCH_DISCOUNT = 0.5
@@ -90,6 +95,31 @@ _PRICES: dict[str, tuple[float, float]] = {
     # an urgency spread it does not sell is not one this sheet should imply.
     "openai/gpt-oss-120b": (0.15, 0.60),
     "openai/gpt-oss-20b": (0.075, 0.30),
+    # Mistral (per mistral.ai/pricing/api, read 2026-08-23). Keyed on the family
+    # prefix rather than the SKU: _lookup takes the longest registered prefix, so
+    # "mistral-medium" covers -latest, -2505, -2508, -2604, -3 and -3.5 without a
+    # row each, and keeps covering the next date-pinned release.
+    #
+    # Batch is 50% of standard, the same rule the other venues publish, so
+    # BATCH_DISCOUNT covers it. No fast tier: Mistral does not sell one.
+    #
+    # Deliberately absent, because they are not on the published table: the
+    # magistral, devstral, mistral-code, mistral-vibe and labs-leanstral
+    # families. They resolve to None, which is the correct answer for a rate
+    # nobody published.
+    "mistral-medium": (1.50, 7.50),
+    "mistral-large": (0.50, 1.50),
+    "mistral-small": (0.15, 0.60),
+    "ministral-3b": (0.10, 0.10),
+    "ministral-8b": (0.15, 0.15),
+    "ministral-14b": (0.20, 0.20),
+    "codestral": (0.30, 0.90),
+    # Served by Mistral, priced on the same sheet, under both of its ids.
+    "glm-5-2": (1.40, 4.40),
+    "zai-glm-5-2": (1.40, 4.40),
+    # Embeddings bill input only — the sheet lists no output rate, and zero is
+    # the rate rather than a guess at one.
+    "mistral-embed": (0.10, 0.00),
 }
 
 # model -> (input, output) USD per 1M on a venue's *fast* tier: the same model,
