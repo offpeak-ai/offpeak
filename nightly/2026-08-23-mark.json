@@ -1,10 +1,10 @@
 {
-  "night_of": "2026-08-22",
+  "night_of": "2026-08-23",
   "mode": "mark",
-  "generated_utc": "2026-08-23T07:57+00:00",
+  "generated_utc": "2026-08-24T09:13+00:00",
   "span_utc": {
-    "from": "2026-08-22T16:00Z",
-    "to": "2026-08-23T07:00Z"
+    "from": "2026-08-23T16:00Z",
+    "to": "2026-08-24T07:00Z"
   },
   "tokens": {
     "batch_discount": 0.5,
@@ -22,43 +22,43 @@
   },
   "carbon_gb": {
     "n_halfhours": 31,
-    "peak_window_17_21_bst": 119.5,
-    "offpeak_window_00_05_bst": 110.9,
-    "window_spread": 1.08,
+    "peak_window_17_21_bst": 163.12,
+    "offpeak_window_00_05_bst": 156.4,
+    "window_spread": 1.04,
     "cleanest_5h": {
-      "avg": 107.5,
-      "from": "2026-08-23T02:00Z"
+      "avg": 152.6,
+      "from": "2026-08-24T02:00Z"
     },
     "dirtiest_5h": {
-      "avg": 132.7,
-      "from": "2026-08-22T17:30Z"
+      "avg": 170.3,
+      "from": "2026-08-23T17:30Z"
     },
-    "chosen_window_spread": 1.23
+    "chosen_window_spread": 1.12
   },
   "power_gb_agile": {
     "n_halfhours": 30,
-    "peak_window_17_21_bst": 34.85,
-    "offpeak_window_00_05_bst": 25.23,
-    "window_spread": 1.38,
-    "max_p_kwh": 40.992,
-    "min_p_kwh": 23.6145
+    "peak_window_17_21_bst": 36.95,
+    "offpeak_window_00_05_bst": 24.56,
+    "window_spread": 1.5,
+    "max_p_kwh": 44.4675,
+    "min_p_kwh": 22.533
   },
   "power_caiso_sp15": {
     "n_hours": 48,
-    "peak_window_17_21_local": 65.68,
-    "offpeak_window_00_05_local": 45.0,
-    "window_spread": 1.46,
+    "peak_window_17_21_local": 71.81,
+    "offpeak_window_00_05_local": 51.31,
+    "window_spread": 1.4,
     "unit": "$/MWh"
   },
   "power_ercot_houston": {
     "n_hours": 48,
-    "peak_window_17_21_local": 77.66,
-    "offpeak_window_00_05_local": 26.07,
-    "window_spread": 2.98,
+    "peak_window_17_21_local": 58.17,
+    "offpeak_window_00_05_local": 24.45,
+    "window_spread": 2.38,
     "unit": "$/MWh"
   },
   "unavailable": {
-    "carbon_caiso_sp15": "CISO: EIA-930 has 2026-08-22 but not yet the 00:00-05:00 local hours of 2026-08-23, which is the trough this session's spread is measured against",
-    "carbon_ercot_houston": "ERCO: EIA-930 has 2026-08-22 but not yet the 00:00-05:00 local hours of 2026-08-23, which is the trough this session's spread is measured against"
+    "carbon_caiso_sp15": "CISO: EIA-930 has published no hours for 2026-08-23 yet (the feed runs about a day behind)",
+    "carbon_ercot_houston": "ERCO: EIA-930 has published no hours for 2026-08-23 yet (the feed runs about a day behind)"
   }
 }
