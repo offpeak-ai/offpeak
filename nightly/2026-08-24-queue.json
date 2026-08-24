@@ -1,0 +1,47 @@
+{
+  "date": "2026-08-24",
+  "started_utc": "2026-08-24T09:09:17+00:00",
+  "cap_usd": 0.01,
+  "legs": [
+    {
+      "venue": "anthropic",
+      "model": "claude-haiku-4-5",
+      "declared_window": "24h",
+      "declared_window_seconds": 86400,
+      "jobs": 2,
+      "submitted_utc": "2026-08-24T09:09:17+00:00",
+      "completed_utc": "2026-08-24T09:11:20+00:00",
+      "elapsed_seconds": 122.8,
+      "fraction_of_window_used": 0.001421,
+      "status": "completed",
+      "input_tokens": 32,
+      "output_tokens": 8,
+      "paid_usd": 3.6e-05,
+      "quoted_list_usd": 0.00034,
+      "skipped_reason": null,
+      "note": null
+    },
+    {
+      "venue": "openai",
+      "model": "gpt-5.6-luna",
+      "declared_window": "24h",
+      "declared_window_seconds": 86400,
+      "jobs": 2,
+      "submitted_utc": "2026-08-24T09:11:20+00:00",
+      "completed_utc": "2026-08-24T09:12:55+00:00",
+      "elapsed_seconds": 94.9,
+      "fraction_of_window_used": 0.001098,
+      "status": "completed",
+      "input_tokens": 30,
+      "output_tokens": 8,
+      "paid_usd": 7.8e-06,
+      "quoted_list_usd": 0.0006184,
+      "skipped_reason": null,
+      "note": null
+    }
+  ],
+  "window_probe": [],
+  "spent_usd": 4.38e-05,
+  "offpeak_version": "0.2.5.dev0",
+  "price_sheet": "2026-08-23"
+}
