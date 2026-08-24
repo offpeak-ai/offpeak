@@ -297,8 +297,17 @@ class TestCaveats:
     def test_the_decaying_venues_are_all_flagged(self):
         report = fr.render(fr.analyse([row()], now=lambda: NOW))
         assert "2026-11-21" in report, "the sol promo"
-        assert "Gemini 3.7 Flash" in report and "2026-12-31" in report
+        assert "gemini-3.7-flash" in report and "2026-12-31" in report
         assert "Qwen night-hours promotion" in report
+
+    def test_a_sheet_promo_is_flagged_once_not_twice(self):
+        # Gemini's Flash decay used to be restated in DECAY_CAVEATS as well as
+        # living in PROMO_NOTES, so the report printed it twice. Reading it from
+        # the sheet is what makes it disappear when the price stops being
+        # promotional, instead of outliving it in a hardcoded tuple.
+        subjects = [c.subject for c in fr.promo_caveats()]
+        assert len(subjects) == len(set(subjects))
+        assert sum("3.7-flash" in s.lower().replace(" ", "-") for s in subjects) == 1
 
     def test_the_sol_caveat_is_read_from_the_sheet_not_restated(self):
         # So that a price which stops being promotional stops being caveated.
