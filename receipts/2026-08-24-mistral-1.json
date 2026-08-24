@@ -1,0 +1,29 @@
+{
+  "run_id": "2026-08-24-mistral-1",
+  "scale": "venue probe (24 jobs, Mistral, sync fallback only \u2014 batch tier 402)",
+  "settled_utc": "2026-08-24T02:19:00+00:00",
+  "deadline": "06:00",
+  "price_sheet": "2026-08-23",
+  "offpeak_version": "0.2.4.dev0",
+  "jobs": 24,
+  "ok": 24,
+  "failed": 0,
+  "fell_back": 24,
+  "sla_met": 24,
+  "input_tokens": 948,
+  "output_tokens": 94,
+  "list_usd": 0.00019860000000000003,
+  "paid_usd": 0.00019860000000000003,
+  "captured_usd": 0.0,
+  "captured_pct": 0.0,
+  "left_on_table_usd": 9.930000000000001e-05,
+  "by_venue": {
+    "mistral:batch": 24
+  },
+  "notes": [
+    "Nothing here settled at a batch tier. POST /v1/batch/jobs answers 402 {\"detail\": \"You do not have access to this service. You can enable billing via the console.\"} on this account. submit() therefore raised, no handle was recorded, and run() put all 24 jobs through the sync fallback at list price \u2014 which is why captured is $0.00.",
+    "The paywall is on batch creation alone. POST /v1/files with purpose=batch returns 422 on a bad file (reachable), and POST /v1/chat/completions returns 200 (that is how these 24 settled).",
+    "This corrects the 2026-08-23 entitlement probe, which read Mistral as entitled on the strength of a 422 naming a missing field. Request validation runs BEFORE the billing check, so a deliberately malformed body can never reach the paywall. Only a well-formed request can, and this run is the well-formed request. A probe that cannot fail the way the real thing fails is not a probe of the real thing.",
+    "The driver itself is exercised: routing, one-model-per-batch, JSONL shape, the seven-state vocabulary and the sync fallback all worked. 24/24 real one-word answers, zero empties."
+  ]
+}
