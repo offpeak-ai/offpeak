@@ -14,3 +14,5 @@ Written by `tools/queue_probe.py`, never by hand.
 | 2026-08-23 | openai | gpt-5.6-luna | 24h | 2 | — | — | skipped — no OPENAI_API_KEY in the environment | — |
 | 2026-08-24 | anthropic | claude-haiku-4-5 | 24h | 2 | 2m02s | 0.142% | completed | $0.0000360 |
 | 2026-08-24 | openai | gpt-5.6-luna | 24h | 2 | 1m34s | 0.110% | completed | $0.00000780 |
+| 2026-08-25 | anthropic | claude-haiku-4-5 | 24h | 2 | 4m51s | 0.337% | completed | $0.0000360 |
+| 2026-08-25 | openai | gpt-5.6-luna | 24h | 2 | — | — | censored | — |

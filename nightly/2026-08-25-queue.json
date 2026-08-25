@@ -1,0 +1,47 @@
+{
+  "date": "2026-08-25",
+  "started_utc": "2026-08-25T08:25:43+00:00",
+  "cap_usd": 0.01,
+  "legs": [
+    {
+      "venue": "anthropic",
+      "model": "claude-haiku-4-5",
+      "declared_window": "24h",
+      "declared_window_seconds": 86400,
+      "jobs": 2,
+      "submitted_utc": "2026-08-25T08:25:43+00:00",
+      "completed_utc": "2026-08-25T08:30:34+00:00",
+      "elapsed_seconds": 291.0,
+      "fraction_of_window_used": 0.003368,
+      "status": "completed",
+      "input_tokens": 32,
+      "output_tokens": 8,
+      "paid_usd": 3.6e-05,
+      "quoted_list_usd": 0.00034,
+      "skipped_reason": null,
+      "note": null
+    },
+    {
+      "venue": "openai",
+      "model": "gpt-5.6-luna",
+      "declared_window": "24h",
+      "declared_window_seconds": 86400,
+      "jobs": 2,
+      "submitted_utc": "2026-08-25T08:30:35+00:00",
+      "completed_utc": null,
+      "elapsed_seconds": null,
+      "fraction_of_window_used": null,
+      "status": "censored",
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "paid_usd": null,
+      "quoted_list_usd": 0.0006184,
+      "skipped_reason": null,
+      "note": "still open after 1800s and cancelled; the batch took longer than this run waited, which is a lower bound and not a completion time"
+    }
+  ],
+  "window_probe": [],
+  "spent_usd": 3.6e-05,
+  "offpeak_version": "0.2.5.dev0",
+  "price_sheet": "2026-08-23"
+}
