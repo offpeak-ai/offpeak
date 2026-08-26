@@ -12,9 +12,10 @@ import time
 from dataclasses import dataclass, field
 from datetime import datetime
 
+from . import prices as _prices
 from .deadline import parse_deadline, seconds_until
 from .job import Job, Receipt, Result, Status
-from .prices import BATCH_DISCOUNT, PRICE_SHEET_DATE, format_usd
+from .prices import BATCH_DISCOUNT, format_usd
 from .venues.base import Venue
 
 __all__ = ["run", "receipt", "Settlement", "default_venues"]
@@ -244,7 +245,7 @@ class Settlement:
             f"list      ${_usd(self.list_usd)}",
             f"paid      ${_usd(self.paid_usd)}",
             f"captured  ${_usd(self.captured_usd)} ({self.captured_pct:.1f}%)",
-            f"prices    snapshot {PRICE_SHEET_DATE} — override via offpeak.prices",
+            f"prices    snapshot {_prices.sheet_date()} — override via offpeak.prices",
         ]
         if self.fell_back:
             lines.append(

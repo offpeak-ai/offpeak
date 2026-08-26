@@ -20,6 +20,7 @@ import argparse
 import json
 import re
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
@@ -27,6 +28,11 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 from offpeak import format_usd  # noqa: E402
 
 REQUIRED = ("run_id", "scale", "settled_utc", "jobs", "list_usd", "paid_usd")
+
+#: Wire format of the machine-readable ledger written beside SETTLED.md.
+#: The Markdown is for people; this is for the website and anyone else who
+#: would otherwise have to scrape a table or hand-copy rows into a page.
+SETTLED_SCHEMA = "offpeak.settled-runs/1"
 
 SETTLED_HEADER = (
     "# Offpeak settled runs — real money\n\n"
@@ -116,6 +122,64 @@ def upsert_settled_row(board: Path, run_id: str, row: str) -> None:
     board.write_text(SETTLED_HEADER + "".join(rows))
 
 
+def as_record(record: dict) -> dict:
+    """One receipt, normalized for machines rather than for a column width."""
+    captured = record.get("captured_usd")
+    if captured is None:
+        captured = record["list_usd"] - record["paid_usd"]
+    pct = record.get("captured_pct")
+    if pct is None:
+        pct = 0.0 if not record["list_usd"] else 100.0 * captured / record["list_usd"]
+    return {
+        "run_id": record["run_id"],
+        "scale": record["scale"],
+        "settled_utc": record["settled_utc"],
+        "price_sheet": record.get("price_sheet"),
+        "offpeak_version": record.get("offpeak_version"),
+        "jobs": record["jobs"],
+        "ok": record.get("ok"),
+        "failed": record.get("failed"),
+        "fell_back": record.get("fell_back") or 0,
+        "sla_met": record.get("sla_met", 0),
+        "input_tokens": record.get("input_tokens", 0),
+        "output_tokens": record.get("output_tokens", 0),
+        "list_usd": record["list_usd"],
+        "paid_usd": record["paid_usd"],
+        "captured_usd": captured,
+        "captured_pct": pct,
+        "by_venue": record.get("by_venue") or {},
+        "notes": record.get("notes") or [],
+    }
+
+
+def summarize(runs: list[dict]) -> dict:
+    """Totals the site would otherwise hand-maintain — and get wrong.
+
+    ``venues_capturing`` counts venues that reached a batch tier **and kept
+    it**. A run that reached the tier and then lost the results is not a
+    capturing venue, and a summary that counted it would be the marketing
+    version of this ledger rather than the accounting one.
+    """
+    capturing = sorted(
+        {
+            venue
+            for run in runs
+            if run["captured_usd"] > 0 and not run["fell_back"]
+            for venue in run["by_venue"]
+        }
+    )
+    return {
+        "runs": len(runs),
+        "jobs": sum(r["jobs"] for r in runs),
+        "list_usd": sum(r["list_usd"] for r in runs),
+        "paid_usd": sum(r["paid_usd"] for r in runs),
+        "captured_usd": sum(r["captured_usd"] for r in runs),
+        "runs_capturing": sum(1 for r in runs if r["captured_usd"] > 0),
+        "runs_capturing_nothing": sum(1 for r in runs if r["captured_usd"] <= 0),
+        "venues_capturing": capturing,
+    }
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--receipts", default="receipts", help="directory of receipt JSON")
@@ -130,10 +194,22 @@ def main() -> int:
     out = Path(a.outdir)
     out.mkdir(parents=True, exist_ok=True)
     board = out / "SETTLED.md"
+    runs: list[dict] = []
     for path in receipts:
         record = load_receipt(path)
         upsert_settled_row(board, record["run_id"], render_row(record))
+        runs.append(as_record(record))
         print(f"settled {record['run_id']} ({record['scale']})")
+
+    runs.sort(key=lambda r: r["run_id"])
+    ledger = {
+        "schema": SETTLED_SCHEMA,
+        "generated_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "summary": summarize(runs),
+        "runs": runs,
+    }
+    (out / "SETTLED.json").write_text(json.dumps(ledger, indent=2) + "\n", encoding="utf-8")
+    print(f"wrote {out / 'SETTLED.json'} ({len(runs)} run(s))")
 
     print()
     print(board.read_text())

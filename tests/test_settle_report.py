@@ -125,3 +125,91 @@ class TestSeparationFromTheQuoteBoard:
 
     def test_the_header_tells_the_reader_to_read_scale_first(self):
         assert "Scale is on every row on purpose" in sr.SETTLED_HEADER
+
+
+# --------------------------------------------------------------------------- #
+# SETTLED.json — the machine-readable ledger the website reads
+# --------------------------------------------------------------------------- #
+
+
+def _write_receipts(tmp_path, records):
+    d = tmp_path / "receipts"
+    d.mkdir()
+    for r in records:
+        (d / f"{r['run_id']}.json").write_text(json.dumps(r))
+    return d
+
+
+def _run(tmp_path, records, monkeypatch):
+    rec = _write_receipts(tmp_path, records)
+    out = tmp_path / "board"
+    monkeypatch.setattr(
+        "sys.argv", ["settle_report.py", "--receipts", str(rec), "--outdir", str(out)]
+    )
+    sr.main()
+    return json.loads((out / "SETTLED.json").read_text())
+
+
+def test_writes_a_machine_readable_ledger(tmp_path, monkeypatch):
+    doc = _run(tmp_path, [record()], monkeypatch)
+    assert doc["schema"] == sr.SETTLED_SCHEMA
+    assert doc["runs"][0]["run_id"] == "2026-08-22-mechanics-1"
+    assert doc["summary"]["runs"] == 1
+
+
+def test_ledger_carries_notes_so_the_site_need_not_restate_them(tmp_path, monkeypatch):
+    doc = _run(tmp_path, [record(notes=["the venue was gated"])], monkeypatch)
+    assert doc["runs"][0]["notes"] == ["the venue was gated"]
+
+
+def test_summary_totals_the_money(tmp_path, monkeypatch):
+    doc = _run(
+        tmp_path,
+        [
+            record(run_id="2026-08-22-a", list_usd=1.0, paid_usd=0.5, captured_usd=0.5),
+            record(run_id="2026-08-22-b", list_usd=3.0, paid_usd=1.5, captured_usd=1.5),
+        ],
+        monkeypatch,
+    )
+    assert doc["summary"]["list_usd"] == 4.0
+    assert doc["summary"]["paid_usd"] == 2.0
+    assert doc["summary"]["captured_usd"] == 2.0
+    assert doc["summary"]["runs"] == 2
+
+
+def test_venues_capturing_excludes_a_venue_that_fell_back(tmp_path, monkeypatch):
+    """A batch reached and then lost is not a capturing venue."""
+    doc = _run(
+        tmp_path,
+        [
+            record(run_id="2026-08-22-a", by_venue={"openai:batch": 4}, captured_usd=0.5),
+            record(
+                run_id="2026-08-22-b",
+                by_venue={"mistral:batch": 4},
+                captured_usd=0.0,
+                fell_back=4,
+            ),
+        ],
+        monkeypatch,
+    )
+    assert doc["summary"]["venues_capturing"] == ["openai:batch"]
+    assert doc["summary"]["runs_capturing"] == 1
+    assert doc["summary"]["runs_capturing_nothing"] == 1
+
+
+def test_captured_is_derived_when_a_receipt_omits_it(tmp_path, monkeypatch):
+    r = record(list_usd=2.0, paid_usd=0.5)
+    r.pop("captured_usd", None)
+    r.pop("captured_pct", None)
+    doc = _run(tmp_path, [r], monkeypatch)
+    assert doc["runs"][0]["captured_usd"] == 1.5
+    assert doc["runs"][0]["captured_pct"] == 75.0
+
+
+def test_ledger_is_sorted_by_run_id(tmp_path, monkeypatch):
+    doc = _run(
+        tmp_path,
+        [record(run_id="2026-08-24-z"), record(run_id="2026-08-22-a")],
+        monkeypatch,
+    )
+    assert [r["run_id"] for r in doc["runs"]] == ["2026-08-22-a", "2026-08-24-z"]

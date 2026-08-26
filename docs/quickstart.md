@@ -150,3 +150,7 @@ offpeak.prices.register_price("my-fine-tune", input_per_m=4.0, output_per_m=16.0
 ```
 
 Unknown models settle as `None`, never a guess.
+
+The sheet is also published as dated JSON, so you can pick up a newer one
+without waiting for a release — deliberately, never automatically. See
+**[The published sheet](price-sheet.md)**.
