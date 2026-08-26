@@ -46,7 +46,9 @@ jobs:
           python-version: "3.12"
 
       - name: Install the venue SDKs
-        run: pip install "openai>=1.50" "anthropic>=0.40"
+        run: |
+          pip install "openai>=1.50" "anthropic>=0.40" \
+                      "google-genai>=2.0" "mistralai>=2.9"
 
       - name: Check out the ledger (board-data)
         uses: actions/checkout@v7
@@ -55,9 +57,15 @@ jobs:
           path: board
 
       - name: Measure
-        # Groq is deliberately absent. Its batch tier is plan-gated (403) so
-        # there is nothing to measure, and its key stays out of this workflow:
-        # the window probe is a manual, local act.
+        # Four venues now, not two. Gemini and Mistral were both plan-gated when
+        # this probe was written — Gemini answered FAILED_PRECONDITION and
+        # Mistral 402 — so measuring their queues was measuring a paywall.
+        # Billing is enabled on both and each has settled a real batch, so their
+        # queues are now a number rather than an error, and belong on the board.
+        #
+        # Groq stays deliberately absent. Its batch tier is still plan-gated
+        # (403) so there is nothing to measure, and its key stays out of this
+        # workflow: the window probe is a manual, local act.
         #
         # A venue whose key is not set records itself skipped, with the reason,
         # and every other leg runs exactly as before — the same degradation rule
@@ -65,10 +73,12 @@ jobs:
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
         run: |
           python tools/queue_probe.py \
             --mode "${{ inputs.mode || 'series' }}" \
-            --venues anthropic,openai \
+            --venues anthropic,openai,gemini,mistral \
             --cap "${{ inputs.cap || '0.01' }}" \
             --max-wait 1800 \
             --outdir board/nightly
