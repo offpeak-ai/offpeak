@@ -26,10 +26,11 @@ import math
 from dataclasses import dataclass, field
 from datetime import datetime
 
+from . import prices as _prices
 from .client import _pick_venue, default_venues
 from .deadline import parse_deadline, seconds_until
 from .job import Job
-from .prices import BATCH_DISCOUNT, PRICE_SHEET_DATE, format_usd, get_price
+from .prices import BATCH_DISCOUNT, format_usd, get_price
 from .venues.base import Venue
 
 __all__ = ["quote", "Quote", "VenueQuote", "estimate_tokens", "CHARS_PER_TOKEN"]
@@ -249,7 +250,7 @@ class Quote:
             lines.append(f"note      {self.unpriced} job(s) had no price sheet entry")
         lines += [
             f"basis     {'; '.join(f'{k} {v}' for k, v in sorted(self.basis.items()))}",
-            f"prices    snapshot {PRICE_SHEET_DATE} — estimate only, not a bill",
+            f"prices    snapshot {_prices.sheet_date()} — estimate only, not a bill",
             "─" * 47,
         ]
         return "\n".join(lines)

@@ -1,0 +1,64 @@
+name: Price sheet
+
+# Publishes the bundled price sheet to `board-data` as dated JSON, so a user can
+# pick up a newer sheet deliberately instead of waiting for a release.
+#
+# There is no database behind this and no service to keep up. It writes files:
+# `sheet/<date>.json` is immutable once published, `sheet/latest.json` is a copy
+# of the newest, and `sheet/index.json` lists them. The library never fetches any
+# of it on its own — offpeak.prices.load_sheet() is opt-in, and the default stays
+# the sheet the installed release shipped with, so runs stay offline-capable and
+# old receipts stay checkable against the numbers that settled them.
+#
+# Fires when the sheet in the tree changes. The tool refuses to rewrite a dated
+# sheet whose contents moved without its date moving.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "src/offpeak/prices.py"
+      - "tools/publish_sheet.py"
+      - ".github/workflows/sheet.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+# Everything that pushes board-data shares one queue (#19).
+concurrency:
+  group: board-data
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the sheet (main)
+        uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: Check out the ledger (board-data)
+        uses: actions/checkout@v7
+        with:
+          ref: board-data
+          path: board
+
+      - name: Publish
+        run: python tools/publish_sheet.py --outdir board/sheet
+
+      - name: Commit to board-data
+        working-directory: board
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add sheet
+          if git diff --staged --quiet; then
+            echo "sheet unchanged — nothing to publish"
+            exit 0
+          fi
+          git commit -m "sheet: publish $(date -u +%Y-%m-%d)"
+          git push

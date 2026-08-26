@@ -40,8 +40,12 @@ $10.00. Anthropic's block was unaffected.
 
 from __future__ import annotations
 
+import json
 import math
 from dataclasses import dataclass
+from datetime import datetime, timezone
+from pathlib import Path
+from urllib.request import Request, urlopen
 
 __all__ = [
     "PRICE_SHEET_DATE",
@@ -58,9 +62,24 @@ __all__ = [
     "batch_cost_usd",
     "fast_cost_usd",
     "urgency_spread",
+    "SHEET_SCHEMA",
+    "SheetLoad",
+    "sheet_date",
+    "export_sheet",
+    "load_sheet",
+    "reset_sheet",
 ]
 
+#: The date of the sheet **bundled in this release**. It never moves at runtime:
+#: a receipt that names it must stay checkable against the same numbers later.
 PRICE_SHEET_DATE = "2026-08-23"
+
+#: The date of the sheet currently in force. Equal to :data:`PRICE_SHEET_DATE`
+#: until :func:`load_sheet` replaces it. Read it through :func:`sheet_date` —
+#: modules that did ``from .prices import PRICE_SHEET_DATE`` bound a copy of the
+#: string at import and would otherwise print a stale date beside fresh prices.
+_SHEET_DATE = PRICE_SHEET_DATE
+_SHEET_SOURCE = "bundled"
 
 # Fraction of list price paid on provider batch tiers (published: 50%).
 BATCH_DISCOUNT = 0.5
@@ -212,6 +231,209 @@ PROMO_NOTES: dict[str, PromoNote] = {
         ),
     ),
 }
+
+
+#: Wire format of a published sheet. Bumped only for a breaking change, and
+#: :func:`load_sheet` refuses a major version it does not know — a sheet it
+#: half-understands would price jobs against numbers it guessed at.
+SHEET_SCHEMA = "offpeak.price-sheet/1"
+
+# Captured at import so reset_sheet() can put the release's own numbers back
+# after a published sheet has been loaded over them.
+_BUNDLED_PRICES = dict(_PRICES)
+_BUNDLED_FAST = dict(_FAST_PRICES)
+_BUNDLED_PROMO = dict(PROMO_NOTES)
+
+
+@dataclass(frozen=True)
+class SheetLoad:
+    """What :func:`load_sheet` did — reported, never assumed."""
+
+    sheet_date: str
+    source: str
+    models: int
+    added: int
+    changed: int
+    unchanged: int
+    fast_models: int
+    promo_notes: int
+
+    def __str__(self) -> str:
+        return (
+            f"loaded price sheet {self.sheet_date} from {self.source}: "
+            f"{self.models} model(s) — {self.added} new, {self.changed} changed, "
+            f"{self.unchanged} unchanged; {self.fast_models} fast row(s), "
+            f"{self.promo_notes} promo note(s)"
+        )
+
+
+def sheet_date() -> str:
+    """The date of the sheet currently in force.
+
+    :data:`PRICE_SHEET_DATE` is the sheet this *release* bundles and never
+    moves. This is what is actually pricing jobs right now, which is the figure
+    a quote or a receipt should print.
+    """
+    return _SHEET_DATE
+
+
+def export_sheet() -> dict:
+    """The sheet in force, as the published wire format.
+
+    This is the whole publishing story: the sheet is data, so it serializes.
+    No service, no database — a dated JSON file that anyone can fetch, diff,
+    pin, or check against the provider pages named in ``sources``.
+    """
+    return {
+        "schema": SHEET_SCHEMA,
+        "sheet_date": _SHEET_DATE,
+        "generated_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "batch_discount": BATCH_DISCOUNT,
+        "prices": {
+            model: {"input_per_m": rates[0], "output_per_m": rates[1]}
+            for model, rates in sorted(_PRICES.items())
+        },
+        "fast_prices": {
+            model: {"input_per_m": rates[0], "output_per_m": rates[1]}
+            for model, rates in sorted(_FAST_PRICES.items())
+        },
+        "promo_notes": {
+            model: {
+                "through": note.through,
+                "post_promo": list(note.post_promo),
+                "source": note.source,
+                "note": note.note,
+            }
+            for model, note in sorted(PROMO_NOTES.items())
+        },
+    }
+
+
+def _read_source(source: str | Path) -> tuple[dict, str]:
+    """Fetch *source* as JSON. Returns the document and a printable origin."""
+    text = str(source)
+    if text.startswith("http://"):
+        raise ValueError(
+            "refusing to load a price sheet over plain http — a sheet that "
+            "settles real bills must not be modifiable in transit"
+        )
+    if text.startswith("https://"):
+        request = Request(text, headers={"User-Agent": "offpeak/price-sheet"})
+        with urlopen(request, timeout=30) as response:  # noqa: S310 — https enforced above
+            charset = response.headers.get_content_charset() or "utf-8"
+            return json.loads(response.read().decode(charset)), text
+    path = Path(source)
+    return json.loads(path.read_text(encoding="utf-8")), str(path)
+
+
+def load_sheet(source: str | Path | dict, *, replace: bool = False) -> SheetLoad:
+    """Load a published price sheet over the bundled one. **Opt in, always.**
+
+    *source* is an ``https://`` URL, a filesystem path, or an already-parsed
+    dict. Nothing in the library calls this for you: the default sheet is the
+    one this release shipped with, so ``offpeak`` keeps working offline and a
+    receipt settled today can still be checked next year against the numbers
+    that settled it.
+
+    ``replace=True`` clears the table first, so the loaded sheet is the whole
+    truth and a model it omits resolves to ``None``. The default merges, which
+    keeps any :func:`register_price` overrides and older models you still run.
+
+    A sheet declaring a different ``batch_discount`` than this release is
+    **refused** rather than applied. The discount is a rule the venues publish
+    identically, not a row — and ``client`` and ``quote`` bound their copy of it
+    at import, so honouring it here would price some arithmetic at the new rate
+    and some at the old. That is a release, not a download.
+    """
+    global _SHEET_DATE, _SHEET_SOURCE
+
+    if isinstance(source, dict):
+        document, origin = source, "<dict>"
+    else:
+        document, origin = _read_source(source)
+
+    schema = str(document.get("schema", ""))
+    family, _, major = schema.partition("/")
+    if family != SHEET_SCHEMA.partition("/")[0] or major != SHEET_SCHEMA.rpartition("/")[2]:
+        raise ValueError(
+            f"unsupported price-sheet schema {schema!r}; this build reads {SHEET_SCHEMA}"
+        )
+
+    date = document.get("sheet_date")
+    if not date:
+        raise ValueError("price sheet has no sheet_date — a sheet with no date is not checkable")
+
+    declared = document.get("batch_discount", BATCH_DISCOUNT)
+    if float(declared) != BATCH_DISCOUNT:
+        raise ValueError(
+            f"price sheet declares batch_discount {declared}, this build applies "
+            f"{BATCH_DISCOUNT}. The discount is a published rule rather than a row; "
+            "upgrade offpeak rather than loading a sheet that disagrees with it"
+        )
+
+    rows = document.get("prices") or {}
+    if not rows:
+        raise ValueError("price sheet carries no prices")
+
+    parsed: dict[str, tuple[float, float]] = {}
+    for model, rates in rows.items():
+        try:
+            parsed[str(model)] = (float(rates["input_per_m"]), float(rates["output_per_m"]))
+        except (KeyError, TypeError, ValueError) as exc:
+            raise ValueError(f"price sheet row {model!r} is not a pair of rates: {exc}") from None
+
+    before = dict(_PRICES)
+    added = sum(1 for m in parsed if m not in before)
+    changed = sum(1 for m, r in parsed.items() if m in before and before[m] != r)
+    unchanged = sum(1 for m, r in parsed.items() if m in before and before[m] == r)
+
+    if replace:
+        _PRICES.clear()
+    _PRICES.update(parsed)
+
+    fast = document.get("fast_prices") or {}
+    if replace:
+        _FAST_PRICES.clear()
+    for model, rates in fast.items():
+        _FAST_PRICES[str(model)] = (float(rates["input_per_m"]), float(rates["output_per_m"]))
+
+    notes = document.get("promo_notes") or {}
+    if replace:
+        PROMO_NOTES.clear()
+    for model, note in notes.items():
+        PROMO_NOTES[str(model)] = PromoNote(
+            through=str(note["through"]),
+            post_promo=(float(note["post_promo"][0]), float(note["post_promo"][1])),
+            source=str(note.get("source", "")),
+            note=str(note.get("note", "")),
+        )
+
+    _SHEET_DATE = str(date)
+    _SHEET_SOURCE = origin
+    return SheetLoad(
+        sheet_date=_SHEET_DATE,
+        source=origin,
+        models=len(parsed),
+        added=added,
+        changed=changed,
+        unchanged=unchanged,
+        fast_models=len(fast),
+        promo_notes=len(notes),
+    )
+
+
+def reset_sheet() -> str:
+    """Put the release's own bundled sheet back. Returns its date."""
+    global _SHEET_DATE, _SHEET_SOURCE
+    _PRICES.clear()
+    _PRICES.update(_BUNDLED_PRICES)
+    _FAST_PRICES.clear()
+    _FAST_PRICES.update(_BUNDLED_FAST)
+    PROMO_NOTES.clear()
+    PROMO_NOTES.update(_BUNDLED_PROMO)
+    _SHEET_DATE = PRICE_SHEET_DATE
+    _SHEET_SOURCE = "bundled"
+    return _SHEET_DATE
 
 
 def register_price(model: str, input_per_m: float, output_per_m: float) -> None:
