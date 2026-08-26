@@ -1,0 +1,86 @@
+name: Sheet watch
+
+# Notices the pricing pages this repo cites moving underneath its bundled price
+# sheet, and writes the drift to `board-data`. The hash diff is the product; the
+# LLM classification on top is the demo, and is allowed to fail.
+#
+# Runs at 03:00Z so the classifier's default deadline — the next 06:00Z — is a
+# real three-hour window that still lands before the 06:30Z board mark. It is
+# deliberately not on the mark cron: the watch should already be written by the
+# time the board settles.
+#
+# Spend is capped inside the tool, not here, for the same reason Queue latency
+# caps it there: a workflow-level guard protects the workflow, and what needs
+# protecting is the spend.
+
+on:
+  schedule:
+    - cron: "0 3 * * *"
+  workflow_dispatch:
+    inputs:
+      classify:
+        description: "Run the LLM classifier over each diff"
+        required: false
+        default: true
+        type: boolean
+      cap:
+        description: "hard USD cap for the classification job"
+        required: false
+        default: "0.01"
+
+permissions:
+  contents: write
+
+# Everything that pushes board-data shares one queue (#19). Two workflows
+# writing different files on the same branch still race at the push.
+concurrency:
+  group: board-data
+  cancel-in-progress: false
+
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the tool (main)
+        uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: Install the venue SDKs
+        # Only the two venues default_venues() routes to. The fetch-and-hash
+        # half needs nothing but the standard library.
+        run: pip install "openai>=1.50" "anthropic>=0.40"
+
+      - name: Check out the ledger (board-data)
+        uses: actions/checkout@v7
+        with:
+          ref: board-data
+          path: board
+
+      - name: Watch
+        # A venue whose key is absent does not stop the watch: the classifier
+        # records why it could not run and every hash-diff row publishes
+        # anyway. Same degradation rule the Spread Board uses for EIA.
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          python tools/sheet_watch.py \
+            --outdir board/watch \
+            --cap "${{ inputs.cap || '0.01' }}" \
+            ${{ (inputs.classify == false) && '--no-classify' || '' }}
+
+      - name: Commit to board-data
+        working-directory: board
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add watch
+          if git diff --staged --quiet; then
+            echo "nothing moved — not committing an empty watch"
+            exit 0
+          fi
+          git commit -m "watch: $(date -u +%Y-%m-%d)"
+          git push
