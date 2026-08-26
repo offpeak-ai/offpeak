@@ -298,8 +298,22 @@ def main(argv=None) -> int:
             }
         )
 
+    # The venue's own batch ids, lifted out of the handle log and into the
+    # settlement. They are the one identifier in a receipt that a third party
+    # can independently check — you can ask the venue about a handle, and it
+    # will answer. Leaving them in an uncommitted scratch file meant the
+    # strongest evidence a run produces was thrown away with the run directory.
+    venue_handles: dict[str, list[str]] = {}
+    if handles.exists():
+        for line in handles.read_text().splitlines():
+            if not line.strip():
+                continue
+            entry = json.loads(line)
+            venue_handles.setdefault(entry["venue"], []).append(entry["handle"])
+
     record = {
         "run": "capped settlement run (mechanics proof)",
+        "venue_handles": venue_handles,
         "started": started.isoformat(timespec="seconds"),
         "finished": finished.isoformat(timespec="seconds"),
         "deadline": a.deadline,

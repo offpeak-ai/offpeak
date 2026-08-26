@@ -145,9 +145,70 @@ hand-copy rows into a web page.
     "runs_capturing": 8, "runs_capturing_nothing": 3,
     "venues_capturing": ["anthropic:batch", "gemini:batch", "mistral:batch", "openai:batch"]
   },
-  "runs": [{"run_id": "…", "scale": "…", "captured_pct": 50.0, "notes": ["…"]}]
+  "runs": [{
+    "run_id": "2026-08-26-mistral-3",
+    "receipt_uuid": "763f5fdf-e83f-5a41-a8f3-6d6550d3e46e",
+    "venue_handles": {"mistral:batch": ["1ae160f2-fcd4-4bdb-afe1-17457fa1985f"]},
+    "captured_pct": 50.0,
+    "notes": ["…"]
+  }]
 }
 ```
+
+### The id is derived, not minted
+
+`receipt_uuid` is a **uuid5 over `run_id|settled_utc`**, not a random token.
+A uuid4 would identify a receipt and prove nothing about it — only whoever
+generated it could say it was right. This one anyone holding the receipt can
+recompute:
+
+```python
+import uuid
+NS = uuid.UUID("6f1b1a3e-6a2f-5c4d-9f0e-0b7a2c9d4e51")
+uuid.uuid5(NS, f"{r['run_id']}|{r['settled_utc']}")
+```
+
+Which means it cannot drift from the run it names. A receipt may state its own
+`receipt_uuid`, but a stated id that disagrees with the derived one is
+**refused** rather than trusted. `run_id` stays the ledger's readable key: it
+opens with the settlement date, so a row is unambiguous and sorts correctly, and
+two receipts claiming one `run_id` are a hard error — that collision used to
+drop a settlement from `SETTLED.md` while double-counting it in `SETTLED.json`.
+
+### `venue_handles` is the checkable part
+
+The venue's own batch id — `batch_6a8e…`, `msgbatch_01BH…`, `4a7ccbb3-…`. It is
+the one identifier in a receipt a **third party can verify**: ask the venue
+about the handle and it will answer. Everything else on the row is our
+arithmetic; this is the provider's record of the same event.
+
+Publishing one is safe. Handles are opaque and account-scoped — holding one
+grants nothing without the key, and none encodes an org or project id.
+
+## What a receipt may never contain
+
+Receipts are **aggregate by construction**, and the ledger enforces it rather
+than trusting care:
+
+| tier | holds | published |
+|---|---|---|
+| receipt (`receipts/*.json`) | counts, money, handles, prose | **yes** |
+| run artifact (`settlement.json`) | + per-job model output, + verbatim provider errors | no |
+| provider response | everything | never persisted |
+
+`tools/settle_report.py` refuses a receipt carrying `per_job`, `results`,
+`messages`, `prompts` or `raw`, and refuses anything secret-shaped — an `sk-`
+key, a bearer token, an `AKIA…`, an `AIza…`, an `api_key:` pair.
+
+That guard exists because receipts are written by reading the run artifact, and
+provider error strings routinely carry request URLs, org ids and account hints.
+Copying one verbatim into a public file is a single careless paste, and care is
+not a control.
+
+**If you run `offpeak` on your own keys, the same rule binds harder.** Your
+prompts and outputs are your data, and a receipt has to be provable without
+them — which it is, because every figure on it is aggregate. The handle is
+yours to include or omit.
 
 `venues_capturing` counts venues that reached a batch tier **and kept it**. A run
 that reached the tier and then lost the results is not a capturing venue — see

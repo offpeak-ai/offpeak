@@ -1,5 +1,10 @@
 {
   "run_id": "2026-08-26-openai-1",
+  "venue_handles": {
+    "openai:batch": [
+      "batch_6a8e6b8ef08c8190bd5cac0858f9789c"
+    ]
+  },
   "scale": "venue proof (24 jobs, OpenAI, batch tier)",
   "settled_utc": "2026-08-26T04:37:07+00:00",
   "deadline": "2h",

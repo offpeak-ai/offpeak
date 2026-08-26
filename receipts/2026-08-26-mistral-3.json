@@ -1,5 +1,10 @@
 {
   "run_id": "2026-08-26-mistral-3",
+  "venue_handles": {
+    "mistral:batch": [
+      "1ae160f2-fcd4-4bdb-afe1-17457fa1985f"
+    ]
+  },
   "scale": "venue proof (24 jobs, Mistral, batch tier \u2014 fourth venue to capture)",
   "settled_utc": "2026-08-26T04:43:13+00:00",
   "deadline": "2h",
