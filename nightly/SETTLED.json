@@ -1,0 +1,313 @@
+{
+  "schema": "offpeak.settled-runs/1",
+  "generated_utc": "2026-08-26T17:51:27+00:00",
+  "summary": {
+    "runs": 11,
+    "jobs": 232,
+    "list_usd": 0.026446249999999998,
+    "paid_usd": 0.014603274999999999,
+    "captured_usd": 0.011842974999999999,
+    "runs_capturing": 8,
+    "runs_capturing_nothing": 3,
+    "venues_capturing": [
+      "anthropic:batch",
+      "gemini:batch",
+      "mistral:batch",
+      "openai:batch"
+    ]
+  },
+  "runs": [
+    {
+      "run_id": "2026-08-22-mechanics-1",
+      "scale": "mechanics proof (48 jobs, two venues)",
+      "settled_utc": "2026-08-21T21:35:46-07:00",
+      "price_sheet": "2026-08-21",
+      "offpeak_version": "0.2.2.dev0",
+      "jobs": 48,
+      "ok": 24,
+      "failed": 24,
+      "fell_back": 0,
+      "sla_met": 24,
+      "input_tokens": 787,
+      "output_tokens": 155,
+      "list_usd": 0.001562,
+      "paid_usd": 0.000781,
+      "captured_usd": 0.000781,
+      "captured_pct": 50.0,
+      "by_venue": {
+        "anthropic:batch": 24,
+        "openai:batch": 24
+      },
+      "notes": [
+        "The first genuine settlement. Twenty-four short public-domain lines, classified in one word each, through both venues' cheapest lanes on a 06:00 deadline.",
+        "The Anthropic leg settled 24/24 at the batch tier. The OpenAI leg was rejected job by job with HTTP 400 'max_tokens is not supported with this model; use max_completion_tokens instead' - no tokens were processed, so nothing was billed there.",
+        "The sync fallback did not rescue those jobs: it rescues jobs that never came back, and these came back as failures. Fixed in the driver; run 2 is the same book re-run."
+      ]
+    },
+    {
+      "run_id": "2026-08-22-mechanics-2",
+      "scale": "mechanics proof (24 jobs, OpenAI, ceiling too low)",
+      "settled_utc": "2026-08-21T21:39:39-07:00",
+      "price_sheet": "2026-08-21",
+      "offpeak_version": "0.2.2.dev0",
+      "jobs": 24,
+      "ok": 24,
+      "failed": 0,
+      "fell_back": 0,
+      "sla_met": 24,
+      "input_tokens": 728,
+      "output_tokens": 374,
+      "list_usd": 0.0005943999999999998,
+      "paid_usd": 0.0002971999999999999,
+      "captured_usd": 0.0002971999999999999,
+      "captured_pct": 50.0,
+      "by_venue": {
+        "openai:batch": 24
+      },
+      "notes": [
+        "The OpenAI leg re-run after the driver learned to send max_completion_tokens for the gpt-5 family. It settled: 24/24, billed, SLA met.",
+        "It also returned twenty-four empty strings. gpt-5.6 reasons before it answers and the 16-token ceiling was spent entirely on reasoning, leaving nothing to say. The money here bought 374 output tokens of nothing.",
+        "Published rather than quietly dropped: a settlement that billed for no usable output is exactly the kind of thing a receipt exists to make visible."
+      ]
+    },
+    {
+      "run_id": "2026-08-22-mechanics-3",
+      "scale": "mechanics proof (24 jobs, OpenAI, ceiling sized to the model)",
+      "settled_utc": "2026-08-21T21:42:51-07:00",
+      "price_sheet": "2026-08-21",
+      "offpeak_version": "0.2.2.dev0",
+      "jobs": 24,
+      "ok": 24,
+      "failed": 0,
+      "fell_back": 0,
+      "sla_met": 24,
+      "input_tokens": 728,
+      "output_tokens": 971,
+      "list_usd": 0.0013108,
+      "paid_usd": 0.0006554,
+      "captured_usd": 0.0006554,
+      "captured_pct": 50.0,
+      "by_venue": {
+        "openai:batch": 24
+      },
+      "notes": [
+        "The same twenty-four lines once more, with a 256-token ceiling that leaves a reasoning model room to answer in.",
+        "24/24 settled with real one-word answers, 971 output tokens, zero fallbacks, every SLA met."
+      ]
+    },
+    {
+      "run_id": "2026-08-23-groq-1",
+      "scale": "venue probe (24 jobs, Groq, sync fallback only \u2014 batch tier 403)",
+      "settled_utc": "2026-08-23T03:13:00+00:00",
+      "price_sheet": "2026-08-21",
+      "offpeak_version": "0.2.3.dev0",
+      "jobs": 24,
+      "ok": 24,
+      "failed": 0,
+      "fell_back": 24,
+      "sla_met": 24,
+      "input_tokens": 2288,
+      "output_tokens": 7307,
+      "list_usd": 0.0023636999999999994,
+      "paid_usd": 0.0023636999999999994,
+      "captured_usd": 0.0,
+      "captured_pct": 0.0,
+      "by_venue": {
+        "groq:batch": 24
+      },
+      "notes": [
+        "Nothing here settled at a batch tier. Groq's Batch API answers 403 {\"code\": \"not_available_for_plan\"} on this account for the whole surface \u2014 POST /openai/v1/files with purpose=batch, GET /openai/v1/batches, everything. submit() therefore raised, no handle was ever recorded, and run() put all 24 jobs through the sync fallback, which is why captured is $0.00 and the full list price was paid. The 50% spread this venue exists to capture remains unverified against Groq; the blocker is plan entitlement, not code.",
+        "What the run does verify, with real money: the model routes to groq:batch, the request body renders in Groq's dialect, the new openai/gpt-oss price rows settle a real receipt instead of an unpriced one, and the SLA held \u2014 24/24 met via the fallback.",
+        "openai/gpt-oss-20b reasons far past a one-word answer. At a 512-token ceiling it averaged 304 output tokens and still returned 4 empty strings of 24 (finish_reason=length); at 256, 10 of 24 came back empty. Size a gpt-oss ceiling in the high hundreds at least."
+      ]
+    },
+    {
+      "run_id": "2026-08-24-gemini-1",
+      "scale": "venue proof (5 jobs, Gemini, batch tier \u2014 first third venue to capture)",
+      "settled_utc": "2026-08-24T02:33:04+00:00",
+      "price_sheet": "2026-08-23",
+      "offpeak_version": "0.2.4.dev0",
+      "jobs": 5,
+      "ok": 5,
+      "failed": 0,
+      "fell_back": 0,
+      "sla_met": 5,
+      "input_tokens": 124,
+      "output_tokens": 2427,
+      "list_usd": 0.00919425,
+      "paid_usd": 0.004597125,
+      "captured_usd": 0.004597125,
+      "captured_pct": 50.0,
+      "by_venue": {
+        "gemini:batch": 5
+      },
+      "notes": [
+        "The first venue outside OpenAI and Anthropic to actually settle at a batch tier. 5/5 ok, zero sync fallbacks, 50.0% captured, 2m36s end to end including polling. Groq (403) and Mistral (402) both gate batch behind a plan; this one was gated too until billing was enabled, and the same probe that returned FAILED_PRECONDITION then returns a validation error now.",
+        "Small on purpose. The quote gate prices output at the ceiling, and a reasoning model at a 512-token ceiling puts a 24-line book over the one-cent cap on the worst case alone. Five lines is what fits: worst case quoted $0.009696 against a $0.01 cap, actual list $0.009194.",
+        "Ceiling sized from the failure, not from hope. An earlier one-request probe at max_output_tokens=16 spent 13 tokens on thoughtsTokenCount and returned finishReason MAX_TOKENS with empty content \u2014 billed, no answer. At 512 the five jobs averaged 485 output tokens for a one-word answer, so even this ceiling was close to the wall: gemini-3.7-flash thinks hard about very little.",
+        "Thinking tokens are billed as output and are counted as output here. A receipt that read only candidatesTokenCount would have reported roughly a tenth of this bill."
+      ]
+    },
+    {
+      "run_id": "2026-08-24-mistral-1",
+      "scale": "venue probe (24 jobs, Mistral, sync fallback only \u2014 batch tier 402)",
+      "settled_utc": "2026-08-24T02:19:00+00:00",
+      "price_sheet": "2026-08-23",
+      "offpeak_version": "0.2.4.dev0",
+      "jobs": 24,
+      "ok": 24,
+      "failed": 0,
+      "fell_back": 24,
+      "sla_met": 24,
+      "input_tokens": 948,
+      "output_tokens": 94,
+      "list_usd": 0.00019860000000000003,
+      "paid_usd": 0.00019860000000000003,
+      "captured_usd": 0.0,
+      "captured_pct": 0.0,
+      "by_venue": {
+        "mistral:batch": 24
+      },
+      "notes": [
+        "Nothing here settled at a batch tier. POST /v1/batch/jobs answers 402 {\"detail\": \"You do not have access to this service. You can enable billing via the console.\"} on this account. submit() therefore raised, no handle was recorded, and run() put all 24 jobs through the sync fallback at list price \u2014 which is why captured is $0.00.",
+        "The paywall is on batch creation alone. POST /v1/files with purpose=batch returns 422 on a bad file (reachable), and POST /v1/chat/completions returns 200 (that is how these 24 settled).",
+        "This corrects the 2026-08-23 entitlement probe, which read Mistral as entitled on the strength of a 422 naming a missing field. Request validation runs BEFORE the billing check, so a deliberately malformed body can never reach the paywall. Only a well-formed request can, and this run is the well-formed request. A probe that cannot fail the way the real thing fails is not a probe of the real thing.",
+        "The driver itself is exercised: routing, one-model-per-batch, JSONL shape, the seven-state vocabulary and the sync fallback all worked. 24/24 real one-word answers, zero empties."
+      ]
+    },
+    {
+      "run_id": "2026-08-26-anthropic-1",
+      "scale": "venue proof (6 jobs, Anthropic, batch tier)",
+      "settled_utc": "2026-08-26T04:33:05+00:00",
+      "price_sheet": "2026-08-23",
+      "offpeak_version": "0.2.5.dev0",
+      "jobs": 6,
+      "ok": 6,
+      "failed": 0,
+      "fell_back": 0,
+      "sla_met": 6,
+      "input_tokens": 188,
+      "output_tokens": 38,
+      "list_usd": 0.000378,
+      "paid_usd": 0.000189,
+      "captured_usd": 0.000189,
+      "captured_pct": 50.0,
+      "by_venue": {
+        "anthropic:batch": 6
+      },
+      "notes": [
+        "6/6 ok, zero sync fallbacks, 50.0% captured, 4m05s end to end including polling, on claude-haiku-4-5.",
+        "Six lines rather than twenty-four, and the reason is the cap rather than the venue. The quote gate prices output at the ceiling it is given, so 24 jobs at a 256-token ceiling quote $0.031 of worst-case list on this model \u2014 over a one-cent cap on the worst case alone. Six lines quote $0.007836 and fit. Lowering the ceiling instead would have bought a cheaper quote and a worse run; the ceiling is what the model needs, so the book is what moved.",
+        "Actual output averaged 6.3 tokens a job against that 256-token ceiling. The gap between the quote and the bill is the quote pricing a ceiling and the bill pricing an answer, which is why the quote is marked a ceiling-based figure rather than a forecast."
+      ]
+    },
+    {
+      "run_id": "2026-08-26-gemini-1",
+      "scale": "venue proof (5 jobs, Gemini, batch tier)",
+      "settled_utc": "2026-08-26T04:31:04+00:00",
+      "price_sheet": "2026-08-23",
+      "offpeak_version": "0.2.5.dev0",
+      "jobs": 5,
+      "ok": 5,
+      "failed": 0,
+      "fell_back": 0,
+      "sla_met": 5,
+      "input_tokens": 124,
+      "output_tokens": 2422,
+      "list_usd": 0.0091755,
+      "paid_usd": 0.00458775,
+      "captured_usd": 0.00458775,
+      "captured_pct": 50.0,
+      "by_venue": {
+        "gemini:batch": 5
+      },
+      "notes": [
+        "5/5 ok, zero sync fallbacks, 50.0% captured, 2m04s end to end including polling \u2014 the fastest of tonight's four venues. Repeats 2026-08-24-gemini-1 two days on, at the same 50.0%, on gemini-3.7-flash.",
+        "Thinking tokens are billed as output and are counted as output here. Five jobs averaged 484.4 output tokens for a one-word answer, against a 512-token ceiling \u2014 the same wall the 08-24 run found, and the reason this lane runs five lines and not twenty-four. A receipt reading only candidatesTokenCount would report roughly a tenth of this bill.",
+        "This is the most expensive of tonight's four rows by an order of magnitude, on the fewest jobs, and that is the honest shape of the model rather than a fault in the run: gemini-3.7-flash thinks hard about very little, and the receipt prices what it actually wrote."
+      ]
+    },
+    {
+      "run_id": "2026-08-26-mistral-2",
+      "scale": "venue probe (24 jobs, Mistral, batch completed but was discarded \u2014 driver bug, sync fallback at list)",
+      "settled_utc": "2026-08-26T04:35:50+00:00",
+      "price_sheet": "2026-08-23",
+      "offpeak_version": "0.2.5.dev0",
+      "jobs": 24,
+      "ok": 24,
+      "failed": 0,
+      "fell_back": 24,
+      "sla_met": 24,
+      "input_tokens": 948,
+      "output_tokens": 93,
+      "list_usd": 0.000198,
+      "paid_usd": 0.000198,
+      "captured_usd": 0.0,
+      "captured_pct": 0.0,
+      "by_venue": {
+        "mistral:batch": 24
+      },
+      "notes": [
+        "The 402 is gone. POST /v1/batch/jobs returned a handle (4a7ccbb3-6581-412d-88c9-8e4a2af3109b) instead of the paywall that stopped 2026-08-24-mistral-1, and the batch ran to SUCCESS: 24/24 succeeded_requests, zero failed, created 04:29:02Z and completed 04:35:18Z \u2014 six minutes sixteen seconds. Billing being enabled is confirmed. That is not why this row captured nothing.",
+        "This row captured nothing because of a bug in offpeak's own Mistral driver. MistralBatch._download reached for response.text before reading the stream. mistralai returns a streaming response from files.download, and touching .text before read() raises httpx.ResponseNotRead \u2014 which subclasses RuntimeError, not AttributeError, so the getattr(response, 'text', None) guard around it never applied. collect() therefore raised, run() booked the completed batch as 'batch polling failed', dropped it, and put all 24 jobs through the sync fallback at list price.",
+        "The batch had already finished when that happened. offpeak wrote this settlement at 04:35:50Z; the batch completed at 04:35:18Z, thirty-two seconds earlier. This is not a queue that was too slow, a deadline that was too tight, or a venue that failed. The work was done, paid for, and thrown away by the client that ordered it.",
+        "So this run paid twice for the same twenty-four answers. offpeak accounts for the sync fallback it can see \u2014 $0.000198 at list, which is the paid figure above \u2014 and cannot see the batch it abandoned. That batch billed 948 input and 95 output tokens at the batch tier, roughly $0.0000996 more. True spend for this run is therefore about $0.000298, and the paid column above understates it. The receipt reports what offpeak knows; this note reports what it does not, because a settlement that quietly omits a bill is not a settlement.",
+        "Fixed in the same change that publishes this receipt: _download now reads before it reaches for text, and a regression test drives a response that raises on .text until read() is called. The old test double exposed a plain .text attribute, which is exactly why this shipped \u2014 the fake was more forgiving than the SDK. Verified against this very batch: collect() now returns all 24 results with matching job ids.",
+        "Kept on the ledger rather than deleted and re-run. A driver that reaches a batch tier and then loses it costs exactly as much as a venue that refuses one, and is harder to notice. See 2026-08-26-mistral-3 for the same book after the fix."
+      ]
+    },
+    {
+      "run_id": "2026-08-26-mistral-3",
+      "scale": "venue proof (24 jobs, Mistral, batch tier \u2014 fourth venue to capture)",
+      "settled_utc": "2026-08-26T04:43:13+00:00",
+      "price_sheet": "2026-08-23",
+      "offpeak_version": "0.2.5.dev0",
+      "jobs": 24,
+      "ok": 24,
+      "failed": 0,
+      "fell_back": 0,
+      "sla_met": 24,
+      "input_tokens": 948,
+      "output_tokens": 96,
+      "list_usd": 0.0001998,
+      "paid_usd": 9.99e-05,
+      "captured_usd": 9.99e-05,
+      "captured_pct": 50.0,
+      "by_venue": {
+        "mistral:batch": 24
+      },
+      "notes": [
+        "The fourth venue to capture. 24/24 ok, zero sync fallbacks, 50.0% captured, 33 seconds end to end on mistral-small-latest \u2014 the same twenty-four-line book that 2026-08-26-mistral-2 reached and threw away ninety minutes earlier.",
+        "Nothing about the venue changed between the two rows. The batch in mistral-2 also succeeded, 24/24, in 6m16s; what changed is that offpeak can now read the output file it was already being handed. MistralBatch._download reached for a streaming response's .text before reading it, which raises httpx.ResponseNotRead \u2014 a RuntimeError, so the getattr(..., None) guard around it never applied. collect() raised, run() booked the finished batch as a polling failure, and every job took the sync fallback at list.",
+        "So the pair is the evidence, not this row alone. mistral-1 (402) was a venue refusing the tier. mistral-2 was the tier reached, billed and discarded by a client bug. mistral-3 is the tier reached and kept. All three stay on the ledger: the two that captured nothing are why the one that captured is worth believing.",
+        "Cheapest row on the board tonight by a wide margin \u2014 $0.0000999 paid across 24 jobs \u2014 because mistral-small answers a one-word question in four tokens and is priced at $0.15/$0.60 per million. Sub-cent is the point; production volume is a different claim and is not made here."
+      ]
+    },
+    {
+      "run_id": "2026-08-26-openai-1",
+      "scale": "venue proof (24 jobs, OpenAI, batch tier)",
+      "settled_utc": "2026-08-26T04:37:07+00:00",
+      "price_sheet": "2026-08-23",
+      "offpeak_version": "0.2.5.dev0",
+      "jobs": 24,
+      "ok": 24,
+      "failed": 0,
+      "fell_back": 0,
+      "sla_met": 24,
+      "input_tokens": 728,
+      "output_tokens": 938,
+      "list_usd": 0.0012712,
+      "paid_usd": 0.0006356,
+      "captured_usd": 0.0006356,
+      "captured_pct": 50.0,
+      "by_venue": {
+        "openai:batch": 24
+      },
+      "notes": [
+        "24/24 ok, zero sync fallbacks, 50.0% captured, 8m07s end to end including polling. The full twenty-four-line book on gpt-5.6-luna.",
+        "Twenty-four real one-word answers, zero empty strings. That is the check this lane exists for: 2026-08-22-mechanics-2 billed a full 16-token ceiling of reasoning on this same family and returned 24 empty strings, SLA met and output worthless. At a 256-token ceiling the jobs averaged 39.1 output tokens, so the ceiling is comfortably clear of the reasoning rather than sized to hope.",
+        "Deadline was 2h, inside the venue's published 24h batch window, so the quote warned the SLA rested on the sync fallback. It did not need it \u2014 the batch landed with over an hour and a half to spare."
+      ]
+    }
+  ]
+}
