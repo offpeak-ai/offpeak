@@ -321,3 +321,106 @@ class TestPricing:
         assert q.unpriced == 0
         assert q.list_usd > 0
         assert q.batch_usd == pytest.approx(q.list_usd * 0.5)
+
+
+# --------------------------------------------------------------------------- #
+# _download — the streaming response that cost a real batch
+# --------------------------------------------------------------------------- #
+
+
+class StreamingResponse:
+    """What `mistralai` actually hands back: a stream that must be read first.
+
+    The original fake exposed a plain `.text` attribute, which is why the bug it
+    is modelling shipped — the double was more forgiving than the SDK. Touching
+    `.text` before `read()` raises, and the raise is a RuntimeError subclass, so
+    a `getattr(response, "text", None)` does not shield the caller from it.
+    """
+
+    def __init__(self, payload: bytes):
+        self._payload = payload
+        self._read = False
+
+    @property
+    def text(self):
+        if not self._read:
+            raise RuntimeError(
+                "Attempted to access streaming response content, "
+                "without having called `read()`."
+            )
+        return self._payload.decode("utf-8")
+
+    def read(self):
+        self._read = True
+        return self._payload
+
+
+def _venue_returning(response):
+    class Client:
+        class files:  # noqa: N801 — mirrors the SDK's attribute layout
+            @staticmethod
+            def download(*, file_id):
+                return response
+
+    return MistralBatch(client=Client())
+
+
+def test_download_reads_a_streaming_response():
+    """The regression: this raised ResponseNotRead and lost a completed batch."""
+    venue = _venue_returning(StreamingResponse(b'{"custom_id": "job_1"}\n'))
+    assert venue._download("file_1") == '{"custom_id": "job_1"}\n'
+
+
+def test_download_still_handles_a_plain_text_response():
+    venue = _venue_returning(type("Resp", (), {"text": "hello"})())
+    assert venue._download("file_1") == "hello"
+
+
+def test_download_still_handles_raw_bytes():
+    venue = _venue_returning(b"hello")
+    assert venue._download("file_1") == "hello"
+
+
+def test_download_survives_an_already_consumed_stream():
+    """read() may raise StreamConsumed; .text works by then and must be used."""
+
+    class Consumed:
+        text = "hello"
+
+        def read(self):
+            raise RuntimeError("stream consumed")
+
+    assert _venue_returning(Consumed())._download("file_1") == "hello"
+
+
+def test_collect_returns_results_from_a_streaming_response():
+    """End to end: a completed batch must not be lost to the fallback."""
+    line = json.dumps(
+        {
+            "custom_id": "job_1",
+            "response": {
+                "body": {
+                    "choices": [{"message": {"content": "Melancholic"}}],
+                    "usage": {"prompt_tokens": 40, "completion_tokens": 4},
+                }
+            },
+        }
+    )
+
+    class Client:
+        class files:  # noqa: N801
+            @staticmethod
+            def download(*, file_id):
+                return StreamingResponse((line + "\n").encode("utf-8"))
+
+        class batch:  # noqa: N801
+            class jobs:  # noqa: N801
+                @staticmethod
+                def get(*, job_id):
+                    return type(
+                        "J", (), {"output_file": "f1", "error_file": None, "status": "SUCCESS"}
+                    )()
+
+    got = MistralBatch(client=Client()).collect("h1")
+    assert set(got) == {"job_1"}
+    assert got["job_1"].text == "Melancholic"
