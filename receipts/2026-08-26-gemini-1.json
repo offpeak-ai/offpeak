@@ -1,0 +1,28 @@
+{
+  "run_id": "2026-08-26-gemini-1",
+  "scale": "venue proof (5 jobs, Gemini, batch tier)",
+  "settled_utc": "2026-08-26T04:31:04+00:00",
+  "deadline": "2h",
+  "price_sheet": "2026-08-23",
+  "offpeak_version": "0.2.5.dev0",
+  "jobs": 5,
+  "ok": 5,
+  "failed": 0,
+  "fell_back": 0,
+  "sla_met": 5,
+  "input_tokens": 124,
+  "output_tokens": 2422,
+  "list_usd": 0.0091755,
+  "paid_usd": 0.00458775,
+  "captured_usd": 0.00458775,
+  "captured_pct": 50.0,
+  "left_on_table_usd": 0.0,
+  "by_venue": {
+    "gemini:batch": 5
+  },
+  "notes": [
+    "5/5 ok, zero sync fallbacks, 50.0% captured, 2m04s end to end including polling \u2014 the fastest of tonight's four venues. Repeats 2026-08-24-gemini-1 two days on, at the same 50.0%, on gemini-3.7-flash.",
+    "Thinking tokens are billed as output and are counted as output here. Five jobs averaged 484.4 output tokens for a one-word answer, against a 512-token ceiling \u2014 the same wall the 08-24 run found, and the reason this lane runs five lines and not twenty-four. A receipt reading only candidatesTokenCount would report roughly a tenth of this bill.",
+    "This is the most expensive of tonight's four rows by an order of magnitude, on the fewest jobs, and that is the honest shape of the model rather than a fault in the run: gemini-3.7-flash thinks hard about very little, and the receipt prices what it actually wrote."
+  ]
+}
