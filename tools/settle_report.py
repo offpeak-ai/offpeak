@@ -20,6 +20,7 @@ import argparse
 import json
 import re
 import sys
+import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -33,6 +34,36 @@ REQUIRED = ("run_id", "scale", "settled_utc", "jobs", "list_usd", "paid_usd")
 #: The Markdown is for people; this is for the website and anyone else who
 #: would otherwise have to scrape a table or hand-copy rows into a page.
 SETTLED_SCHEMA = "offpeak.settled-runs/1"
+
+#: Namespace for :func:`receipt_uuid`. Fixed forever: the whole value of a
+#: derived id is that anyone can recompute it, and a namespace that moved would
+#: silently produce a different answer for the same run.
+RECEIPT_NAMESPACE = uuid.UUID("6f1b1a3e-6a2f-5c4d-9f0e-0b7a2c9d4e51")
+
+# Strings that must never reach a published receipt. Receipts are written by
+# hand from a run artifact that *does* hold verbatim provider text — and
+# provider errors routinely carry request URLs, org ids and account hints. Care
+# is not a control, so the ledger refuses them mechanically. Same reason
+# board-data is machine-written: a rule nobody can forget is worth more than one
+# everybody means to follow.
+_SECRET_SHAPED = (
+    re.compile(r"\bsk-[A-Za-z0-9_-]{8,}"),
+    re.compile(r"\bBearer\s+[A-Za-z0-9._-]{8,}"),
+    re.compile(r"\borg-[A-Za-z0-9]{8,}"),
+    re.compile(r"\bAKIA[0-9A-Z]{12,}"),
+    re.compile(r"\bAIza[0-9A-Za-z_-]{20,}"),
+    # Separators are matched as a run so an escaped JSON quote (\") between the
+    # key and its value does not walk the pattern straight past a real leak.
+    re.compile(
+        r"(?:api[_-]?key|secret|token|password)[\"\'\\\s:=]{1,6}[A-Za-z0-9._-]{12,}",
+        re.I,
+    ),
+)
+
+# Fields that belong to the run artifact, never to the published ledger. A
+# receipt is aggregate by construction: per-job rows carry model output, and on
+# somebody else's key that output is their data, not evidence of ours.
+_ARTIFACT_ONLY = ("per_job", "results", "messages", "prompts", "raw")
 
 SETTLED_HEADER = (
     "# Offpeak settled runs — real money\n\n"
@@ -57,6 +88,41 @@ _RUN_ID = re.compile(r"^\d{4}-\d{2}-\d{2}[0-9A-Za-z._-]*$")
 _DATA_ROW = re.compile(r"^\| \d{4}-\d{2}-\d{2}")
 
 
+def receipt_uuid(record: dict) -> str:
+    """A stable id for a run, **derived rather than minted**.
+
+    A random uuid4 would identify a receipt and prove nothing about it: only
+    whoever generated it could say it was right. This is a uuid5 over
+    ``run_id|settled_utc``, so anyone holding the receipt can recompute it and
+    check it — the same standard every money figure on this ledger is held to.
+
+    It also means the id cannot drift from the run it names. Change either
+    field and the id changes with it; store a different one and it is provably
+    wrong rather than merely unfamiliar.
+    """
+    return str(uuid.uuid5(RECEIPT_NAMESPACE, f"{record['run_id']}|{record['settled_utc']}"))
+
+
+def _refuse_unpublishable(path: Path, record: dict) -> None:
+    """Refuse a receipt carrying anything that must not be published."""
+    for field in _ARTIFACT_ONLY:
+        if field in record:
+            raise ValueError(
+                f"{path.name}: receipt carries {field!r}, which belongs to the run "
+                "artifact and not the published ledger — a receipt is aggregate "
+                "by construction"
+            )
+    blob = json.dumps(record)
+    for pattern in _SECRET_SHAPED:
+        found = pattern.search(blob)
+        if found:
+            raise ValueError(
+                f"{path.name}: receipt contains something secret-shaped "
+                f"({found.group(0)[:12]}…) — receipts are public, and provider "
+                "error text is not safe to copy verbatim"
+            )
+
+
 def load_receipt(path: Path) -> dict:
     """Read one receipt, refusing anything that cannot be rendered honestly."""
     record = json.loads(path.read_text())
@@ -69,6 +135,18 @@ def load_receipt(path: Path) -> dict:
         raise ValueError(
             f"{path.name}: run_id must open with the settlement date "
             f"(YYYY-MM-DD...), got {record['run_id']!r}"
+        )
+    _refuse_unpublishable(path, record)
+
+    # A receipt may carry its own id, but it does not get to disagree with the
+    # one its own fields derive. An id that can drift from the run it names is
+    # worse than no id at all.
+    derived = receipt_uuid(record)
+    stated = record.get("receipt_uuid")
+    if stated is not None and str(stated) != derived:
+        raise ValueError(
+            f"{path.name}: receipt_uuid {stated!r} does not match the id derived "
+            f"from run_id and settled_utc ({derived})"
         )
     return record
 
@@ -132,6 +210,8 @@ def as_record(record: dict) -> dict:
         pct = 0.0 if not record["list_usd"] else 100.0 * captured / record["list_usd"]
     return {
         "run_id": record["run_id"],
+        "receipt_uuid": receipt_uuid(record),
+        "venue_handles": record.get("venue_handles") or {},
         "scale": record["scale"],
         "settled_utc": record["settled_utc"],
         "price_sheet": record.get("price_sheet"),
@@ -195,11 +275,27 @@ def main() -> int:
     out.mkdir(parents=True, exist_ok=True)
     board = out / "SETTLED.md"
     runs: list[dict] = []
+    seen: dict[str, Path] = {}
     for path in receipts:
         record = load_receipt(path)
-        upsert_settled_row(board, record["run_id"], render_row(record))
+        run_id = record["run_id"]
+
+        # Two receipts claiming one run_id used to be silently destructive:
+        # SETTLED.md kept the last row and dropped the earlier settlement,
+        # while SETTLED.json kept both and double-counted the money. The two
+        # ledgers disagreed and nothing said so. A run id is an identity, and
+        # a collision is a mistake worth stopping for.
+        if run_id in seen:
+            raise ValueError(
+                f"{path.name}: run_id {run_id!r} is already claimed by "
+                f"{seen[run_id].name}. Two settlements cannot share one id — "
+                "the ledger would drop one of them and double-count the other."
+            )
+        seen[run_id] = path
+
+        upsert_settled_row(board, run_id, render_row(record))
         runs.append(as_record(record))
-        print(f"settled {record['run_id']} ({record['scale']})")
+        print(f"settled {run_id} ({record['scale']})")
 
     runs.sort(key=lambda r: r["run_id"])
     ledger = {

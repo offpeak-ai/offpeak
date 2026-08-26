@@ -213,3 +213,133 @@ def test_ledger_is_sorted_by_run_id(tmp_path, monkeypatch):
         monkeypatch,
     )
     assert [r["run_id"] for r in doc["runs"]] == ["2026-08-22-a", "2026-08-24-z"]
+
+
+# --------------------------------------------------------------------------- #
+# Receipt identity — derived, not minted
+# --------------------------------------------------------------------------- #
+
+
+def test_receipt_uuid_is_derived_from_the_run_it_names():
+    """Anyone holding the receipt can recompute it. That is the whole point."""
+    import uuid as _uuid
+
+    r = record()
+    expected = str(
+        _uuid.uuid5(sr.RECEIPT_NAMESPACE, f"{r['run_id']}|{r['settled_utc']}")
+    )
+    assert sr.receipt_uuid(r) == expected
+
+
+def test_receipt_uuid_is_stable_across_calls():
+    r = record()
+    assert sr.receipt_uuid(r) == sr.receipt_uuid(r)
+
+
+def test_receipt_uuid_moves_when_the_run_does():
+    a = sr.receipt_uuid(record(run_id="2026-08-22-a"))
+    b = sr.receipt_uuid(record(run_id="2026-08-22-b"))
+    c = sr.receipt_uuid(record(settled_utc="2026-08-23T05:00:00+00:00"))
+    assert len({a, b, c}) == 3
+
+
+def test_a_stated_uuid_that_disagrees_is_refused(tmp_path):
+    """An id that can drift from its run is worse than no id."""
+    d = _write_receipts(tmp_path, [record(receipt_uuid="00000000-0000-0000-0000-000000000000")])
+    with pytest.raises(ValueError, match="does not match the id derived"):
+        sr.load_receipt(next(d.glob("*.json")))
+
+
+def test_a_stated_uuid_that_agrees_is_accepted(tmp_path):
+    r = record()
+    r["receipt_uuid"] = sr.receipt_uuid(r)
+    d = _write_receipts(tmp_path, [r])
+    assert sr.load_receipt(next(d.glob("*.json")))["receipt_uuid"] == sr.receipt_uuid(r)
+
+
+def test_ledger_carries_the_uuid_and_the_handles(tmp_path, monkeypatch):
+    doc = _run(
+        tmp_path,
+        [record(venue_handles={"openai:batch": ["batch_abc123"]})],
+        monkeypatch,
+    )
+    assert doc["runs"][0]["receipt_uuid"] == sr.receipt_uuid(record())
+    assert doc["runs"][0]["venue_handles"] == {"openai:batch": ["batch_abc123"]}
+
+
+# --------------------------------------------------------------------------- #
+# Collision — used to be silently destructive
+# --------------------------------------------------------------------------- #
+
+
+def test_two_receipts_claiming_one_run_id_are_refused(tmp_path, monkeypatch):
+    """SETTLED.md dropped one and SETTLED.json double-counted the other."""
+    rec = _write_receipts(
+        tmp_path, [record(run_id="2026-08-22-x", list_usd=1.0)]
+    )
+    (rec / "second.json").write_text(
+        json.dumps(record(run_id="2026-08-22-x", list_usd=99.0))
+    )
+    monkeypatch.setattr(
+        "sys.argv",
+        ["settle_report.py", "--receipts", str(rec), "--outdir", str(tmp_path / "b")],
+    )
+    with pytest.raises(ValueError, match="already claimed by"):
+        sr.main()
+
+
+# --------------------------------------------------------------------------- #
+# What must never be published
+# --------------------------------------------------------------------------- #
+
+
+@pytest.mark.parametrize(
+    "field", ["per_job", "results", "messages", "prompts", "raw"]
+)
+def test_artifact_only_fields_are_refused(tmp_path, field):
+    """A receipt is aggregate by construction; per-job rows carry model output."""
+    d = _write_receipts(tmp_path, [record(**{field: [{"text": "hello"}]})])
+    with pytest.raises(ValueError, match=field):
+        sr.load_receipt(next(d.glob("*.json")))
+
+
+@pytest.mark.parametrize(
+    "leak",
+    [
+        "sk-abcdefghijklmnop",
+        "Bearer abcdefghijklmnop",
+        "org-abcdefghijkl",
+        "AKIAABCDEFGHIJKLMNOP",
+        "AIzaSyAbcdefghijklmnopqrstuvwxyz012",
+        'api_key: "abcdefghijklmnop"',
+    ],
+)
+def test_secret_shaped_content_is_refused(tmp_path, leak):
+    """Provider error text is not safe to copy verbatim into a public file."""
+    d = _write_receipts(tmp_path, [record(notes=[f"the venue said: {leak}"])])
+    with pytest.raises(ValueError, match="secret-shaped"):
+        sr.load_receipt(next(d.glob("*.json")))
+
+
+def test_a_batch_handle_is_not_mistaken_for_a_secret(tmp_path):
+    """Handles are opaque and account-scoped — publishing one grants nothing."""
+    d = _write_receipts(
+        tmp_path,
+        [
+            record(
+                venue_handles={
+                    "openai:batch": ["batch_6a8e6b8ef08c8190bd5cac0858f9789c"],
+                    "anthropic:batch": ["msgbatch_01BHiETAX1Hprbvq4rFnj6PS"],
+                    "mistral:batch": ["4a7ccbb3-6581-412d-88c9-8e4a2af3109b"],
+                    "gemini:batch": ["batches/zrdgw9dep0lx52gnog4y5z78jld998p0p8va"],
+                }
+            )
+        ],
+    )
+    assert sr.load_receipt(next(d.glob("*.json")))["venue_handles"]
+
+
+def test_every_committed_receipt_passes_the_guards():
+    """The ledger in this repo must satisfy the rules it enforces on others."""
+    for path in sorted(Path(__file__).resolve().parent.parent.glob("receipts/*.json")):
+        sr.load_receipt(path)
