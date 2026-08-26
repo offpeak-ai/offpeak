@@ -27,6 +27,7 @@ nav:
   - Home: index.md
   - Quickstart: quickstart.md
   - Temporal: quickstart-temporal.md
+  - Airflow: quickstart-airflow.md
   - The Spread Board: night-board.md
   - Spec: spec.md
   - API reference: reference.md
