@@ -203,15 +203,34 @@ class MistralBatch(Venue):
         }
 
     def _download(self, file_id: str) -> str:
-        """The file's text, however this SDK version hands it back."""
+        """The file's text, however this SDK version hands it back.
+
+        Read before reaching for ``.text``, not after. ``files.download`` returns
+        a *streaming* response on the current SDK, and touching ``.text`` before
+        it has been read raises ``httpx.ResponseNotRead`` — which is a
+        ``RuntimeError``, not an ``AttributeError``, so ``getattr(response,
+        "text", None)`` does not shield it. Asking for the text first therefore
+        raised out of :meth:`collect`, ``run()`` booked the completed batch as a
+        polling failure, and every job took the sync fallback at list price:
+        the batch tier was reached, paid for, and then thrown away.
+
+        See ``receipts/2026-08-26-mistral-2.json`` — that is this bug's bill.
+        """
         response = self.client.files.download(file_id=file_id)
-        text = getattr(response, "text", None)
-        if text is not None:
-            return text
         read = getattr(response, "read", None)
         if callable(read):
-            raw = read()
-            return raw.decode("utf-8") if isinstance(raw, bytes) else str(raw)
+            try:
+                raw = read()
+            except Exception:  # noqa: BLE001 — an already-consumed stream
+                raw = None
+            if raw is not None:
+                return raw.decode("utf-8") if isinstance(raw, bytes) else str(raw)
+        try:
+            text = response.text
+        except Exception:  # noqa: BLE001 — unread stream, or no .text at all
+            text = None
+        if text is not None:
+            return text
         return response.decode("utf-8") if isinstance(response, bytes) else str(response)
 
     def cancel(self, handle: str) -> None:
