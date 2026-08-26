@@ -1,0 +1,29 @@
+{
+  "run_id": "2026-08-26-mistral-3",
+  "scale": "venue proof (24 jobs, Mistral, batch tier \u2014 fourth venue to capture)",
+  "settled_utc": "2026-08-26T04:43:13+00:00",
+  "deadline": "2h",
+  "price_sheet": "2026-08-23",
+  "offpeak_version": "0.2.5.dev0",
+  "jobs": 24,
+  "ok": 24,
+  "failed": 0,
+  "fell_back": 0,
+  "sla_met": 24,
+  "input_tokens": 948,
+  "output_tokens": 96,
+  "list_usd": 0.0001998,
+  "paid_usd": 9.99e-05,
+  "captured_usd": 9.99e-05,
+  "captured_pct": 50.0,
+  "left_on_table_usd": 0.0,
+  "by_venue": {
+    "mistral:batch": 24
+  },
+  "notes": [
+    "The fourth venue to capture. 24/24 ok, zero sync fallbacks, 50.0% captured, 33 seconds end to end on mistral-small-latest \u2014 the same twenty-four-line book that 2026-08-26-mistral-2 reached and threw away ninety minutes earlier.",
+    "Nothing about the venue changed between the two rows. The batch in mistral-2 also succeeded, 24/24, in 6m16s; what changed is that offpeak can now read the output file it was already being handed. MistralBatch._download reached for a streaming response's .text before reading it, which raises httpx.ResponseNotRead \u2014 a RuntimeError, so the getattr(..., None) guard around it never applied. collect() raised, run() booked the finished batch as a polling failure, and every job took the sync fallback at list.",
+    "So the pair is the evidence, not this row alone. mistral-1 (402) was a venue refusing the tier. mistral-2 was the tier reached, billed and discarded by a client bug. mistral-3 is the tier reached and kept. All three stay on the ledger: the two that captured nothing are why the one that captured is worth believing.",
+    "Cheapest row on the board tonight by a wide margin \u2014 $0.0000999 paid across 24 jobs \u2014 because mistral-small answers a one-word question in four tokens and is priced at $0.15/$0.60 per million. Sub-cent is the point; production volume is a different claim and is not made here."
+  ]
+}

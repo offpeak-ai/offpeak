@@ -1,0 +1,28 @@
+{
+  "run_id": "2026-08-26-anthropic-1",
+  "scale": "venue proof (6 jobs, Anthropic, batch tier)",
+  "settled_utc": "2026-08-26T04:33:05+00:00",
+  "deadline": "2h",
+  "price_sheet": "2026-08-23",
+  "offpeak_version": "0.2.5.dev0",
+  "jobs": 6,
+  "ok": 6,
+  "failed": 0,
+  "fell_back": 0,
+  "sla_met": 6,
+  "input_tokens": 188,
+  "output_tokens": 38,
+  "list_usd": 0.000378,
+  "paid_usd": 0.000189,
+  "captured_usd": 0.000189,
+  "captured_pct": 50.0,
+  "left_on_table_usd": 0.0,
+  "by_venue": {
+    "anthropic:batch": 6
+  },
+  "notes": [
+    "6/6 ok, zero sync fallbacks, 50.0% captured, 4m05s end to end including polling, on claude-haiku-4-5.",
+    "Six lines rather than twenty-four, and the reason is the cap rather than the venue. The quote gate prices output at the ceiling it is given, so 24 jobs at a 256-token ceiling quote $0.031 of worst-case list on this model \u2014 over a one-cent cap on the worst case alone. Six lines quote $0.007836 and fit. Lowering the ceiling instead would have bought a cheaper quote and a worse run; the ceiling is what the model needs, so the book is what moved.",
+    "Actual output averaged 6.3 tokens a job against that 256-token ceiling. The gap between the quote and the bill is the quote pricing a ceiling and the bill pricing an answer, which is why the quote is marked a ceiling-based figure rather than a forecast."
+  ]
+}

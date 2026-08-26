@@ -1,0 +1,28 @@
+{
+  "run_id": "2026-08-26-openai-1",
+  "scale": "venue proof (24 jobs, OpenAI, batch tier)",
+  "settled_utc": "2026-08-26T04:37:07+00:00",
+  "deadline": "2h",
+  "price_sheet": "2026-08-23",
+  "offpeak_version": "0.2.5.dev0",
+  "jobs": 24,
+  "ok": 24,
+  "failed": 0,
+  "fell_back": 0,
+  "sla_met": 24,
+  "input_tokens": 728,
+  "output_tokens": 938,
+  "list_usd": 0.0012712,
+  "paid_usd": 0.0006356,
+  "captured_usd": 0.0006356,
+  "captured_pct": 50.0,
+  "left_on_table_usd": 0.0,
+  "by_venue": {
+    "openai:batch": 24
+  },
+  "notes": [
+    "24/24 ok, zero sync fallbacks, 50.0% captured, 8m07s end to end including polling. The full twenty-four-line book on gpt-5.6-luna.",
+    "Twenty-four real one-word answers, zero empty strings. That is the check this lane exists for: 2026-08-22-mechanics-2 billed a full 16-token ceiling of reasoning on this same family and returned 24 empty strings, SLA met and output worthless. At a 256-token ceiling the jobs averaged 39.1 output tokens, so the ceiling is comfortably clear of the reasoning rather than sized to hope.",
+    "Deadline was 2h, inside the venue's published 24h batch window, so the quote warned the SLA rested on the sync fallback. It did not need it \u2014 the batch landed with over an hour and a half to spare."
+  ]
+}
