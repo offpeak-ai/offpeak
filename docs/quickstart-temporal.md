@@ -166,4 +166,5 @@ Logging that line from the activity puts the spread in the same place you
 already look when a workflow misbehaves.
 
 See the **[Quickstart](quickstart.md)** for `quote()`, `run()` and receipts in
-isolation, and the **[Spec](spec.md)** for the full deadline semantics.
+isolation, **[Airflow](quickstart-airflow.md)** for the same retelling under a
+scheduler, and the **[Spec](spec.md)** for the full deadline semantics.
