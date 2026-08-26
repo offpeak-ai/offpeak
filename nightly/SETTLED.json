@@ -1,6 +1,6 @@
 {
   "schema": "offpeak.settled-runs/1",
-  "generated_utc": "2026-08-26T17:51:27+00:00",
+  "generated_utc": "2026-08-26T20:01:46+00:00",
   "summary": {
     "runs": 11,
     "jobs": 232,
@@ -19,6 +19,8 @@
   "runs": [
     {
       "run_id": "2026-08-22-mechanics-1",
+      "receipt_uuid": "3f4c7555-f797-51e6-a512-88bb37e8036f",
+      "venue_handles": {},
       "scale": "mechanics proof (48 jobs, two venues)",
       "settled_utc": "2026-08-21T21:35:46-07:00",
       "price_sheet": "2026-08-21",
@@ -46,6 +48,8 @@
     },
     {
       "run_id": "2026-08-22-mechanics-2",
+      "receipt_uuid": "2fdd530d-876f-536b-93b2-3e7d49a0355f",
+      "venue_handles": {},
       "scale": "mechanics proof (24 jobs, OpenAI, ceiling too low)",
       "settled_utc": "2026-08-21T21:39:39-07:00",
       "price_sheet": "2026-08-21",
@@ -72,6 +76,8 @@
     },
     {
       "run_id": "2026-08-22-mechanics-3",
+      "receipt_uuid": "e77f36d1-f91f-5f0e-808a-cb4974916b8b",
+      "venue_handles": {},
       "scale": "mechanics proof (24 jobs, OpenAI, ceiling sized to the model)",
       "settled_utc": "2026-08-21T21:42:51-07:00",
       "price_sheet": "2026-08-21",
@@ -97,6 +103,8 @@
     },
     {
       "run_id": "2026-08-23-groq-1",
+      "receipt_uuid": "94e8b362-09fd-5868-9f7e-62d255f159de",
+      "venue_handles": {},
       "scale": "venue probe (24 jobs, Groq, sync fallback only \u2014 batch tier 403)",
       "settled_utc": "2026-08-23T03:13:00+00:00",
       "price_sheet": "2026-08-21",
@@ -123,6 +131,8 @@
     },
     {
       "run_id": "2026-08-24-gemini-1",
+      "receipt_uuid": "135eb019-2939-58f2-9f27-aed778d4d57b",
+      "venue_handles": {},
       "scale": "venue proof (5 jobs, Gemini, batch tier \u2014 first third venue to capture)",
       "settled_utc": "2026-08-24T02:33:04+00:00",
       "price_sheet": "2026-08-23",
@@ -150,6 +160,8 @@
     },
     {
       "run_id": "2026-08-24-mistral-1",
+      "receipt_uuid": "75042dbe-a934-5e15-97e2-9a2f8ae0b5c7",
+      "venue_handles": {},
       "scale": "venue probe (24 jobs, Mistral, sync fallback only \u2014 batch tier 402)",
       "settled_utc": "2026-08-24T02:19:00+00:00",
       "price_sheet": "2026-08-23",
@@ -177,6 +189,12 @@
     },
     {
       "run_id": "2026-08-26-anthropic-1",
+      "receipt_uuid": "ff878dd9-8885-5dd7-bf8c-bf25a9bc665b",
+      "venue_handles": {
+        "anthropic:batch": [
+          "msgbatch_01BHiETAX1Hprbvq4rFnj6PS"
+        ]
+      },
       "scale": "venue proof (6 jobs, Anthropic, batch tier)",
       "settled_utc": "2026-08-26T04:33:05+00:00",
       "price_sheet": "2026-08-23",
@@ -203,6 +221,12 @@
     },
     {
       "run_id": "2026-08-26-gemini-1",
+      "receipt_uuid": "11d42f9d-ded9-50ba-a71a-53c476ab1677",
+      "venue_handles": {
+        "gemini:batch": [
+          "batches/zrdgw9dep0lx52gnog4y5z78jld998p0p8va"
+        ]
+      },
       "scale": "venue proof (5 jobs, Gemini, batch tier)",
       "settled_utc": "2026-08-26T04:31:04+00:00",
       "price_sheet": "2026-08-23",
@@ -229,6 +253,12 @@
     },
     {
       "run_id": "2026-08-26-mistral-2",
+      "receipt_uuid": "e62d2b47-987b-5c03-a1c5-12de5eee6dea",
+      "venue_handles": {
+        "mistral:batch": [
+          "4a7ccbb3-6581-412d-88c9-8e4a2af3109b"
+        ]
+      },
       "scale": "venue probe (24 jobs, Mistral, batch completed but was discarded \u2014 driver bug, sync fallback at list)",
       "settled_utc": "2026-08-26T04:35:50+00:00",
       "price_sheet": "2026-08-23",
@@ -258,6 +288,12 @@
     },
     {
       "run_id": "2026-08-26-mistral-3",
+      "receipt_uuid": "763f5fdf-e83f-5a41-a8f3-6d6550d3e46e",
+      "venue_handles": {
+        "mistral:batch": [
+          "1ae160f2-fcd4-4bdb-afe1-17457fa1985f"
+        ]
+      },
       "scale": "venue proof (24 jobs, Mistral, batch tier \u2014 fourth venue to capture)",
       "settled_utc": "2026-08-26T04:43:13+00:00",
       "price_sheet": "2026-08-23",
@@ -285,6 +321,12 @@
     },
     {
       "run_id": "2026-08-26-openai-1",
+      "receipt_uuid": "d51502ec-ad15-5674-a1fc-59f9d6bc0b07",
+      "venue_handles": {
+        "openai:batch": [
+          "batch_6a8e6b8ef08c8190bd5cac0858f9789c"
+        ]
+      },
       "scale": "venue proof (24 jobs, OpenAI, batch tier)",
       "settled_utc": "2026-08-26T04:37:07+00:00",
       "price_sheet": "2026-08-23",
