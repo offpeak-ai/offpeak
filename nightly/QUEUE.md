@@ -16,3 +16,7 @@ Written by `tools/queue_probe.py`, never by hand.
 | 2026-08-24 | openai | gpt-5.6-luna | 24h | 2 | 1m34s | 0.110% | completed | $0.00000780 |
 | 2026-08-25 | anthropic | claude-haiku-4-5 | 24h | 2 | 4m51s | 0.337% | completed | $0.0000360 |
 | 2026-08-25 | openai | gpt-5.6-luna | 24h | 2 | — | — | censored | — |
+| 2026-08-26 | anthropic | claude-haiku-4-5 | 24h | 2 | 2m35s | 0.179% | completed | $0.0000360 |
+| 2026-08-26 | openai | gpt-5.6-luna | 24h | 2 | — | — | censored | — |
+| 2026-08-26 | gemini | gemini-3.7-flash | 24h | 2 | 5m06s | 0.355% | completed | $0.000613 |
+| 2026-08-26 | mistral | mistral-small-latest | 24h | 2 | — | — | censored | — |
