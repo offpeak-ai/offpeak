@@ -406,3 +406,60 @@ def test_receipt_render_shows_a_dash_for_an_unpriced_model():
     venue = FakeVenue(prefix="mystery")
     results = offpeak.run([job("mystery-model", "x")], "2h", venues=[venue], poll_interval=0)
     assert "list $—" in str(results[0].receipt)
+
+
+class HalfBrokenVenue(FakeVenue):
+    """Completes the batch, but returns one job as an error row — the
+    mechanics-1 shape: HTTP 400s inside a "completed" batch."""
+
+    def collect(self, handle):
+        results = super().collect(handle)
+        first = next(iter(results))
+        results[first] = Result(
+            job=None, text=None, raw={}, error="HTTP 400: max_tokens unsupported"
+        )
+        return results
+
+
+def test_a_job_returned_failed_is_rescued_not_shrugged_at():
+    # mechanics-1, on the public ledger: 24 jobs came back as error rows inside
+    # a completed batch and the rescue skipped them. The SLA does not care
+    # whether a job vanished or came back broken.
+    venue = HalfBrokenVenue()
+    jobs = [job("claude-haiku-4-5", f"doc {i}") for i in range(3)]
+    results = offpeak.run(jobs, "8h", venues=[venue], poll_interval=0)
+
+    assert all(r.ok for r in results)
+    rescued = [r for r in results if r.receipt and r.receipt.fell_back]
+    assert len(rescued) == 1
+    assert venue.sync_runs == [rescued[0].job.id]
+
+    settlement = offpeak.receipt(results)
+    assert settlement.sla_met == 3
+    assert settlement.fell_back == 1
+
+
+def test_fallback_none_reports_the_broken_return_instead_of_rescuing():
+    venue = HalfBrokenVenue()
+    jobs = [job("claude-haiku-4-5", f"doc {i}") for i in range(2)]
+    results = offpeak.run(jobs, "8h", venues=[venue], fallback="none", poll_interval=0)
+
+    failed = [r for r in results if not r.ok]
+    assert len(failed) == 1
+    assert "max_tokens unsupported" in failed[0].error
+    assert venue.sync_runs == []
+
+
+def test_a_failed_rescue_of_a_broken_return_keeps_both_errors():
+    class DoublyBrokenVenue(HalfBrokenVenue):
+        def run_sync(self, j):
+            self.sync_runs.append(j.id)
+            return Result(job=j, error="sync also refused")
+
+    venue = DoublyBrokenVenue()
+    jobs = [job("claude-haiku-4-5", "doc")]
+    results = offpeak.run(jobs, "8h", venues=[venue], poll_interval=0)
+
+    assert not results[0].ok
+    assert "batch returned an error" in results[0].error
+    assert "sync also refused" in results[0].error

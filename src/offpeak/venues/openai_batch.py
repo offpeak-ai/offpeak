@@ -9,7 +9,7 @@ from __future__ import annotations
 import json
 
 from ..job import Job, Result
-from .base import BatchState, Venue
+from .base import BatchState, Venue, iso_utc
 
 __all__ = ["OpenAIBatch", "build_jsonl", "parse_output_line", "body_params"]
 
@@ -122,11 +122,29 @@ class OpenAIBatch(Venue):
             "cancelled": "cancelled",
         }
         counts = getattr(batch, "request_counts", None)
+        # The first terminal timestamp the batch object carries. "expired" is
+        # deliberately preserved in raw_status: run() treats it as failed, but
+        # an expiry IS the observation the queue probe exists to catch.
+        finished = next(
+            (
+                ts
+                for ts in (
+                    getattr(batch, "completed_at", None),
+                    getattr(batch, "failed_at", None),
+                    getattr(batch, "expired_at", None),
+                    getattr(batch, "cancelled_at", None),
+                )
+                if ts
+            ),
+            None,
+        )
         return BatchState(
             status=mapping.get(batch.status, "in_progress"),
             completed=getattr(counts, "completed", 0) or 0,
             failed=getattr(counts, "failed", 0) or 0,
             total=getattr(counts, "total", 0) or 0,
+            raw_status=str(batch.status) if getattr(batch, "status", None) else None,
+            completed_at_utc=iso_utc(finished),
         )
 
     def collect(self, handle: str) -> dict[str, Result]:

@@ -8,10 +8,39 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
+from datetime import datetime, timezone
 
 from ..job import Job, Result
 
-__all__ = ["Venue", "BatchState"]
+__all__ = ["Venue", "BatchState", "iso_utc"]
+
+
+def iso_utc(value) -> str | None:
+    """Normalise a provider timestamp — unix seconds, datetime, or ISO string —
+    to an ISO 8601 UTC string. Anything unrecognisable becomes None rather than
+    a guess: an absent completion time is honest, a wrong one poisons a record.
+    """
+    if value is None:
+        return None
+    try:
+        if isinstance(value, (int, float)):
+            if value <= 0:
+                return None
+            return datetime.fromtimestamp(value, tz=timezone.utc).isoformat(
+                timespec="seconds"
+            )
+        if isinstance(value, datetime):
+            if value.tzinfo is None:
+                value = value.replace(tzinfo=timezone.utc)
+            return value.astimezone(timezone.utc).isoformat(timespec="seconds")
+        if isinstance(value, str) and value:
+            parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+            if parsed.tzinfo is None:
+                parsed = parsed.replace(tzinfo=timezone.utc)
+            return parsed.astimezone(timezone.utc).isoformat(timespec="seconds")
+    except (ValueError, OverflowError, OSError):
+        return None
+    return None
 
 
 @dataclass
@@ -22,6 +51,14 @@ class BatchState:
     completed: int = 0
     failed: int = 0
     total: int = 0
+    #: The provider's own status word, unmapped ("expired" survives here even
+    #: though it maps to "failed" for run()'s purposes). None when the driver
+    #: has nothing beyond the mapped status.
+    raw_status: str | None = None
+    #: When the provider says the batch finished (ISO 8601, UTC), if it says.
+    #: A poller that checks once a day still learns the true completion time
+    #: from this field; without it, resolution is bounded by the check times.
+    completed_at_utc: str | None = None
 
     @property
     def done(self) -> bool:

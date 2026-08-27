@@ -133,7 +133,21 @@ def run(
     for name in list(pending):
         _cancel(groups[name][0], pending.pop(name))
     stragglers = _missing(groups, collected)
-    if stragglers and fallback == "sync" and seconds_until(resolved) > 0:
+    # A job that came BACK failed is a straggler too. mechanics-1 put this gap
+    # on the public ledger: 24 jobs returned as HTTP 400 rows inside a
+    # "completed" batch, and the rescue skipped them because they were present
+    # in `collected` — it rescued jobs that never came back, not jobs that came
+    # back broken. The SLA does not care which way a job missed.
+    failed_returns = [
+        j
+        for j in job_list
+        if j.id in collected and not collected[j.id].ok and j not in stragglers
+    ]
+    if (
+        (stragglers or failed_returns)
+        and fallback == "sync"
+        and seconds_until(resolved) > 0
+    ):
         for j in stragglers:
             name = _venue_of(j, groups)
             result = _run_sync(groups[name][0], j)
@@ -141,6 +155,18 @@ def run(
                 fell_back.add(j.id)
             elif name in venue_errors:
                 result.error = f"{venue_errors[name]}; sync fallback failed: {result.error}"
+            collected[j.id] = result
+        for j in failed_returns:
+            name = _venue_of(j, groups)
+            batch_error = collected[j.id].error
+            result = _run_sync(groups[name][0], j)
+            if result.ok:
+                fell_back.add(j.id)
+            else:
+                result.error = (
+                    f"batch returned an error ({batch_error}); "
+                    f"sync fallback failed: {result.error}"
+                )
             collected[j.id] = result
 
     completed_at = datetime.now().astimezone()

@@ -145,18 +145,52 @@ class TestMeasurement:
         # 864s of a 24h window is exactly 1%.
         assert leg.fraction_of_window_used == pytest.approx(0.01)
 
-    def test_a_batch_still_open_at_the_cutoff_is_censored_not_timed(self, monkeypatch):
-        # Writing max_wait down as a completion time is the one way this record
-        # could start lying: it is a lower bound, and the row has to say so.
+    def test_a_batch_still_open_at_the_cutoff_is_left_running_not_cancelled(
+        self, monkeypatch
+    ):
+        # The old design cancelled here and wrote "censored" — destroying
+        # exactly the slow observations the map exists for. Now the leg is
+        # recorded open, the handle is kept, and a later run resolves it.
         stub = self._stub_venue(monkeypatch, ["in_progress"] * 50)
         leg = qp.measure_leg(
             "openai", "24h", max_wait=0, poll=0, now=self._clock(0, 1), sleep=lambda s: None
         )
-        assert leg.status == "censored"
+        assert leg.status == "open"
         assert leg.elapsed_seconds is None
         assert leg.fraction_of_window_used is None
-        assert "lower bound" in leg.note
-        assert stub.cancelled == ["batch_1"], "a censored batch must not be left running"
+        assert leg.handle == "batch_1"
+        assert "left running" in leg.note
+        assert stub.cancelled == [], "the tail must not be cancelled — it is the product"
+
+    def test_a_poll_failure_leaves_the_batch_running_too(self, monkeypatch):
+        # A network blip on our side says nothing about the batch. Cancelling
+        # would have converted our failure into the venue's.
+        class State:
+            status = "in_progress"
+            failed = 0
+            done = False
+
+        class Stub:
+            cancelled = []
+
+            def submit(self, jobs):
+                return "batch_1"
+
+            def status(self, handle):
+                raise Boom("connection reset")
+
+            def cancel(self, handle):
+                Stub.cancelled.append(handle)
+
+        Stub.cancelled = []
+        monkeypatch.setattr(qp, "_venue", lambda name, window: Stub())
+        leg = qp.measure_leg(
+            "openai", "24h", max_wait=60, poll=0, now=self._clock(0, 1), sleep=lambda s: None
+        )
+        assert leg.status == "open"
+        assert leg.handle == "batch_1"
+        assert "poll failed" in leg.note
+        assert Stub.cancelled == []
 
     def test_a_failed_submit_is_recorded_rather_than_raised(self, monkeypatch):
         class Stub:
@@ -318,3 +352,222 @@ class TestPlanning:
         # gpt-oss burns hundreds of tokens before it answers; an empty
         # completion still bills and still takes queue time to produce.
         assert qp.CEILINGS["openai/gpt-oss-20b"] >= 512
+
+
+class TestOpenLegResolution:
+    """The park-and-resolve loop: how the probe observes the tail."""
+
+    def _record(self, tmp_path, date="2026-08-26", status="open", handle="batch_9"):
+        record = {
+            "date": date,
+            "started_utc": f"{date}T08:00:00+00:00",
+            "cap_usd": 0.01,
+            "spent_usd": 0.0,
+            "legs": [
+                {
+                    "venue": "openai",
+                    "model": "gpt-5.6-luna",
+                    "declared_window": "24h",
+                    "declared_window_seconds": 86400,
+                    "jobs": 2,
+                    "submitted_utc": f"{date}T08:00:00+00:00",
+                    "completed_utc": None,
+                    "elapsed_seconds": None,
+                    "fraction_of_window_used": None,
+                    "status": status,
+                    "input_tokens": 0,
+                    "output_tokens": 0,
+                    "paid_usd": None,
+                    "quoted_list_usd": 0.001,
+                    "skipped_reason": None,
+                    "note": "still open",
+                    "handle": handle,
+                }
+            ],
+        }
+        path = tmp_path / f"{date}-queue.json"
+        path.write_text(json.dumps(record))
+        qp.save_open(
+            tmp_path,
+            [
+                {
+                    "record": path.name,
+                    "leg_index": 0,
+                    "venue": "openai",
+                    "model": "gpt-5.6-luna",
+                    "declared_window": "24h",
+                    "declared_window_seconds": 86400,
+                    "handle": handle,
+                    "submitted_utc": f"{date}T08:00:00+00:00",
+                    "last_checked_utc": f"{date}T08:30:00+00:00",
+                }
+            ],
+        )
+        return path
+
+    def _state(self, status, raw_status=None, completed_at_utc=None, completed=2, total=2):
+        class State:
+            pass
+
+        s = State()
+        s.status = status
+        s.raw_status = raw_status
+        s.completed_at_utc = completed_at_utc
+        s.completed = completed
+        s.failed = 0
+        s.total = total
+        s.done = status in ("completed", "failed", "cancelled")
+        return s
+
+    def _venue_stub(self, monkeypatch, state, usage=None):
+        class Result:
+            raw = usage if usage is not None else {"prompt_tokens": 10, "completion_tokens": 4}
+
+        class Stub:
+            cancelled = []
+
+            def status(self, handle):
+                return state
+
+            def collect(self, handle):
+                return {"a": Result()}
+
+            def cancel(self, handle):
+                Stub.cancelled.append(handle)
+
+        Stub.cancelled = []
+        monkeypatch.setattr(qp, "_venue", lambda name, window: Stub())
+        return Stub
+
+    def _now(self, iso):
+        fixed = datetime.fromisoformat(iso)
+        return lambda: fixed
+
+    def test_a_completed_leg_gets_the_providers_own_timestamp(
+        self, tmp_path, monkeypatch
+    ):
+        # Submitted 08:00, provider says it finished 14:00 — the row must say
+        # six hours even though we only looked the next morning.
+        monkeypatch.setenv("OPENAI_API_KEY", "k")
+        path = self._record(tmp_path)
+        self._venue_stub(
+            monkeypatch,
+            self._state("completed", completed_at_utc="2026-08-26T14:00:00+00:00"),
+        )
+        qp.resolve_open(tmp_path, now=self._now("2026-08-27T06:30:00+00:00"))
+
+        leg = json.loads(path.read_text())["legs"][0]
+        assert leg["status"] == "completed"
+        assert leg["elapsed_seconds"] == 6 * 3600
+        assert leg["fraction_of_window_used"] == pytest.approx(0.25)
+        assert qp.load_open(tmp_path) == []
+
+    def test_without_a_provider_timestamp_the_row_admits_the_bound(
+        self, tmp_path, monkeypatch
+    ):
+        monkeypatch.setenv("OPENAI_API_KEY", "k")
+        path = self._record(tmp_path)
+        self._venue_stub(monkeypatch, self._state("completed"))
+        qp.resolve_open(tmp_path, now=self._now("2026-08-27T06:30:00+00:00"))
+
+        leg = json.loads(path.read_text())["legs"][0]
+        assert leg["status"] == "completed"
+        assert "upper bound" in leg["note"]
+
+    def test_an_expiry_is_recorded_as_the_finding_it_is(self, tmp_path, monkeypatch):
+        # OpenAI folds "expired" into failed for run()'s purposes; the probe
+        # must keep the word, because expiry-at-window IS the product's risk.
+        monkeypatch.setenv("OPENAI_API_KEY", "k")
+        path = self._record(tmp_path)
+        self._venue_stub(
+            monkeypatch,
+            self._state(
+                "failed",
+                raw_status="expired",
+                completed_at_utc="2026-08-27T08:00:00+00:00",
+                completed=1,
+                total=2,
+            ),
+        )
+        qp.resolve_open(tmp_path, now=self._now("2026-08-27T08:30:00+00:00"))
+
+        leg = json.loads(path.read_text())["legs"][0]
+        assert leg["status"] == "expired"
+        assert "partial-completion" in leg["note"]
+        assert qp.load_open(tmp_path) == []
+
+    def test_a_batch_far_past_its_window_is_cancelled_and_the_overrun_recorded(
+        self, tmp_path, monkeypatch
+    ):
+        monkeypatch.setenv("OPENAI_API_KEY", "k")
+        path = self._record(tmp_path)
+        stub = self._venue_stub(monkeypatch, self._state("in_progress"))
+        # 24h window + 48h grace = 72h; check at 80h after submission.
+        qp.resolve_open(tmp_path, now=self._now("2026-08-29T16:30:00+00:00"))
+
+        leg = json.loads(path.read_text())["legs"][0]
+        assert leg["status"] == "overran_window"
+        assert stub.cancelled == ["batch_9"]
+        assert qp.load_open(tmp_path) == []
+
+    def test_a_still_running_leg_inside_its_window_stays_parked(
+        self, tmp_path, monkeypatch
+    ):
+        monkeypatch.setenv("OPENAI_API_KEY", "k")
+        self._record(tmp_path)
+        stub = self._venue_stub(monkeypatch, self._state("in_progress"))
+        qp.resolve_open(tmp_path, now=self._now("2026-08-26T12:00:00+00:00"))
+
+        assert len(qp.load_open(tmp_path)) == 1
+        assert stub.cancelled == []
+
+    def test_a_missing_key_parks_the_leg_rather_than_losing_it(
+        self, tmp_path, monkeypatch
+    ):
+        monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+        self._record(tmp_path)
+        qp.resolve_open(tmp_path, now=self._now("2026-08-27T06:30:00+00:00"))
+        assert len(qp.load_open(tmp_path)) == 1
+
+    def test_open_legs_are_registered_from_a_session(self, tmp_path):
+        session = qp.Session(
+            date="2026-08-26", started_utc="2026-08-26T08:00:00+00:00", cap_usd=0.01
+        )
+        session.legs.append(
+            qp.Leg(
+                venue="openai",
+                model="gpt-5.6-luna",
+                declared_window="24h",
+                declared_window_seconds=86400,
+                jobs=2,
+                submitted_utc="2026-08-26T08:00:00+00:00",
+                status="open",
+                handle="batch_7",
+            )
+        )
+        session.legs.append(
+            qp.Leg(
+                venue="anthropic",
+                model="claude-haiku-4-5",
+                declared_window="24h",
+                declared_window_seconds=86400,
+                jobs=2,
+                status="completed",
+            )
+        )
+        added = qp.register_open_legs(tmp_path, "2026-08-26-queue.json", session)
+        assert added == 1
+        assert qp.load_open(tmp_path)[0]["handle"] == "batch_7"
+
+    def test_resolution_updates_the_sessions_spend(self, tmp_path, monkeypatch):
+        monkeypatch.setenv("OPENAI_API_KEY", "k")
+        path = self._record(tmp_path)
+        self._venue_stub(
+            monkeypatch,
+            self._state("completed", completed_at_utc="2026-08-26T14:00:00+00:00"),
+            usage={"prompt_tokens": 1000, "completion_tokens": 100},
+        )
+        qp.resolve_open(tmp_path, now=self._now("2026-08-27T06:30:00+00:00"))
+        record = json.loads(path.read_text())
+        assert record["legs"][0]["paid_usd"] == record["spent_usd"]
+        assert record["spent_usd"] > 0
