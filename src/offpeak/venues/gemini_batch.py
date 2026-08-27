@@ -42,7 +42,7 @@ The first live batch run from this code set ``max_output_tokens=16``, spent
 from __future__ import annotations
 
 from ..job import Job, Result
-from .base import BatchState, Venue
+from .base import BatchState, Venue, iso_utc
 
 __all__ = [
     "GeminiBatch",
@@ -271,6 +271,10 @@ class GeminiBatch(Venue):
                 (getattr(stats, "successful_count", 0) or 0)
                 + (getattr(stats, "failed_count", 0) or 0)
                 + (getattr(stats, "incomplete_count", 0) or 0)
+            ),
+            raw_status=str(getattr(state, "name", state)) if state else None,
+            completed_at_utc=iso_utc(
+                getattr(job, "end_time", None) or getattr(job, "update_time", None)
             ),
         )
 

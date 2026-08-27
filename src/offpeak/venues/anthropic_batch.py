@@ -7,7 +7,7 @@ Uses your own ``ANTHROPIC_API_KEY``. Requires the ``anthropic`` extra:
 from __future__ import annotations
 
 from ..job import Job, Result
-from .base import BatchState, Venue
+from .base import BatchState, Venue, iso_utc
 
 __all__ = ["AnthropicBatch", "build_requests"]
 
@@ -85,6 +85,8 @@ class AnthropicBatch(Venue):
             status=status,
             completed=getattr(counts, "succeeded", 0) or 0,
             failed=(getattr(counts, "errored", 0) or 0) + (getattr(counts, "expired", 0) or 0),
+            raw_status=str(processing) if processing else None,
+            completed_at_utc=iso_utc(getattr(batch, "ended_at", None)),
             total=sum(
                 getattr(counts, k, 0) or 0
                 for k in ("processing", "succeeded", "errored", "canceled", "expired")

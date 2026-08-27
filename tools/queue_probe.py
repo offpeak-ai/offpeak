@@ -153,6 +153,10 @@ class Leg:
     quoted_list_usd: float = 0.0
     skipped_reason: str | None = None
     note: str | None = None
+    #: The venue's batch handle, kept so a leg still open when this run stops
+    #: watching can be resolved by a later run instead of cancelled. A batch
+    #: that outlives the probe is the observation, not a nuisance.
+    handle: str | None = None
 
 
 def build_book(model: str, jobs: int = PROBE_JOBS_PER_LEG) -> list[offpeak.Job]:
@@ -237,9 +241,12 @@ def measure_leg(
     list to keep the SLA — and a instrument that rescues the thing it is timing
     measures the rescue instead.
 
-    A batch still open at ``max_wait`` is **cancelled and recorded as censored**,
-    never as having taken ``max_wait``. A lower bound written down as an
-    observation is the one way this record could start lying.
+    A batch still open at ``max_wait`` is recorded as **open** and left running,
+    with its handle kept so a later run can resolve it to a real completion
+    time. The earlier design cancelled here and wrote "censored" — a lower
+    bound — which systematically destroyed exactly the observations the map
+    exists for: the slow ones. The tail is the product; cancelling the tail
+    measured everything except it.
     """
     now = now or (lambda: datetime.now(timezone.utc))
     spec = VENUE_SPECS[venue_name]
@@ -262,6 +269,7 @@ def measure_leg(
         leg.status = "submit_failed"
         leg.note = f"{type(exc).__name__}: {str(exc)[:300]}"
         return leg
+    leg.handle = handle
 
     deadline = time.monotonic() + max_wait
     state = None
@@ -269,19 +277,23 @@ def measure_leg(
         try:
             state = venue.status(handle)
         except Exception as exc:  # noqa: BLE001
-            leg.status = "poll_failed"
-            leg.note = f"{type(exc).__name__}: {str(exc)[:300]}"
-            venue.cancel(handle)
+            # A poll failure says nothing about the batch — it is still out
+            # there running. Cancelling here would have converted our network
+            # blip into the venue's failure. Left open for a later run.
+            leg.status = "open"
+            leg.note = (
+                f"poll failed ({type(exc).__name__}: {str(exc)[:200]}); batch "
+                f"left running — a later run resolves it from the handle"
+            )
             return leg
         if state.done:
             break
         if time.monotonic() >= deadline:
-            venue.cancel(handle)
-            leg.status = "censored"
+            leg.status = "open"
             leg.note = (
-                f"still open after {max_wait:.0f}s and cancelled; the batch took "
-                f"longer than this run waited, which is a lower bound and not a "
-                f"completion time"
+                f"still open after {max_wait:.0f}s; left running — this run "
+                f"stopped watching, the batch did not stop cooking. A later "
+                f"run resolves it to a real completion time from the handle."
             )
             return leg
         sleep(poll)
@@ -408,6 +420,240 @@ def _quote_list_usd(book, venue_name: str, window: str) -> float:
     return q.list_usd
 
 
+# ---------------------------------------------------------------------------
+# Open-leg resolution: the piece that lets the probe observe the tail.
+#
+# A leg the run stopped watching is parked here — venue, handle, where its row
+# lives — and every subsequent run's first act is to try to resolve the parked
+# legs to real outcomes. The original day's record is updated in place and the
+# table rebuilt, so the row that said "open" comes to say what actually
+# happened, on the day it was submitted. Records stay canonical; this file is
+# just the worklist.
+# ---------------------------------------------------------------------------
+
+OPEN_FILE = "queue-open.json"
+
+#: How long past the declared window a batch may run before the probe gives up
+#: on it: cancelled best-effort, recorded as overran_window. Two days is long
+#: enough that the record says "the venue blew its own window by 2x+", which is
+#: itself the observation.
+ABANDON_GRACE_SECONDS = 48 * 3600
+
+
+def load_open(outdir: Path) -> list[dict]:
+    path = outdir / OPEN_FILE
+    if not path.exists():
+        return []
+    try:
+        return json.loads(path.read_text()).get("open", [])
+    except (OSError, ValueError):
+        return []
+
+
+def save_open(outdir: Path, entries: list[dict]) -> None:
+    (outdir / OPEN_FILE).write_text(
+        json.dumps({"open": entries}, indent=2) + "\n"
+    )
+
+
+def register_open_legs(outdir: Path, record_name: str, session: Session) -> int:
+    """Park every open leg of *session* on the worklist. Returns how many."""
+    entries = load_open(outdir)
+    added = 0
+    for index, leg in enumerate(session.legs):
+        if leg.status == "open" and leg.handle:
+            entries.append(
+                {
+                    "record": record_name,
+                    "leg_index": index,
+                    "venue": leg.venue,
+                    "model": leg.model,
+                    "declared_window": leg.declared_window,
+                    "declared_window_seconds": leg.declared_window_seconds,
+                    "handle": leg.handle,
+                    "submitted_utc": leg.submitted_utc,
+                    "last_checked_utc": leg.submitted_utc,
+                }
+            )
+            added += 1
+    if added:
+        save_open(outdir, entries)
+    return added
+
+
+def _parse_utc(text: str | None) -> datetime | None:
+    if not text:
+        return None
+    try:
+        parsed = datetime.fromisoformat(text.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    return parsed
+
+
+def _update_record_leg(outdir: Path, entry: dict, **fields) -> None:
+    """Rewrite one leg of one stored record, and its session spend, in place."""
+    path = outdir / entry["record"]
+    record = json.loads(path.read_text())
+    leg = record["legs"][entry["leg_index"]]
+    paid_before = leg.get("paid_usd") or 0.0
+    leg.update(fields)
+    paid_after = leg.get("paid_usd") or 0.0
+    record["spent_usd"] = round(
+        (record.get("spent_usd") or 0.0) - paid_before + paid_after, 10
+    )
+    path.write_text(json.dumps(record, indent=2) + "\n")
+
+
+def resolve_open(outdir: Path, *, now=None) -> list[str]:
+    """Try to settle every parked leg. Returns log lines for the run output.
+
+    Each entry meets one of five fates: **resolved** (the venue reports a
+    terminal state — the original row gets its real completion time, from the
+    provider's own timestamp when it publishes one, otherwise bounded by our
+    check times and labelled as such); **still open** (checked, running,
+    within its window — stays parked); **overran** (past declared window plus
+    grace — cancelled best-effort and recorded as overran_window, which is the
+    finding, not a cleanup); **no key** (can't ask today — stays parked); or
+    **check failed** (venue error — stays parked, noted).
+    """
+    now = now or (lambda: datetime.now(timezone.utc))
+    entries = load_open(outdir)
+    if not entries:
+        return []
+    lines: list[str] = []
+    still_open: list[dict] = []
+    touched_records = False
+
+    for entry in entries:
+        label = f"{entry['venue']} @ {entry['declared_window']} ({entry['record']})"
+        spec = VENUE_SPECS.get(entry["venue"])
+        if spec is None or not os.environ.get(spec["key"]):
+            entry["note"] = f"no {spec['key'] if spec else 'known key'} at last check"
+            still_open.append(entry)
+            lines.append(f"  {label}: key unavailable — still parked")
+            continue
+
+        checked = now()
+        try:
+            venue = _venue(entry["venue"], entry["declared_window"])
+            state = venue.status(entry["handle"])
+        except Exception as exc:  # noqa: BLE001
+            entry["last_checked_utc"] = checked.isoformat(timespec="seconds")
+            entry["note"] = f"check failed: {type(exc).__name__}: {str(exc)[:200]}"
+            still_open.append(entry)
+            lines.append(f"  {label}: check failed ({type(exc).__name__}) — still parked")
+            continue
+
+        submitted = _parse_utc(entry.get("submitted_utc"))
+
+        if not state.done:
+            deadline_passed = (
+                submitted is not None
+                and (checked - submitted).total_seconds()
+                > entry["declared_window_seconds"] + ABANDON_GRACE_SECONDS
+            )
+            if deadline_passed:
+                try:
+                    venue.cancel(entry["handle"])
+                except Exception:  # noqa: BLE001 — best-effort
+                    pass
+                overshoot = (checked - submitted).total_seconds()
+                _update_record_leg(
+                    outdir,
+                    entry,
+                    status="overran_window",
+                    note=(
+                        f"still running {overshoot / 3600:.1f}h after submission "
+                        f"against a declared {entry['declared_window']} window; "
+                        f"cancelled after window + {ABANDON_GRACE_SECONDS // 3600}h "
+                        f"grace. The overrun is the observation."
+                    ),
+                )
+                touched_records = True
+                lines.append(f"  {label}: OVERRAN its window — recorded and cancelled")
+            else:
+                entry["last_checked_utc"] = checked.isoformat(timespec="seconds")
+                entry.pop("note", None)
+                still_open.append(entry)
+                lines.append(f"  {label}: still running — parked again")
+            continue
+
+        # Terminal. Pin the completion time: the provider's own stamp when it
+        # gives one, else this check time with the bound stated out loud.
+        provider_ts = _parse_utc(state.completed_at_utc)
+        completed = provider_ts or checked
+        note = None
+        if provider_ts is None:
+            note = (
+                f"venue reports no completion timestamp; finished sometime "
+                f"between the previous check ({entry.get('last_checked_utc')}) "
+                f"and this one — elapsed is an upper bound, not a measurement"
+            )
+        status = state.status
+        if state.raw_status == "expired":
+            status = "expired"
+            note = (
+                (note + "; " if note else "")
+                + f"the venue expired the batch at its window with "
+                f"{state.completed}/{state.total} done — the partial-completion "
+                f"failure mode, observed"
+            )
+
+        fields: dict = {
+            "status": status,
+            "completed_utc": completed.isoformat(timespec="seconds"),
+        }
+        if submitted is not None and completed >= submitted:
+            elapsed = round((completed - submitted).total_seconds(), 1)
+            fields["elapsed_seconds"] = elapsed
+            fields["fraction_of_window_used"] = round(
+                elapsed / entry["declared_window_seconds"], 6
+            )
+
+        if state.status == "completed":
+            try:
+                results = venue.collect(entry["handle"])
+                input_tokens = output_tokens = 0
+                for res in results.values():
+                    usage = res.raw or {}
+                    input_tokens += int(
+                        usage.get("prompt_tokens") or usage.get("input_tokens") or 0
+                    )
+                    output_tokens += int(
+                        usage.get("completion_tokens") or usage.get("output_tokens") or 0
+                    )
+                fields["input_tokens"] = input_tokens
+                fields["output_tokens"] = output_tokens
+                fields["paid_usd"] = prices.batch_cost_usd(
+                    entry["model"], input_tokens, output_tokens
+                )
+            except Exception as exc:  # noqa: BLE001
+                note = (note + "; " if note else "") + (
+                    f"collect failed: {type(exc).__name__}: {str(exc)[:200]}"
+                )
+        if note:
+            fields["note"] = note
+
+        _update_record_leg(outdir, entry, **fields)
+        touched_records = True
+        lines.append(
+            f"  {label}: resolved {status}"
+            + (
+                f" in {_fmt_elapsed(fields.get('elapsed_seconds'))}"
+                if fields.get("elapsed_seconds") is not None
+                else ""
+            )
+        )
+
+    save_open(outdir, still_open)
+    if touched_records:
+        rebuild_table(outdir / "QUEUE.md", outdir)
+    return lines
+
+
 QUEUE_HEADER = (
     "# Offpeak queue latency — observed, not modelled\n\n"
     "How long a batch tier actually takes to land, measured by submitting a "
@@ -421,8 +667,13 @@ QUEUE_HEADER = (
     "**Every row is one submission.** There is no percentile here and no fitted "
     "curve: a handful of observations does not have a distribution, and a model "
     "over them would read as knowledge rather than as the few numbers it came "
-    "from. A row marked *censored* was still open when the run stopped waiting "
-    "and was cancelled — a lower bound, never a completion time.\n\n"
+    "from. A row marked *open* is a batch still running when the probe stopped "
+    "watching — it stays on the venue's queue and the row is rewritten with the "
+    "real outcome once a later run resolves it from the stored handle. A row "
+    "marked *expired* or *overran_window* is the venue missing its own declared "
+    "window — the failure mode this table exists to catch. Early rows marked "
+    "*censored* predate resolution: those batches were cancelled at 30 minutes "
+    "and are lower bounds, never completion times.\n\n"
     "Written by `tools/queue_probe.py`, never by hand.\n\n"
     "| session | venue | model | declared | jobs | elapsed | % of window | status | paid |\n"
     "|---|---|---|---|---|---|---|---|---|\n"
@@ -498,7 +749,7 @@ def parse_args(argv=None):
     ap.add_argument("--outdir", default="nightly", help="where the record and table live")
     ap.add_argument(
         "--venues",
-        default="anthropic,openai",
+        default="anthropic,openai,gemini,mistral",
         help="comma-separated venues to measure (groq is opt-in and needs its own key)",
     )
     ap.add_argument(
@@ -567,12 +818,24 @@ def main(argv=None) -> int:
         print(f"--dry-run: cap ${a.cap:.4f}, nothing submitted.", flush=True)
         return 0
 
+    # First act of every run: try to settle what earlier runs left open. The
+    # rows this rewrites are the tail of the distribution — the entire reason
+    # the probe exists — so resolution runs before any new money is spent.
+    resolved_lines = resolve_open(out)
+    if resolved_lines:
+        print("resolving parked legs:", flush=True)
+        for line in resolved_lines:
+            print(line, flush=True)
+
     session = run_series(
         venues, accepted, cap_usd=a.cap, max_wait=a.max_wait, poll=a.poll
     )
     record = session_record(session)
     path = out / f"{today}-queue.json"
     path.write_text(json.dumps(record, indent=2) + "\n")
+    parked = register_open_legs(out, path.name, session)
+    if parked:
+        print(f"parked {parked} still-open leg(s) for a later run to resolve", flush=True)
     rebuild_table(out / "QUEUE.md", out)
 
     for leg in session.legs:

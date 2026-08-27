@@ -51,7 +51,7 @@ from __future__ import annotations
 import json
 
 from ..job import Job, Result
-from .base import BatchState, Venue
+from .base import BatchState, Venue, iso_utc
 from .openai_batch import parse_output_line
 
 __all__ = ["MistralBatch", "build_jsonl", "DEFAULT_TIMEOUT_HOURS"]
@@ -180,6 +180,8 @@ class MistralBatch(Venue):
             completed=getattr(job, "succeeded_requests", 0) or 0,
             failed=getattr(job, "failed_requests", 0) or 0,
             total=getattr(job, "total_requests", 0) or 0,
+            raw_status=str(raw) if raw else None,
+            completed_at_utc=iso_utc(getattr(job, "completed_at", None)),
         )
 
     def collect(self, handle: str) -> dict[str, Result]:
