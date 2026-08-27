@@ -32,7 +32,7 @@ and no row about it should be read as rate coverage.
 | `openai:pricing` | cited by prices.py | 188 | <https://developers.openai.com/api/docs/pricing> |
 | `groq:pricing` | cited by prices.py | 1 | <https://groq.com/pricing> |
 | `mistral:pricing` | cited by prices.py | 50 | <https://mistral.ai/pricing/api> |
-| `google:pricing` | cited by prices.py | 514 | <https://ai.google.dev/pricing> |
+| `google:pricing` | cited by prices.py | 485 | <https://ai.google.dev/pricing> |
 | `groq:plans` | watched, not yet priced | **0 — rendered client-side** | <https://console.groq.com/docs/service-tiers> |
 | `xai:pricing` | watched, not yet priced | 8 | <https://docs.x.ai/docs/models> |
 | `deepseek:pricing` | watched, not yet priced | 18 | <https://api-docs.deepseek.com/quick_start/pricing> |
@@ -52,3 +52,7 @@ and no row about it should be read as rate coverage.
 | 2026-08-26 | `xai:pricing` | baseline | — | — | — | — | 5,303 chars recorded |
 | 2026-08-26 | `deepseek:pricing` | baseline | — | — | — | — | 2,747 chars recorded |
 | 2026-08-26 | `qwen:pricing` | baseline | — | — | — | — | 28,645 chars recorded |
+| 2026-08-27 | `anthropic:pricing` | changed | +8 / −0 | unclassified | — | — | fa208c529936 -> 537c5d18eb4c |
+| 2026-08-27 | `openai:pricing` | changed | +5 / −0 | unclassified | — | — | d6a925dd5749 -> f103352cd90d |
+| 2026-08-27 | `mistral:pricing` | changed | +2 / −1 | unclassified | — | — | ea1005b813fe -> c916c6693705 |
+| 2026-08-27 | `google:pricing` | changed | +82 / −256 | unclassified | — | — | 5acfb597938b -> c5e78760d87f |
