@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "offpeak"
-version = "0.2.5.dev0"
+version = "0.2.5"
 description = "Deadline-priced inference: give AI jobs a deadline and run them on the cheapest venue that still meets it — provider batch tiers, 50% off, today. The deadline is the input; the discount follows."
 readme = "README.md"
 license = "Apache-2.0"
