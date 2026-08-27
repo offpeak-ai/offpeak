@@ -4,10 +4,27 @@ name: Spread Board
 # branch, not to main: main is protected (PR + four required checks), so a
 # scheduled bot push there would be rejected on every run.
 
+# GitHub's scheduler is best-effort: it drops runs under load and says nothing.
+# Four consecutive scheduled runs vanished across 2026-08-26/27 and the board
+# simply had no rows for them. One cron a day is one chance a day, so each pass
+# now has catch-ups behind it, and a run that finds its session already recorded
+# exits without doing it twice.
+#
+# A catch-up must know which session it is *for*. The clock inference in
+# night_span() flips at 16:00Z, so a mark that runs late marks the session that
+# just started rather than the one that just finished — that is exactly how the
+# 2026-08-27 board got a row of empty spreads. Every run therefore derives its
+# session from the cron's *intended* time and passes it as --night, which makes
+# a late run a repair instead of a second failure.
 on:
   schedule:
-    - cron: "0 19 * * *"   # quote — the session ahead, carbon forecast
-    - cron: "30 6 * * *"   # mark  — the session just finished, carbon actuals
+    - cron: "37 6 * * *"    # mark  — the session just finished, carbon actuals
+    - cron: "23 9 * * *"    #   catch-up, if the 06:37 mark never fired
+    - cron: "17 12 * * *"   #   catch-up
+    - cron: "11 15 * * *"   #   catch-up — last one before the 16:00Z pivot
+    - cron: "7 19 * * *"    # quote — the session ahead, carbon forecast
+    - cron: "19 21 * * *"   #   catch-up, if the 19:07 quote never fired
+    - cron: "29 23 * * *"   #   catch-up
   workflow_dispatch:
     inputs:
       mode:
@@ -16,6 +33,15 @@ on:
         default: quote
         type: choice
         options: [quote, mark]
+      night:
+        description: "Session to run against (YYYY-MM-DD). Blank = derive it."
+        required: false
+        default: ""
+      force:
+        description: "Run even if this session is already recorded"
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: write
@@ -44,25 +70,67 @@ jobs:
           ref: board-data
           path: board
 
-      - name: Pick the pass
+      - name: Pick the pass and the session
         id: pick
+        # Derived from the cron's INTENDED time, never from when the run
+        # actually started: a scheduled run can fire hours late, and "now" would
+        # then resolve to the wrong side of the 16:00Z pivot and mark the wrong
+        # session. night_report's own constant decides the pivot, so this can
+        # not drift away from the tool it is feeding.
+        env:
+          SCHEDULE: ${{ github.event.schedule }}
+          IN_MODE: ${{ inputs.mode }}
+          IN_NIGHT: ${{ inputs.night }}
         run: |
-          if [ -n "${{ inputs.mode }}" ]; then
-            mode="${{ inputs.mode }}"
-          elif [ "${{ github.event.schedule }}" = "0 19 * * *" ]; then
-            mode=quote
+          python - <<'EOF' >> "$GITHUB_OUTPUT"
+          import datetime as dt, importlib.util, os
+          spec = importlib.util.spec_from_file_location(
+              "nr", "tools/night_report.py")
+          nr = importlib.util.module_from_spec(spec)
+          spec.loader.exec_module(nr)
+
+          now = dt.datetime.now(dt.timezone.utc)
+          cron = (os.environ.get("SCHEDULE") or "").split()
+          if cron:
+              # the most recent occurrence of this cron at or before now
+              intended = now.replace(minute=int(cron[0]), hour=int(cron[1]),
+                                     second=0, microsecond=0)
+              if intended > now:
+                  intended -= dt.timedelta(days=1)
+          else:
+              intended = now
+
+          mode = os.environ.get("IN_MODE") or (
+              "quote" if intended.hour >= nr.NIGHT_START_HOUR_UTC else "mark")
+          night = os.environ.get("IN_NIGHT") or nr.default_night(intended, mode)
+          print(f"mode={mode}")
+          print(f"night={night}")
+          EOF
+          cat "$GITHUB_OUTPUT"
+
+      - name: Skip if this session is already recorded
+        id: guard
+        # What makes a catch-up cheap: on the days nothing was dropped it costs
+        # one checkout and stops. The record on board-data is the source of
+        # truth for "did this already happen", not the run history.
+        run: |
+          f="board/nightly/${{ steps.pick.outputs.night }}-${{ steps.pick.outputs.mode }}.json"
+          if [ -f "$f" ] && [ "${{ inputs.force }}" != "true" ]; then
+            echo "run=false" >> "$GITHUB_OUTPUT"
+            echo "$f already exists — the ${{ steps.pick.outputs.mode }} pass for ${{ steps.pick.outputs.night }} is done. Nothing to do."
           else
-            mode=mark
+            echo "run=true" >> "$GITHUB_OUTPUT"
+            echo "running the ${{ steps.pick.outputs.mode }} pass for ${{ steps.pick.outputs.night }}"
           fi
-          echo "mode=$mode" >> "$GITHUB_OUTPUT"
-          echo "running the $mode pass"
 
       - name: Install US-zone data source
         # gridstatus is an Action-only dependency: the SDK does not need it and
         # the generator degrades to GB-only without it.
+        if: steps.guard.outputs.run == 'true'
         run: pip install "gridstatus>=0.36"
 
       - name: Generate
+        if: steps.guard.outputs.run == 'true'
         # EIA_API_KEY is optional: absent, the US carbon columns are recorded
         # unavailable and every other leg runs exactly as before.
         env:
@@ -70,10 +138,12 @@ jobs:
         run: |
           python tools/night_report.py \
             --mode "${{ steps.pick.outputs.mode }}" \
+            --night "${{ steps.pick.outputs.night }}" \
             --us-zones \
             --outdir board/nightly
 
       - name: Commit to board-data
+        if: steps.guard.outputs.run == 'true'
         working-directory: board
         run: |
           git config user.name "github-actions[bot]"

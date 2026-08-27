@@ -31,6 +31,7 @@ import json
 import os
 import re
 import statistics
+import sys
 import time
 import urllib.error
 import urllib.parse
@@ -145,19 +146,39 @@ def z(t: dt.datetime) -> str:
     return t.strftime("%Y-%m-%dT%H:%MZ")
 
 
-def night_span(now: dt.datetime, mode: str) -> tuple[dt.datetime, dt.datetime]:
+def night_span(
+    now: dt.datetime, mode: str, night: dt.date | None = None
+) -> tuple[dt.datetime, dt.datetime]:
     """The (from, to) UTC span of the session this run is about.
 
     ``mark`` truncates at *now* — actuals do not exist for the future.
+
+    Without *night* the session is inferred from the clock, which is right on
+    the cron and wrong off it: the inference flips at 16:00Z, so a mark that
+    runs late — a catch-up after GitHub dropped the scheduled one — marks the
+    session that has just *started* rather than the one that just finished,
+    and writes a row of empty spreads over a night nobody measured. Passing
+    *night* states the session instead of guessing it, which is what makes a
+    late run a repair rather than a second failure.
     """
-    anchor = now.replace(minute=0, second=0, microsecond=0)
-    start = anchor.replace(hour=NIGHT_START_HOUR_UTC)
-    if anchor.hour < NIGHT_START_HOUR_UTC:
-        start -= dt.timedelta(days=1)
+    if night is not None:
+        start = dt.datetime(
+            night.year, night.month, night.day, NIGHT_START_HOUR_UTC, tzinfo=dt.timezone.utc
+        )
+    else:
+        anchor = now.replace(minute=0, second=0, microsecond=0)
+        start = anchor.replace(hour=NIGHT_START_HOUR_UTC)
+        if anchor.hour < NIGHT_START_HOUR_UTC:
+            start -= dt.timedelta(days=1)
     end = start + dt.timedelta(hours=NIGHT_HOURS)
     if mode == "mark":
         end = min(end, now)
     return start, end
+
+
+def default_night(now: dt.datetime, mode: str) -> dt.date:
+    """The session a run started at *now* is about, when nobody said."""
+    return night_span(now, mode)[0].date()
 
 
 def carbon(f: dt.datetime, t: dt.datetime, field: str) -> list[tuple[str, float]]:
@@ -622,6 +643,13 @@ def rebuild_board(board: Path, records: Path) -> int:
     return len(rows)
 
 
+def _night_arg(value: str) -> dt.date:
+    try:
+        return dt.date.fromisoformat(value)
+    except ValueError as exc:  # argparse renders this as the usage error
+        raise argparse.ArgumentTypeError(f"not a YYYY-MM-DD date: {value!r}") from exc
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--mode", choices=["quote", "mark"], required=True)
@@ -637,10 +665,27 @@ def main() -> int:
         action="store_true",
         help="also price CAISO SP15 and ERCOT Houston (needs gridstatus)",
     )
+    ap.add_argument(
+        "--night",
+        type=_night_arg,
+        default=None,
+        help="the session to run against (YYYY-MM-DD, the date its 16:00Z open "
+        "falls on). Default: inferred from the clock. A catch-up run must say "
+        "which session it is for — the inference is only right on the cron.",
+    )
     a = ap.parse_args()
 
     now = dt.datetime.now(dt.timezone.utc)
-    span = night_span(now, a.mode)
+    if a.night is not None and a.night > now.date():
+        print(f"ABORT: {a.night} has not opened yet", file=sys.stderr)
+        return 2
+    span = night_span(now, a.mode, a.night)
+    if span[1] <= span[0]:
+        print(
+            f"ABORT: the {span[0].date()} session has not opened yet",
+            file=sys.stderr,
+        )
+        return 2
     field = "forecast" if a.mode == "quote" else "actual"
 
     errors: dict[str, str] = {}

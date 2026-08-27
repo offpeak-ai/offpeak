@@ -1,5 +1,6 @@
 """Night-board tests — pure functions only, no network."""
 
+import argparse
 import datetime as dt
 import importlib.util
 import json
@@ -612,3 +613,48 @@ class TestCarbonBackfill:
             if ln.startswith(f"| {today} ")
         ][0]
         assert "0.8x" in row, row
+
+
+# --- a run that says which session it is for -------------------------------
+#
+# The clock inference flips at 16:00Z. A mark that runs late — the catch-up
+# after GitHub dropped the scheduled one — therefore marks the session that has
+# just started instead of the one that just finished, and publishes a row of
+# empty spreads over a night nobody measured. These pin the repair.
+
+
+def test_night_override_marks_the_session_it_names_not_the_clocks():
+    late = utc(2026, 8, 27, 17, 16)  # past 16:00Z: the inference has flipped
+    inferred_from, _ = nr.night_span(late, "mark")
+    assert inferred_from.date() == dt.date(2026, 8, 27)  # the wrong one
+
+    named_from, named_to = nr.night_span(late, "mark", dt.date(2026, 8, 26))
+    assert named_from == utc(2026, 8, 26, 16)
+    assert named_to == utc(2026, 8, 27, 7)  # whole session, not truncated at now
+
+
+def test_night_override_still_truncates_a_session_in_progress():
+    # Naming a session does not invent actuals for hours that have not happened.
+    _, to = nr.night_span(utc(2026, 8, 27, 20), "mark", dt.date(2026, 8, 27))
+    assert to == utc(2026, 8, 27, 20)
+
+
+def test_without_an_override_nothing_changes():
+    for now, mode in [
+        (utc(2026, 8, 20, 19), "quote"),
+        (utc(2026, 8, 21, 6, 30), "mark"),
+        (utc(2026, 8, 21, 4), "quote"),
+    ]:
+        assert nr.night_span(now, mode, None) == nr.night_span(now, mode)
+
+
+def test_default_night_is_what_the_cron_would_have_marked():
+    # What a catch-up passes to --night to stand in for the run that was dropped.
+    assert nr.default_night(utc(2026, 8, 27, 6, 30), "mark") == dt.date(2026, 8, 26)
+    assert nr.default_night(utc(2026, 8, 27, 19), "quote") == dt.date(2026, 8, 27)
+
+
+def test_night_arg_rejects_something_that_is_not_a_date():
+    assert nr._night_arg("2026-08-26") == dt.date(2026, 8, 26)
+    with pytest.raises(argparse.ArgumentTypeError):
+        nr._night_arg("last tuesday")
