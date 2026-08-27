@@ -51,8 +51,26 @@
     "unit": "$/MWh"
   },
   "unavailable": {
-    "caiso_sp15": "caiso_sp15: no day-ahead rows (2026-08-25: ConnectTimeout: HTTPConnectionPool(host='oasis.caiso.com', port=80): Max retries exceeded with url: /oasisapi/SingleZip?resultformat=6&q; 2026-08-26: ConnectTimeout: HTTPConnectionPool(host='oasis.caiso.com', port=80): Max retries exceeded with url: /oasisapi/SingleZip?resultformat=6&q)",
-    "carbon_caiso_sp15": "CISO: EIA-930 has published no hours for 2026-08-25 yet (the feed runs about a day behind)",
-    "carbon_ercot_houston": "ERCO: EIA-930 has published no hours for 2026-08-25 yet (the feed runs about a day behind)"
+    "caiso_sp15": "caiso_sp15: no day-ahead rows (2026-08-25: ConnectTimeout: HTTPConnectionPool(host='oasis.caiso.com', port=80): Max retries exceeded with url: /oasisapi/SingleZip?resultformat=6&q; 2026-08-26: ConnectTimeout: HTTPConnectionPool(host='oasis.caiso.com', port=80): Max retries exceeded with url: /oasisapi/SingleZip?resultformat=6&q)"
+  },
+  "carbon_caiso_sp15": {
+    "n_hours": 48,
+    "peak_window_17_21_local": 219.32,
+    "offpeak_window_00_05_local": 250.18,
+    "window_spread": 0.88,
+    "unit": "gCO2/kWh",
+    "basis": "derived",
+    "method": "derived: EIA-930 hourly generation mix x (EIA CO2 coefficients x EIA fleet heat rates); generation-side only, imports and storage carry-over not accounted",
+    "unclassified_share": 0.053
+  },
+  "carbon_ercot_houston": {
+    "n_hours": 48,
+    "peak_window_17_21_local": 304.15,
+    "offpeak_window_00_05_local": 365.42,
+    "window_spread": 0.83,
+    "unit": "gCO2/kWh",
+    "basis": "derived",
+    "method": "derived: EIA-930 hourly generation mix x (EIA CO2 coefficients x EIA fleet heat rates); generation-side only, imports and storage carry-over not accounted",
+    "unclassified_share": 0.001
   }
 }
