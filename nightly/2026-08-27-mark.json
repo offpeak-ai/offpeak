@@ -1,10 +1,10 @@
 {
   "night_of": "2026-08-27",
   "mode": "mark",
-  "generated_utc": "2026-08-27T23:38+00:00",
+  "generated_utc": "2026-08-27T23:54+00:00",
   "span_utc": {
     "from": "2026-08-27T16:00Z",
-    "to": "2026-08-27T23:38Z"
+    "to": "2026-08-27T23:54Z"
   },
   "tokens": {
     "batch_discount": 0.5,
