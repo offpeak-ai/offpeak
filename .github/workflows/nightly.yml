@@ -113,15 +113,55 @@ jobs:
         # What makes a catch-up cheap: on the days nothing was dropped it costs
         # one checkout and stops. The record on board-data is the source of
         # truth for "did this already happen", not the run history.
+        #
+        # A mark is the exception, because a mark truncates at *now*: the 06:37
+        # pass necessarily stops 23 minutes before the session it is marking
+        # actually ends. So a mark counts as done only once its record covers
+        # the whole session, and a later catch-up completes a partial one
+        # instead of skipping it. That makes the record better on ordinary days
+        # — the full session rather than one cut short — and it is what repairs
+        # a mark written against the wrong side of the 16:00Z pivot.
+        env:
+          NIGHT: ${{ steps.pick.outputs.night }}
+          MODE: ${{ steps.pick.outputs.mode }}
+          FORCE: ${{ inputs.force }}
         run: |
-          f="board/nightly/${{ steps.pick.outputs.night }}-${{ steps.pick.outputs.mode }}.json"
-          if [ -f "$f" ] && [ "${{ inputs.force }}" != "true" ]; then
-            echo "run=false" >> "$GITHUB_OUTPUT"
-            echo "$f already exists — the ${{ steps.pick.outputs.mode }} pass for ${{ steps.pick.outputs.night }} is done. Nothing to do."
-          else
-            echo "run=true" >> "$GITHUB_OUTPUT"
-            echo "running the ${{ steps.pick.outputs.mode }} pass for ${{ steps.pick.outputs.night }}"
-          fi
+          python - <<'EOF' >> "$GITHUB_OUTPUT"
+          import datetime as dt, importlib.util, json, os, pathlib
+          spec = importlib.util.spec_from_file_location(
+              "nr", "tools/night_report.py")
+          nr = importlib.util.module_from_spec(spec)
+          spec.loader.exec_module(nr)
+
+          night, mode = os.environ["NIGHT"], os.environ["MODE"]
+          rec = pathlib.Path(f"board/nightly/{night}-{mode}.json")
+          run, why = True, "no record yet"
+
+          if os.environ.get("FORCE") == "true":
+              why = "forced"
+          elif rec.exists():
+              run, why = False, "already recorded"
+              if mode == "mark":
+                  # complete only if it reaches the session's 07:00Z close
+                  end = dt.datetime.fromisoformat(
+                      dt.date.fromisoformat(night).isoformat()
+                  ).replace(tzinfo=dt.timezone.utc) + dt.timedelta(
+                      hours=nr.NIGHT_START_HOUR_UTC + nr.NIGHT_HOURS)
+                  try:
+                      to = json.loads(rec.read_text())["span_utc"]["to"]
+                      covered = dt.datetime.fromisoformat(
+                          to.replace("Z", "+00:00"))
+                  except (OSError, ValueError, KeyError, TypeError):
+                      run, why = True, "record unreadable — remarking"
+                  else:
+                      if covered < end:
+                          run, why = True, (
+                              f"partial mark (covers to {to}, session closes "
+                              f"{end:%Y-%m-%dT%H:%MZ}) — completing it")
+          print(f"run={'true' if run else 'false'}")
+          print(f"why={why}")
+          EOF
+          cat "$GITHUB_OUTPUT"
 
       - name: Install US-zone data source
         # gridstatus is an Action-only dependency: the SDK does not need it and
