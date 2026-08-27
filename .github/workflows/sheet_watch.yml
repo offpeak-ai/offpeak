@@ -13,9 +13,16 @@ name: Sheet watch
 # caps it there: a workflow-level guard protects the workflow, and what needs
 # protecting is the spend.
 
+# Catch-ups behind the primary, because GitHub drops scheduled runs silently —
+# the 03:00Z watch was one of four that vanished on 2026-08-26/27. The drift
+# record is meant to be one reading a day, so a run that finds today's reading
+# already taken stops before fetching anything.
 on:
   schedule:
-    - cron: "0 3 * * *"
+    - cron: "7 3 * * *"     # the daily reading, before the 06:30Z mark
+    - cron: "13 8 * * *"    #   catch-up, if the 03:07 watch never fired
+    - cron: "27 13 * * *"   #   catch-up
+    - cron: "43 20 * * *"   #   catch-up
   workflow_dispatch:
     inputs:
       classify:
@@ -27,6 +34,11 @@ on:
         description: "hard USD cap for the classification job"
         required: false
         default: "0.01"
+      force:
+        description: "Read again even if today's reading is already taken"
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: write
@@ -59,7 +71,34 @@ jobs:
           ref: board-data
           path: board
 
+      - name: Skip if today's reading is already taken
+        id: guard
+        # snapshots.json stamps every source with the moment it was fetched, so
+        # the ledger itself answers "has this run already happened today" — no
+        # dependence on the run history, which is exactly what went missing.
+        run: |
+          python - <<'EOF' >> "$GITHUB_OUTPUT"
+          import datetime as dt, json, os, pathlib
+          today = dt.datetime.now(dt.timezone.utc).date().isoformat()
+          snap = pathlib.Path("board/watch/snapshots.json")
+          done = False
+          if snap.exists() and os.environ.get("FORCE") != "true":
+              try:
+                  data = json.loads(snap.read_text())
+                  done = any(
+                      (v.get("fetched_at") or "").startswith(today)
+                      for v in data.values() if isinstance(v, dict)
+                  )
+              except (OSError, ValueError):
+                  done = False
+          print(f"run={'false' if done else 'true'}")
+          EOF
+          cat "$GITHUB_OUTPUT"
+        env:
+          FORCE: ${{ inputs.force }}
+
       - name: Watch
+        if: steps.guard.outputs.run == 'true'
         # A venue whose key is absent does not stop the watch: the classifier
         # records why it could not run and every hash-diff row publishes
         # anyway. Same degradation rule the Spread Board uses for EIA.
@@ -67,12 +106,20 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
+          # The classifier's default deadline is the next 06:00Z. On the
+          # 03:07 cron that is a three-hour window; on a catch-up at 20:43 it
+          # is ten hours, and offpeak.run would hold this job — and the
+          # board-data concurrency group with it — for all of them. Bound it.
+          deadline=$(python -c 'import datetime as d; print((d.datetime.now(d.timezone.utc) + d.timedelta(hours=2)).strftime("%Y-%m-%dT%H:%M:%SZ"))')
+          echo "classifier deadline: $deadline"
           python tools/sheet_watch.py \
             --outdir board/watch \
             --cap "${{ inputs.cap || '0.01' }}" \
+            --deadline "$deadline" \
             ${{ (inputs.classify == false) && '--no-classify' || '' }}
 
       - name: Commit to board-data
+        if: steps.guard.outputs.run == 'true'
         working-directory: board
         run: |
           git config user.name "github-actions[bot]"

@@ -762,6 +762,13 @@ def parse_args(argv=None):
     ap.add_argument("--max-wait", type=float, default=1800.0, help="seconds to wait per leg")
     ap.add_argument("--poll", type=float, default=15.0, help="seconds between polls")
     ap.add_argument("--dry-run", action="store_true", help="plan and quote, submit nothing")
+    ap.add_argument(
+        "--resolve-only",
+        action="store_true",
+        help="resolve parked legs and rebuild the table, then stop — submit "
+        "nothing and spend nothing. What a catch-up run does once the day's "
+        "session is already measured.",
+    )
     return ap.parse_args(argv)
 
 
@@ -826,6 +833,17 @@ def main(argv=None) -> int:
         print("resolving parked legs:", flush=True)
         for line in resolved_lines:
             print(line, flush=True)
+
+    if a.resolve_only:
+        # Resolution is free and gets *better* the more often it runs: a leg
+        # resolved four hours after it landed carries a four-hour bound instead
+        # of a day-long one. So the catch-up crons that exist to notice a
+        # dropped run are not wasted on the days nothing was dropped — they
+        # spend nothing and tighten the tail.
+        if not resolved_lines:
+            print("no parked legs to resolve", flush=True)
+        rebuild_table(out / "QUEUE.md", out)
+        return 0
 
     session = run_series(
         venues, accepted, cap_usd=a.cap, max_wait=a.max_wait, poll=a.poll

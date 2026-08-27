@@ -571,3 +571,33 @@ class TestOpenLegResolution:
         record = json.loads(path.read_text())
         assert record["legs"][0]["paid_usd"] == record["spent_usd"]
         assert record["spent_usd"] > 0
+
+
+# --- --resolve-only: what a catch-up run does when nothing was dropped ------
+
+
+def test_resolve_only_spends_nothing_and_submits_nothing(tmp_path, monkeypatch):
+    # The catch-up crons exist to notice a dropped run. On the days nothing was
+    # dropped they must not buy a second session.
+    def explode(*a, **k):  # pragma: no cover — the point is that it is not called
+        raise AssertionError("resolve-only must not submit")
+
+    monkeypatch.setattr(qp, "run_series", explode)
+    rc = qp.main(["--resolve-only", "--outdir", str(tmp_path)])
+    assert rc == 0
+    assert not list(tmp_path.glob("*-queue.json"))
+
+
+def test_resolve_only_still_resolves_and_rebuilds(tmp_path, monkeypatch):
+    seen = {}
+
+    def fake_resolve(outdir, **k):
+        seen["resolved"] = Path(outdir)
+        return ["  mistral @ 24h (r.json): resolved completed in 4h2m"]
+
+    monkeypatch.setattr(qp, "resolve_open", fake_resolve)
+    monkeypatch.setattr(qp, "run_series", lambda *a, **k: pytest.fail("must not submit"))
+    rc = qp.main(["--resolve-only", "--outdir", str(tmp_path)])
+    assert rc == 0
+    assert seen["resolved"] == tmp_path
+    assert (tmp_path / "QUEUE.md").exists()  # the table is rebuilt from records
