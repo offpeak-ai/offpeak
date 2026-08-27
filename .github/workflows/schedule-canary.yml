@@ -1,0 +1,31 @@
+name: Schedule canary
+
+# TEMPORARY DIAGNOSTIC — delete once it has answered.
+#
+# One question: does GitHub's scheduler deliver ANY cron tick to this repo?
+# Four consecutive scheduled runs vanished across 2026-08-26/27 while
+# push-triggered runs stayed green, every workflow reported state=active, and
+# Actions was operational with no incident. "Drops some ticks under load" and
+# "delivers none to this repo" look identical from the outside and call for
+# completely different fixes: the first is answered by the catch-up crons in
+# #47, the second only by a trigger outside GitHub.
+#
+# Every 15 minutes, echoing a timestamp. Costs seconds. If nothing appears
+# here within the hour, the scheduler is not delivering to this repo at all.
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Say when
+        run: |
+          echo "canary fired at $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          echo "event=${{ github.event_name }} cron=${{ github.event.schedule }}"
