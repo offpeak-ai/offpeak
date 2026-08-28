@@ -12,7 +12,7 @@ checkable — if something here is not true yet, it says so.
   fallback left on the table, as arithmetic against published price sheets.
 - **A `Venue` interface** — the extension point. A venue is anywhere deferred
   work can run.
-- **[The Spread Board](night-board.md)** — GB power and carbon, marked daily.
+- **[The Spread Board](spread-board.md)** — GB power and carbon, marked daily.
 
 ## What does not exist yet
 

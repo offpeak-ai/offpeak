@@ -1,5 +1,12 @@
 name: Spread Board
 
+# The filename says nightly and stays that way: it is a cadence, not a claim.
+# This runs once a day because the grid legs it marks have a real day/night
+# session — the evening peak through the trough that follows — and because the
+# calibration record wants one mark per session. The token spread it publishes
+# alongside carries no clock at all: that one is priced by urgency, and a batch
+# tier is half price at noon exactly as it is at midnight.
+#
 # Quotes at the open, marks at the close. Output is committed to the `board-data`
 # branch, not to main: main is protected (PR + four required checks), so a
 # scheduled bot push there would be rejected on every run.
@@ -75,7 +82,7 @@ jobs:
         # Derived from the cron's INTENDED time, never from when the run
         # actually started: a scheduled run can fire hours late, and "now" would
         # then resolve to the wrong side of the 16:00Z pivot and mark the wrong
-        # session. night_report's own constant decides the pivot, so this can
+        # session. board_report's own constant decides the pivot, so this can
         # not drift away from the tool it is feeding.
         env:
           SCHEDULE: ${{ github.event.schedule }}
@@ -85,9 +92,9 @@ jobs:
           python - <<'EOF' >> "$GITHUB_OUTPUT"
           import datetime as dt, importlib.util, os
           spec = importlib.util.spec_from_file_location(
-              "nr", "tools/night_report.py")
-          nr = importlib.util.module_from_spec(spec)
-          spec.loader.exec_module(nr)
+              "br", "tools/board_report.py")
+          br = importlib.util.module_from_spec(spec)
+          spec.loader.exec_module(br)
 
           now = dt.datetime.now(dt.timezone.utc)
           cron = (os.environ.get("SCHEDULE") or "").split()
@@ -101,8 +108,8 @@ jobs:
               intended = now
 
           mode = os.environ.get("IN_MODE") or (
-              "quote" if intended.hour >= nr.NIGHT_START_HOUR_UTC else "mark")
-          night = os.environ.get("IN_NIGHT") or nr.default_night(intended, mode)
+              "quote" if intended.hour >= br.NIGHT_START_HOUR_UTC else "mark")
+          night = os.environ.get("IN_NIGHT") or br.default_night(intended, mode)
           print(f"mode={mode}")
           print(f"night={night}")
           EOF
@@ -129,9 +136,9 @@ jobs:
           python - <<'EOF' >> "$GITHUB_OUTPUT"
           import datetime as dt, importlib.util, json, os, pathlib
           spec = importlib.util.spec_from_file_location(
-              "nr", "tools/night_report.py")
-          nr = importlib.util.module_from_spec(spec)
-          spec.loader.exec_module(nr)
+              "br", "tools/board_report.py")
+          br = importlib.util.module_from_spec(spec)
+          spec.loader.exec_module(br)
 
           night, mode = os.environ["NIGHT"], os.environ["MODE"]
           rec = pathlib.Path(f"board/nightly/{night}-{mode}.json")
@@ -146,7 +153,7 @@ jobs:
                   end = dt.datetime.fromisoformat(
                       dt.date.fromisoformat(night).isoformat()
                   ).replace(tzinfo=dt.timezone.utc) + dt.timedelta(
-                      hours=nr.NIGHT_START_HOUR_UTC + nr.NIGHT_HOURS)
+                      hours=br.NIGHT_START_HOUR_UTC + br.NIGHT_HOURS)
                   try:
                       to = json.loads(rec.read_text())["span_utc"]["to"]
                       covered = dt.datetime.fromisoformat(
@@ -176,7 +183,7 @@ jobs:
         env:
           EIA_API_KEY: ${{ secrets.EIA_API_KEY }}
         run: |
-          python tools/night_report.py \
+          python tools/board_report.py \
             --mode "${{ steps.pick.outputs.mode }}" \
             --night "${{ steps.pick.outputs.night }}" \
             --us-zones \

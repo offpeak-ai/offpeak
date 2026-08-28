@@ -18,7 +18,7 @@ print(offpeak.receipt(results))                # what it actually cost
 ```
 
 - **[Quickstart](quickstart.md)** — install, quote, run, read the receipt.
-- **[The Spread Board](night-board.md)** — the same claim, marked daily against open grid data.
+- **[The Spread Board](spread-board.md)** — the same claim, marked daily against open grid data.
 - **[Spec](spec.md)** — deadline semantics, statuses, receipts.
 - **[API reference](reference.md)** — every public symbol.
 - **[Roadmap](roadmap.md)** — what exists, what does not, and what is being built.
