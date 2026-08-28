@@ -58,27 +58,23 @@
     "unit": "$/MWh"
   },
   "carbon_caiso_sp15": {
-    "n_hours": 24,
+    "n_hours": 48,
     "peak_window_17_21_local": 219.03,
-    "offpeak_window_00_05_local": null,
-    "window_spread": null,
+    "offpeak_window_00_05_local": 278.44,
+    "window_spread": 0.79,
     "unit": "gCO2/kWh",
     "basis": "derived",
     "method": "derived: EIA-930 hourly generation mix x (EIA CO2 coefficients x EIA fleet heat rates); generation-side only, imports and storage carry-over not accounted",
-    "unclassified_share": 0.049
+    "unclassified_share": 0.045
   },
   "carbon_ercot_houston": {
-    "n_hours": 24,
+    "n_hours": 48,
     "peak_window_17_21_local": 342.85,
-    "offpeak_window_00_05_local": null,
-    "window_spread": null,
+    "offpeak_window_00_05_local": 427.01,
+    "window_spread": 0.8,
     "unit": "gCO2/kWh",
     "basis": "derived",
     "method": "derived: EIA-930 hourly generation mix x (EIA CO2 coefficients x EIA fleet heat rates); generation-side only, imports and storage carry-over not accounted",
     "unclassified_share": 0.001
-  },
-  "unavailable": {
-    "carbon_caiso_sp15": "CISO: EIA-930 has 2026-08-26 but not yet the 00:00-05:00 local hours of 2026-08-27, which is the trough this session's spread is measured against",
-    "carbon_ercot_houston": "ERCO: EIA-930 has 2026-08-26 but not yet the 00:00-05:00 local hours of 2026-08-27, which is the trough this session's spread is measured against"
   }
 }
