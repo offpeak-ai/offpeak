@@ -1,7 +1,7 @@
 # Offpeak Spread Board — marked sessions
 
 Quotes are open-data observation, not trade advice; settlements (real runs)
-live elsewhere. Generated daily by `tools/night_report.py`.
+live elsewhere. Generated daily by `tools/board_report.py`.
 
 Token spreads are published rather than observed: batch tiers are 50% off list, a 2.0x spread for work that can wait, and the same model's fast tier is 4x its batch tier — gpt-5.6-sol at $8/$40 vs $2/$10 per 1M, per developers.openai.com/api/docs/pricing.
 Caveat: gpt-5.6-sol's standard rate is promotional at least through 2026-11-21; post-promo list is $5/$30 and both tiers move with it, so the ratio is the durable figure, not the dollars.
