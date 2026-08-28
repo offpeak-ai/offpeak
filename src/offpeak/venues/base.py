@@ -59,6 +59,11 @@ class BatchState:
     #: A poller that checks once a day still learns the true completion time
     #: from this field; without it, resolution is bounded by the check times.
     completed_at_utc: str | None = None
+    #: When the provider says it accepted the batch (ISO 8601, UTC), if it says.
+    #: Turnaround measured between two provider stamps is the venue's own
+    #: elapsed time; measured against our submit() clock it also carries
+    #: whatever gap sits between us and them. Both stamps, or neither.
+    created_at_utc: str | None = None
 
     @property
     def done(self) -> bool:
