@@ -145,6 +145,7 @@ class OpenAIBatch(Venue):
             total=getattr(counts, "total", 0) or 0,
             raw_status=str(batch.status) if getattr(batch, "status", None) else None,
             completed_at_utc=iso_utc(finished),
+            created_at_utc=iso_utc(getattr(batch, "created_at", None)),
         )
 
     def collect(self, handle: str) -> dict[str, Result]:
