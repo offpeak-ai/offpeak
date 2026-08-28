@@ -65,6 +65,8 @@ nightly_digest()
 which subclasses `datetime.datetime` and is already timezone-aware. `offpeak`
 takes it as-is — no string, no conversion, no assumed timezone.
 
+The deadline is the consumer's need — *summaries ready by 06:00* — not a request to run the work late. `offpeak` submits immediately and the venue is free to return any time before the window closes; observed batch completion on the [queue board](https://github.com/offpeak-ai/offpeak/blob/board-data/nightly/QUEUE.md) runs in minutes, not hours. The window buys the discount and the provider's freedom to choose when — never a delay you asked for.
+
 ## Deadline = the SLA
 
 When a task declares an SLA, that is the deadline, and it is the more honest one

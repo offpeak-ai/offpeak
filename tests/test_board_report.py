@@ -1,4 +1,4 @@
-"""Night-board tests — pure functions only, no network."""
+"""Spread Board tests — pure functions only, no network."""
 
 import argparse
 import datetime as dt
@@ -12,10 +12,10 @@ from offpeak.prices import BATCH_DISCOUNT as SDK_BATCH_DISCOUNT
 from offpeak.prices import urgency_spread
 
 _spec = importlib.util.spec_from_file_location(
-    "night_report", Path(__file__).resolve().parent.parent / "tools" / "night_report.py"
+    "board_report", Path(__file__).resolve().parent.parent / "tools" / "board_report.py"
 )
-nr = importlib.util.module_from_spec(_spec)
-_spec.loader.exec_module(nr)
+br = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(br)
 
 
 def utc(y, m, d, h, mi=0):
@@ -28,68 +28,68 @@ def series(*pairs):
 
 def test_board_discount_tracks_the_sdk_price_sheet():
     # The board prints a token spread; it must not drift from what offpeak bills.
-    assert nr.BATCH_DISCOUNT == SDK_BATCH_DISCOUNT
+    assert br.BATCH_DISCOUNT == SDK_BATCH_DISCOUNT
 
 
 def test_board_urgency_spread_tracks_the_sdk_price_sheet():
     # The 4x is a citable claim on a public page. It is duplicated here because
     # the Action does not install the SDK — so it has to be pinned to the sheet
     # the SDK settles receipts against, or the board could publish a stale one.
-    assert nr.URGENCY_SPREAD == urgency_spread(nr.URGENCY_MODEL)
+    assert br.URGENCY_SPREAD == urgency_spread(br.URGENCY_MODEL)
 
 
 class TestNightSpan:
     def test_quote_at_dusk_covers_peak_through_dawn(self):
-        f, t = nr.night_span(utc(2026, 8, 20, 19), "quote")
-        assert (nr.z(f), nr.z(t)) == ("2026-08-20T16:00Z", "2026-08-21T07:00Z")
+        f, t = br.night_span(utc(2026, 8, 20, 19), "quote")
+        assert (br.z(f), br.z(t)) == ("2026-08-20T16:00Z", "2026-08-21T07:00Z")
 
     def test_span_covers_both_windows_the_board_compares(self):
         # The bug this replaced: a forward-only window from 19:00Z missed the
         # 16-20Z peak entirely, so the peak column was null in every session.
-        f, t = nr.night_span(utc(2026, 8, 20, 19), "quote")
+        f, t = br.night_span(utc(2026, 8, 20, 19), "quote")
         span_hours = int((t - f).total_seconds() // 3600)
         hours = {(f + dt.timedelta(hours=i)).hour for i in range(span_hours)}
-        assert hours & set(range(*nr.PEAK_WINDOW_UTC))
-        assert hours & ({23} | set(range(0, nr.OFFPEAK_WINDOW_UTC[1])))
+        assert hours & set(range(*br.PEAK_WINDOW_UTC))
+        assert hours & ({23} | set(range(0, br.OFFPEAK_WINDOW_UTC[1])))
 
     def test_mark_at_dawn_looks_back_at_the_finished_night(self):
-        f, t = nr.night_span(utc(2026, 8, 21, 6, 30), "mark")
-        assert nr.z(f) == "2026-08-20T16:00Z"
+        f, t = br.night_span(utc(2026, 8, 21, 6, 30), "mark")
+        assert br.z(f) == "2026-08-20T16:00Z"
         assert f.date() == dt.date(2026, 8, 20)  # the night is named for its dusk
 
     def test_mark_never_reaches_into_the_future(self):
         now = utc(2026, 8, 21, 6, 30)
-        _, t = nr.night_span(now, "mark")
+        _, t = br.night_span(now, "mark")
         assert t <= now  # actuals do not exist yet
 
     def test_a_run_before_dusk_still_belongs_to_the_previous_night(self):
-        f, _ = nr.night_span(utc(2026, 8, 21, 4), "quote")
-        assert nr.z(f) == "2026-08-20T16:00Z"
+        f, _ = br.night_span(utc(2026, 8, 21, 4), "quote")
+        assert br.z(f) == "2026-08-20T16:00Z"
 
 
 class TestWindow:
     def test_plain_range_is_half_open(self):
-        assert nr.window(series((16, 0, 10.0), (19, 30, 20.0), (20, 0, 999.0)), 16, 20) == 15.0
+        assert br.window(series((16, 0, 10.0), (19, 30, 20.0), (20, 0, 999.0)), 16, 20) == 15.0
 
     def test_range_wraps_midnight(self):
         s = series((23, 0, 10.0), (0, 30, 20.0), (3, 30, 30.0), (12, 0, 999.0))
-        assert nr.window(s, 23, 4) == 20.0
+        assert br.window(s, 23, 4) == 20.0
 
     def test_empty_selection_is_none_not_zero(self):
-        assert nr.window(series((12, 0, 5.0)), 16, 20) is None
+        assert br.window(series((12, 0, 5.0)), 16, 20) is None
 
     def test_malformed_timestamps_are_skipped_not_fatal(self):
-        assert nr.window([("garbage", 1.0), ("2026-08-20T17:00Z", 8.0)], 16, 20) == 8.0
+        assert br.window([("garbage", 1.0), ("2026-08-20T17:00Z", 8.0)], 16, 20) == 8.0
 
 
 class TestBestWorst5h:
     def test_needs_a_full_five_hours(self):
-        assert nr.best_worst_5h(series(*[(h, 0, 1.0) for h in range(9)])) is None
+        assert br.best_worst_5h(series(*[(h, 0, 1.0) for h in range(9)])) is None
 
     def test_finds_cleanest_and_dirtiest_windows(self):
         vals = [10.0] * 10 + [90.0] * 10
         s = [(f"2026-08-20T{i // 2:02d}:{(i % 2) * 30:02d}Z", v) for i, v in enumerate(vals)]
-        (best_avg, best_from), (worst_avg, worst_from) = nr.best_worst_5h(s)
+        (best_avg, best_from), (worst_avg, worst_from) = br.best_worst_5h(s)
         assert best_avg == 10.0 and worst_avg == 90.0
         assert best_from < worst_from
 
@@ -102,9 +102,9 @@ class TestGetJsonRetries:
             calls.append(url)
             raise OSError("connection reset")
 
-        monkeypatch.setattr(nr.urllib.request, "urlopen", flaky)
-        with pytest.raises(nr.FetchError):
-            nr.get_json("https://example.test/x", retries=3, sleep=slept.append)
+        monkeypatch.setattr(br.urllib.request, "urlopen", flaky)
+        with pytest.raises(br.FetchError):
+            br.get_json("https://example.test/x", retries=3, sleep=slept.append)
         assert len(calls) == 3  # did not give up on the first blip
         assert len(slept) == 2  # backed off between attempts, not after the last
 
@@ -112,9 +112,9 @@ class TestGetJsonRetries:
         def down(url, timeout=None):
             raise OSError("down")
 
-        monkeypatch.setattr(nr.urllib.request, "urlopen", down)
-        with pytest.raises(nr.FetchError, match="failed after"):
-            nr.get_json("https://example.test/y?secret=1", retries=1, sleep=lambda _: None)
+        monkeypatch.setattr(br.urllib.request, "urlopen", down)
+        with pytest.raises(br.FetchError, match="failed after"):
+            br.get_json("https://example.test/y?secret=1", retries=1, sleep=lambda _: None)
 
     def test_query_string_is_not_echoed_into_the_error(self, monkeypatch):
         # Board URLs are keyless today, but an error string can end up in a
@@ -122,9 +122,9 @@ class TestGetJsonRetries:
         def down(url, timeout=None):
             raise OSError("down")
 
-        monkeypatch.setattr(nr.urllib.request, "urlopen", down)
-        with pytest.raises(nr.FetchError) as excinfo:
-            nr.get_json("https://example.test/y?secret=hunter2", retries=1, sleep=lambda _: None)
+        monkeypatch.setattr(br.urllib.request, "urlopen", down)
+        with pytest.raises(br.FetchError) as excinfo:
+            br.get_json("https://example.test/y?secret=hunter2", retries=1, sleep=lambda _: None)
         assert "hunter2" not in str(excinfo.value)
 
 
@@ -140,7 +140,7 @@ class TestBuildRecord:
             errors={},
         )
         base.update(kw)
-        return nr.build_record(**base)
+        return br.build_record(**base)
 
     def test_one_dead_leg_does_not_sink_the_other(self):
         rec = self._rec(
@@ -167,14 +167,14 @@ class TestBuildRecord:
         # what will move it, or the record is a number without provenance.
         tokens = self._rec()["tokens"]
         assert tokens["urgency_spread"] == 4.0
-        assert nr.URGENCY_MODEL in tokens["urgency_note"]
+        assert br.URGENCY_MODEL in tokens["urgency_note"]
         assert tokens["source"] == "developers.openai.com/api/docs/pricing"
         assert "2026-11-21" in tokens["caveat"]
 
     def test_the_board_header_cites_the_spread_it_prints(self):
-        assert "4x its batch tier" in nr.BOARD_HEADER
-        assert "developers.openai.com/api/docs/pricing" in nr.BOARD_HEADER
-        assert "promotional at least through 2026-11-21" in nr.BOARD_HEADER
+        assert "4x its batch tier" in br.BOARD_HEADER
+        assert "developers.openai.com/api/docs/pricing" in br.BOARD_HEADER
+        assert "promotional at least through 2026-11-21" in br.BOARD_HEADER
 
 
 class TestBoard:
@@ -189,7 +189,7 @@ class TestBoard:
     def test_rebuilds_every_night_it_has_a_record_for(self, tmp_path):
         self._write(tmp_path, "2026-08-19")
         self._write(tmp_path, "2026-08-20")
-        n = nr.rebuild_board(tmp_path / "BOARD.md", tmp_path)
+        n = br.rebuild_board(tmp_path / "BOARD.md", tmp_path)
         text = (tmp_path / "BOARD.md").read_text()
         assert n == 2
         assert text.startswith("# Offpeak Spread Board")
@@ -199,7 +199,7 @@ class TestBoard:
     def test_nights_are_ordered_by_date_not_by_arrival(self, tmp_path):
         for night in ("2026-08-20", "2026-08-18", "2026-08-19"):
             self._write(tmp_path, night)
-        nr.rebuild_board(tmp_path / "BOARD.md", tmp_path)
+        br.rebuild_board(tmp_path / "BOARD.md", tmp_path)
         rows = [ln for ln in (tmp_path / "BOARD.md").read_text().splitlines()
                 if ln.startswith("| 2026-")]
         assert [r.split("|")[1].strip() for r in rows] == [
@@ -207,9 +207,9 @@ class TestBoard:
 
     def test_re_marking_a_night_corrects_it_instead_of_duplicating(self, tmp_path):
         self._write(tmp_path, "2026-08-20", power_gb_agile={"window_spread": 1.1})
-        nr.rebuild_board(tmp_path / "BOARD.md", tmp_path)
+        br.rebuild_board(tmp_path / "BOARD.md", tmp_path)
         self._write(tmp_path, "2026-08-20", power_gb_agile={"window_spread": 9.9})
-        nr.rebuild_board(tmp_path / "BOARD.md", tmp_path)
+        br.rebuild_board(tmp_path / "BOARD.md", tmp_path)
         text = (tmp_path / "BOARD.md").read_text()
         assert text.count("| 2026-08-20 |") == 1
         assert "9.9x" in text and "1.1x" not in text
@@ -221,7 +221,7 @@ class TestBoard:
         # carbon column. Every row is re-rendered, so every row lines up.
         self._write(tmp_path, "2026-08-19")
         self._write(tmp_path, "2026-08-20")
-        nr.rebuild_board(tmp_path / "BOARD.md", tmp_path)
+        br.rebuild_board(tmp_path / "BOARD.md", tmp_path)
         header, rows = _split(tmp_path / "BOARD.md")
         assert len({r.count("|") for r in rows}) == 1
         assert all(r.count("|") == header.count("|") for r in rows)
@@ -230,31 +230,31 @@ class TestBoard:
         self._write(tmp_path, "2026-08-20")
         (tmp_path / "2026-08-21-quote.json").write_text(
             json.dumps(self._record("2026-08-21")))
-        assert nr.rebuild_board(tmp_path / "BOARD.md", tmp_path) == 1
+        assert br.rebuild_board(tmp_path / "BOARD.md", tmp_path) == 1
         assert "2026-08-21" not in (tmp_path / "BOARD.md").read_text()
 
     def test_a_night_with_no_record_loses_its_row(self, tmp_path):
         # A row that cannot be re-derived from a record is not evidence.
         self._write(tmp_path, "2026-08-19")
         self._write(tmp_path, "2026-08-20")
-        nr.rebuild_board(tmp_path / "BOARD.md", tmp_path)
+        br.rebuild_board(tmp_path / "BOARD.md", tmp_path)
         (tmp_path / "2026-08-19-mark.json").unlink()
-        nr.rebuild_board(tmp_path / "BOARD.md", tmp_path)
+        br.rebuild_board(tmp_path / "BOARD.md", tmp_path)
         assert "2026-08-19" not in (tmp_path / "BOARD.md").read_text()
 
     def test_one_unreadable_record_costs_its_row_not_the_board(self, tmp_path, capsys):
         self._write(tmp_path, "2026-08-19")
         (tmp_path / "2026-08-20-mark.json").write_text("{ this is not json")
-        assert nr.rebuild_board(tmp_path / "BOARD.md", tmp_path) == 1
+        assert br.rebuild_board(tmp_path / "BOARD.md", tmp_path) == 1
         assert "skipping unreadable record" in capsys.readouterr().out
         assert "| 2026-08-19 |" in (tmp_path / "BOARD.md").read_text()
 
     def test_no_records_leaves_a_header_and_no_rows(self, tmp_path):
-        assert nr.rebuild_board(tmp_path / "BOARD.md", tmp_path) == 0
-        assert (tmp_path / "BOARD.md").read_text() == nr.BOARD_HEADER
+        assert br.rebuild_board(tmp_path / "BOARD.md", tmp_path) == 0
+        assert (tmp_path / "BOARD.md").read_text() == br.BOARD_HEADER
 
     def test_missing_values_render_as_a_dash_not_a_crash(self):
-        row = nr.render_row({"night_of": "2026-08-20", "tokens": {"spread": 2.0}})
+        row = br.render_row({"night_of": "2026-08-20", "tokens": {"spread": 2.0}})
         # 2 windows x 2 GB legs, 2 GB spreads, 2 US price spreads, 2 US carbon
         assert row.count("—") == 10
         assert row.endswith("2.0x |\n")
@@ -280,7 +280,7 @@ class TestUsZones:
 
     def test_windows_are_read_off_the_zones_own_clock(self):
         night = dt.date(2026, 8, 20)
-        leg = nr.us_leg(self._rows(night, [100.0, 120.0], [20.0, 30.0]), night)
+        leg = br.us_leg(self._rows(night, [100.0, 120.0], [20.0, 30.0]), night)
         assert leg["peak_window_17_21_local"] == 110.0
         assert leg["offpeak_window_00_05_local"] == 25.0
         assert leg["window_spread"] == 4.4
@@ -292,15 +292,15 @@ class TestUsZones:
         rows = self._rows(night, [100.0], [20.0])
         tz = dt.timezone(dt.timedelta(hours=-7))
         rows.append((dt.datetime(2026, 8, 20, 2, tzinfo=tz), 999.0))  # same-day trough
-        leg = nr.us_leg(rows, night)
+        leg = br.us_leg(rows, night)
         assert leg["offpeak_window_00_05_local"] == 20.0  # 999 ignored
 
     def test_a_zone_with_no_usable_hours_is_no_leg_at_all(self):
-        assert nr.us_leg([], dt.date(2026, 8, 20)) is None
+        assert br.us_leg([], dt.date(2026, 8, 20)) is None
 
     def test_half_a_zone_still_reports_what_it_has(self):
         night = dt.date(2026, 8, 20)
-        leg = nr.us_leg(self._rows(night, [100.0], []), night)
+        leg = br.us_leg(self._rows(night, [100.0], []), night)
         assert leg["peak_window_17_21_local"] == 100.0
         assert leg["offpeak_window_00_05_local"] is None
         assert leg["window_spread"] is None
@@ -318,57 +318,57 @@ class TestUsZones:
             return real_import(name, *a, **k)
 
         monkeypatch.setattr(builtins, "__import__", no_gridstatus)
-        with pytest.raises(nr.FetchError, match="gridstatus is not installed"):
-            nr._us_rows("caiso_sp15", dt.date(2026, 8, 20))
+        with pytest.raises(br.FetchError, match="gridstatus is not installed"):
+            br._us_rows("caiso_sp15", dt.date(2026, 8, 20))
 
     def test_us_legs_land_in_the_record_and_the_row(self):
         night = dt.date(2026, 8, 20)
-        rec = nr.build_record(
+        rec = br.build_record(
             mode="mark", night=night, now=utc(2026, 8, 21, 6, 30),
             span=(utc(2026, 8, 20, 16), utc(2026, 8, 21, 7)),
             carbon_series=None, power_series=None, errors={},
-            us_legs={"caiso_sp15": nr.us_leg(self._rows(night, [100.0], [25.0]), night)},
+            us_legs={"caiso_sp15": br.us_leg(self._rows(night, [100.0], [25.0]), night)},
         )
         assert rec["power_caiso_sp15"]["window_spread"] == 4.0
-        assert "4.0x" in nr.render_row(rec)
+        assert "4.0x" in br.render_row(rec)
 
 
 class TestHourIntensity:
     def test_a_gas_only_hour_is_the_gas_factor(self):
-        intensity, classified, unclassified = nr.hour_intensity({"NG": 1000.0})
-        assert intensity == pytest.approx(nr.CO2_KG_PER_MWH["NG"])
+        intensity, classified, unclassified = br.hour_intensity({"NG": 1000.0})
+        assert intensity == pytest.approx(br.CO2_KG_PER_MWH["NG"])
         assert (classified, unclassified) == (1000.0, 0.0)
 
     def test_zero_carbon_generation_dilutes_it(self):
         # Half gas, half wind: the fleet factor, halved.
-        intensity, _, _ = nr.hour_intensity({"NG": 500.0, "WND": 500.0})
-        assert intensity == pytest.approx(nr.CO2_KG_PER_MWH["NG"] / 2)
+        intensity, _, _ = br.hour_intensity({"NG": 500.0, "WND": 500.0})
+        assert intensity == pytest.approx(br.CO2_KG_PER_MWH["NG"] / 2)
 
     def test_a_carbon_free_hour_is_zero_not_none(self):
-        intensity, _, _ = nr.hour_intensity({"WND": 100.0, "SUN": 50.0})
+        intensity, _, _ = br.hour_intensity({"WND": 100.0, "SUN": 50.0})
         assert intensity == 0.0
 
     def test_an_hour_with_nothing_classified_has_no_intensity(self):
         # A grid we cannot characterise has no intensity, not one of zero.
-        intensity, classified, unclassified = nr.hour_intensity({"OTH": 900.0})
+        intensity, classified, unclassified = br.hour_intensity({"OTH": 900.0})
         assert intensity is None
         assert (classified, unclassified) == (0.0, 900.0)
 
     def test_storage_charging_is_load_not_negative_generation(self):
         # BAT at -400 is demand wearing a generator's name. Netting it against
         # gas would invent carbon-free MWh that nobody generated.
-        with_charge, _, _ = nr.hour_intensity({"NG": 1000.0, "BAT": -400.0})
-        assert with_charge == pytest.approx(nr.CO2_KG_PER_MWH["NG"])
+        with_charge, _, _ = br.hour_intensity({"NG": 1000.0, "BAT": -400.0})
+        assert with_charge == pytest.approx(br.CO2_KG_PER_MWH["NG"])
 
     def test_an_unknown_fuel_code_is_unclassified_not_assumed_clean(self):
-        _, classified, unclassified = nr.hour_intensity({"NG": 100.0, "XYZ": 900.0})
+        _, classified, unclassified = br.hour_intensity({"NG": 100.0, "XYZ": 900.0})
         assert (classified, unclassified) == (100.0, 900.0)
 
     def test_the_factors_are_derived_from_their_published_halves(self):
         # Coal: 205.7 lb CO2/MMBtu x 10 MMBtu/MWh, in kg. Roughly 933.
-        assert nr.CO2_KG_PER_MWH["COL"] == pytest.approx(933.0, abs=1.0)
-        assert nr.CO2_KG_PER_MWH["NG"] == pytest.approx(424.6, abs=1.0)
-        assert nr.CO2_KG_PER_MWH["COL"] > nr.CO2_KG_PER_MWH["NG"]
+        assert br.CO2_KG_PER_MWH["COL"] == pytest.approx(933.0, abs=1.0)
+        assert br.CO2_KG_PER_MWH["NG"] == pytest.approx(424.6, abs=1.0)
+        assert br.CO2_KG_PER_MWH["COL"] > br.CO2_KG_PER_MWH["NG"]
 
 
 class TestUsCarbonLeg:
@@ -383,7 +383,7 @@ class TestUsCarbonLeg:
 
     def test_windows_match_the_price_legs_and_carry_their_unit(self):
         night = dt.date(2026, 8, 20)
-        leg = nr.us_carbon_leg(self._mix(night, [800.0], [200.0]), night)
+        leg = br.us_carbon_leg(self._mix(night, [800.0], [200.0]), night)
         assert leg["unit"] == "gCO2/kWh"
         assert leg["window_spread"] == 4.0  # 0.8 gas vs 0.2 gas
         assert leg["basis"] == "derived"
@@ -392,24 +392,24 @@ class TestUsCarbonLeg:
     def test_the_unclassified_share_is_reported_not_buried(self):
         night = dt.date(2026, 8, 20)
         mix = {(night, 17): {"NG": 750.0, "OTH": 250.0}}
-        leg = nr.us_carbon_leg(mix, night)
+        leg = br.us_carbon_leg(mix, night)
         assert leg["unclassified_share"] == 0.25
 
     def test_a_night_with_no_usable_hours_is_no_leg(self):
-        assert nr.us_carbon_leg({}, dt.date(2026, 8, 20)) is None
+        assert br.us_carbon_leg({}, dt.date(2026, 8, 20)) is None
 
     def test_the_leg_lands_in_the_record_and_the_row(self):
         night = dt.date(2026, 8, 20)
-        rec = nr.build_record(
+        rec = br.build_record(
             mode="mark", night=night, now=utc(2026, 8, 21, 6, 30),
             span=(utc(2026, 8, 20, 16), utc(2026, 8, 21, 7)),
             carbon_series=None, power_series=None, errors={},
             us_carbon_legs={
-                "ercot_houston": nr.us_carbon_leg(self._mix(night, [900.0], [300.0]), night)
+                "ercot_houston": br.us_carbon_leg(self._mix(night, [900.0], [300.0]), night)
             },
         )
         assert rec["carbon_ercot_houston"]["window_spread"] == 3.0
-        assert "3.0x" in nr.render_row(rec)
+        assert "3.0x" in br.render_row(rec)
         assert "EIA-930" in rec["sources"]["carbon_us"]
 
 
@@ -420,8 +420,8 @@ class TestEiaMix:
             {"period": "2026-08-20T17-05", "fueltype": "WND", "value": "500"},
             {"period": "2026-08-21T02-05", "fueltype": "NG", "value": "100"},
         ]}}
-        monkeypatch.setattr(nr, "get_json", lambda url, **kw: payload)
-        mix = nr.eia_mix("ercot_houston", dt.date(2026, 8, 20), "k")
+        monkeypatch.setattr(br, "get_json", lambda url, **kw: payload)
+        mix = br.eia_mix("ercot_houston", dt.date(2026, 8, 20), "k")
         assert mix[(dt.date(2026, 8, 20), 17)] == {"NG": 500.0, "WND": 500.0}
         assert mix[(dt.date(2026, 8, 21), 2)] == {"NG": 100.0}
 
@@ -431,15 +431,15 @@ class TestEiaMix:
             {"period": "garbage", "fueltype": "NG", "value": "5"},
             {"period": "2026-08-20T17-05", "fueltype": "COL", "value": "7"},
         ]}}
-        monkeypatch.setattr(nr, "get_json", lambda url, **kw: payload)
-        assert nr.eia_mix("ercot_houston", dt.date(2026, 8, 20), "k") == {
+        monkeypatch.setattr(br, "get_json", lambda url, **kw: payload)
+        assert br.eia_mix("ercot_houston", dt.date(2026, 8, 20), "k") == {
             (dt.date(2026, 8, 20), 17): {"COL": 7.0}
         }
 
     def test_an_empty_feed_says_it_runs_behind_rather_than_marking_zero(self, monkeypatch):
-        monkeypatch.setattr(nr, "get_json", lambda url, **kw: {"response": {"data": []}})
-        with pytest.raises(nr.FetchError, match="about a day behind"):
-            nr.eia_mix("caiso_sp15", dt.date(2026, 8, 20), "k")
+        monkeypatch.setattr(br, "get_json", lambda url, **kw: {"response": {"data": []}})
+        with pytest.raises(br.FetchError, match="about a day behind"):
+            br.eia_mix("caiso_sp15", dt.date(2026, 8, 20), "k")
 
     def test_the_api_key_never_reaches_an_error_message(self, monkeypatch):
         # get_json already strips query strings; this pins that the key rides
@@ -448,24 +448,24 @@ class TestEiaMix:
 
         def capture(url, **kw):
             seen["url"] = url
-            raise nr.FetchError("boom")
+            raise br.FetchError("boom")
 
-        monkeypatch.setattr(nr, "get_json", capture)
-        with pytest.raises(nr.FetchError):
-            nr.eia_mix("caiso_sp15", dt.date(2026, 8, 20), "hunter2")
+        monkeypatch.setattr(br, "get_json", capture)
+        with pytest.raises(br.FetchError):
+            br.eia_mix("caiso_sp15", dt.date(2026, 8, 20), "hunter2")
         assert "hunter2" in seen["url"].split("?", 1)[1]
         assert "hunter2" not in seen["url"].split("?", 1)[0]
 
 
 class TestUtcOffset:
     def test_summer_and_winter_offsets_differ_like_the_grid_does(self):
-        assert nr.utc_offset("America/Chicago", dt.date(2026, 8, 20)) == "-05:00"
-        assert nr.utc_offset("America/Chicago", dt.date(2026, 1, 20)) == "-06:00"
-        assert nr.utc_offset("America/Los_Angeles", dt.date(2026, 8, 20)) == "-07:00"
+        assert br.utc_offset("America/Chicago", dt.date(2026, 8, 20)) == "-05:00"
+        assert br.utc_offset("America/Chicago", dt.date(2026, 1, 20)) == "-06:00"
+        assert br.utc_offset("America/Los_Angeles", dt.date(2026, 8, 20)) == "-07:00"
 
     def test_an_unknown_zone_costs_the_column_not_the_run(self):
-        with pytest.raises(nr.FetchError):
-            nr.utc_offset("Mars/Olympus_Mons", dt.date(2026, 8, 20))
+        with pytest.raises(br.FetchError):
+            br.utc_offset("Mars/Olympus_Mons", dt.date(2026, 8, 20))
 
 
 class TestBoardHeaderHealing:
@@ -482,9 +482,9 @@ class TestBoardHeaderHealing:
         (tmp_path / "2026-08-20-mark.json").write_text(
             json.dumps({"night_of": "2026-08-20", "tokens": {"spread": 2.0}})
         )
-        nr.rebuild_board(board, tmp_path)
+        br.rebuild_board(board, tmp_path)
         text = board.read_text()
-        assert text.startswith(nr.BOARD_HEADER)
+        assert text.startswith(br.BOARD_HEADER)
         assert "| old | columns |" not in text
         assert "| 2026-08-19 | a | b |" not in text
 
@@ -517,17 +517,17 @@ class TestCarbonBackfill:
     def test_a_leg_without_a_trough_is_not_a_partial_answer(self):
         # The board's column *is* the spread. Publishing the half we have would
         # put a number in a cell that means something else.
-        assert not nr.carbon_is_complete(
+        assert not br.carbon_is_complete(
             {"peak_window_17_21_local": 197.9, "offpeak_window_00_05_local": None,
              "window_spread": None}
         )
-        assert nr.carbon_is_complete(self._leg())
-        assert not nr.carbon_is_complete(None)
+        assert br.carbon_is_complete(self._leg())
+        assert not br.carbon_is_complete(None)
 
     def test_late_arriving_carbon_is_written_into_the_old_record(self, tmp_path):
         today = dt.date.today().isoformat()
         path = self._mark(tmp_path, today)
-        filled = nr.backfill_carbon(tmp_path, "key", fetch=lambda z, n: self._leg())
+        filled = br.backfill_carbon(tmp_path, "key", fetch=lambda z, n: self._leg())
         assert sorted(filled) == [f"{today} caiso_sp15", f"{today} ercot_houston"]
         rec = json.loads(path.read_text())
         assert rec["carbon_caiso_sp15"]["window_spread"] == 0.8
@@ -537,7 +537,7 @@ class TestCarbonBackfill:
         today = dt.date.today().isoformat()
         path = self._mark(tmp_path, today)
         peak_only = {"peak_window_17_21_local": 197.9, "window_spread": None}
-        assert nr.backfill_carbon(tmp_path, "key", fetch=lambda z, n: peak_only) == []
+        assert br.backfill_carbon(tmp_path, "key", fetch=lambda z, n: peak_only) == []
         rec = json.loads(path.read_text())
         assert "carbon_caiso_sp15" not in rec
         assert "not yet the 00:00-05:00 local hours" in rec["unavailable"]["carbon_caiso_sp15"]
@@ -547,7 +547,7 @@ class TestCarbonBackfill:
         # *following* morning, which is a day further out again.
         today = dt.date.today()
         self._mark(tmp_path, today.isoformat())
-        nr.backfill_carbon(tmp_path, "key", fetch=lambda z, n: {"window_spread": None})
+        br.backfill_carbon(tmp_path, "key", fetch=lambda z, n: {"window_spread": None})
         rec = json.loads((tmp_path / f"{today}-mark.json").read_text())
         assert str(today + dt.timedelta(days=1)) in rec["unavailable"]["carbon_caiso_sp15"]
 
@@ -560,14 +560,14 @@ class TestCarbonBackfill:
             asked.append(zone)
             return self._leg()
 
-        nr.backfill_carbon(tmp_path, "key", fetch=fetch)
+        br.backfill_carbon(tmp_path, "key", fetch=fetch)
         assert "caiso_sp15" not in asked, "a complete leg is left alone"
 
     def test_it_does_not_reach_back_past_the_lookback(self, tmp_path):
         old = (dt.date.today() - dt.timedelta(days=30)).isoformat()
         self._mark(tmp_path, old)
         asked = []
-        nr.backfill_carbon(
+        br.backfill_carbon(
             tmp_path, "key", lookback=5,
             fetch=lambda z, n: asked.append(z) or self._leg(),
         )
@@ -578,9 +578,9 @@ class TestCarbonBackfill:
         self._mark(tmp_path, today)
 
         def fetch(zone, night):
-            raise nr.FetchError("EIA is down")
+            raise br.FetchError("EIA is down")
 
-        assert nr.backfill_carbon(tmp_path, "key", fetch=fetch) == []
+        assert br.backfill_carbon(tmp_path, "key", fetch=fetch) == []
         rec = json.loads((tmp_path / f"{today}-mark.json").read_text())
         assert rec["unavailable"]["carbon_caiso_sp15"] == "EIA is down"
 
@@ -591,23 +591,23 @@ class TestCarbonBackfill:
         def fetch(zone, night):
             raise RuntimeError("something else entirely")
 
-        assert nr.backfill_carbon(tmp_path, "key", fetch=fetch) == []
+        assert br.backfill_carbon(tmp_path, "key", fetch=fetch) == []
 
     def test_an_unreadable_record_is_skipped_not_fatal(self, tmp_path):
         (tmp_path / "2026-08-20-mark.json").write_text("{not json")
-        assert nr.backfill_carbon(tmp_path, "key", fetch=lambda z, n: self._leg()) == []
+        assert br.backfill_carbon(tmp_path, "key", fetch=lambda z, n: self._leg()) == []
 
     def test_a_record_with_no_date_is_skipped(self, tmp_path):
         (tmp_path / "x-mark.json").write_text(json.dumps({"mode": "mark"}))
-        assert nr.backfill_carbon(tmp_path, "key", fetch=lambda z, n: self._leg()) == []
+        assert br.backfill_carbon(tmp_path, "key", fetch=lambda z, n: self._leg()) == []
 
     def test_the_backfilled_leg_reaches_the_board(self, tmp_path):
         # The projection is what publishes it, so the two have to work together:
         # backfill rewrites the record, rebuild_board re-renders every row.
         today = dt.date.today().isoformat()
         self._mark(tmp_path, today)
-        nr.backfill_carbon(tmp_path, "key", fetch=lambda z, n: self._leg())
-        nr.rebuild_board(tmp_path / "BOARD.md", tmp_path)
+        br.backfill_carbon(tmp_path, "key", fetch=lambda z, n: self._leg())
+        br.rebuild_board(tmp_path / "BOARD.md", tmp_path)
         row = [
             ln for ln in (tmp_path / "BOARD.md").read_text().splitlines()
             if ln.startswith(f"| {today} ")
@@ -625,17 +625,17 @@ class TestCarbonBackfill:
 
 def test_night_override_marks_the_session_it_names_not_the_clocks():
     late = utc(2026, 8, 27, 17, 16)  # past 16:00Z: the inference has flipped
-    inferred_from, _ = nr.night_span(late, "mark")
+    inferred_from, _ = br.night_span(late, "mark")
     assert inferred_from.date() == dt.date(2026, 8, 27)  # the wrong one
 
-    named_from, named_to = nr.night_span(late, "mark", dt.date(2026, 8, 26))
+    named_from, named_to = br.night_span(late, "mark", dt.date(2026, 8, 26))
     assert named_from == utc(2026, 8, 26, 16)
     assert named_to == utc(2026, 8, 27, 7)  # whole session, not truncated at now
 
 
 def test_night_override_still_truncates_a_session_in_progress():
     # Naming a session does not invent actuals for hours that have not happened.
-    _, to = nr.night_span(utc(2026, 8, 27, 20), "mark", dt.date(2026, 8, 27))
+    _, to = br.night_span(utc(2026, 8, 27, 20), "mark", dt.date(2026, 8, 27))
     assert to == utc(2026, 8, 27, 20)
 
 
@@ -645,16 +645,16 @@ def test_without_an_override_nothing_changes():
         (utc(2026, 8, 21, 6, 30), "mark"),
         (utc(2026, 8, 21, 4), "quote"),
     ]:
-        assert nr.night_span(now, mode, None) == nr.night_span(now, mode)
+        assert br.night_span(now, mode, None) == br.night_span(now, mode)
 
 
 def test_default_night_is_what_the_cron_would_have_marked():
     # What a catch-up passes to --night to stand in for the run that was dropped.
-    assert nr.default_night(utc(2026, 8, 27, 6, 30), "mark") == dt.date(2026, 8, 26)
-    assert nr.default_night(utc(2026, 8, 27, 19), "quote") == dt.date(2026, 8, 27)
+    assert br.default_night(utc(2026, 8, 27, 6, 30), "mark") == dt.date(2026, 8, 26)
+    assert br.default_night(utc(2026, 8, 27, 19), "quote") == dt.date(2026, 8, 27)
 
 
 def test_night_arg_rejects_something_that_is_not_a_date():
-    assert nr._night_arg("2026-08-26") == dt.date(2026, 8, 26)
+    assert br._night_arg("2026-08-26") == dt.date(2026, 8, 26)
     with pytest.raises(argparse.ArgumentTypeError):
-        nr._night_arg("last tuesday")
+        br._night_arg("last tuesday")

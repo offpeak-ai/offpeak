@@ -46,7 +46,8 @@ mistral = ["mistralai>=2.9"]
 gemini = ["google-genai>=2.0"]
 all = ["openai>=1.50", "anthropic>=0.40"]
 dev = ["pytest>=8", "ruff>=0.6", "build", "twine"]
-docs = ["mkdocs>=1.6,<2", "mkdocs-material>=9.5,<10", "mkdocstrings[python]>=0.26"]
+docs = ["mkdocs>=1.6,<2", "mkdocs-material>=9.5,<10", "mkdocstrings[python]>=0.26",
+        "mkdocs-redirects>=1.2"]
 
 [project.urls]
 Homepage = "https://github.com/offpeak-ai/offpeak"

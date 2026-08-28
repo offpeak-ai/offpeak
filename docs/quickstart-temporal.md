@@ -52,6 +52,8 @@ async def summarize(docs: list[str], deadline: str) -> list[str]:
 
 That is the whole integration. `deadline` is the one new argument.
 
+The deadline is the consumer's need — *summaries ready by 06:00* — not a request to run the work late. `offpeak` submits immediately and the venue is free to return any time before the window closes; observed batch completion on the [queue board](https://github.com/offpeak-ai/offpeak/blob/board-data/nightly/QUEUE.md) runs in minutes, not hours. The window buys the discount and the provider's freedom to choose when — never a delay you asked for.
+
 ## The workflow
 
 ```python

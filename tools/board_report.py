@@ -10,8 +10,8 @@ feed costs that column and nothing else.
 
 Run as two passes over the same session:
 
-    night_report.py --mode quote   # ~19:00Z, the session ahead, carbon forecast
-    night_report.py --mode mark    # ~06:30Z, the session just finished, actuals
+    board_report.py --mode quote   # the session ahead, carbon forecast
+    board_report.py --mode mark    # the session just finished, actuals
 
 A "session" is 16:00Z-07:00Z — it opens with the 17:00 BST evening peak and
 closes after the 00-05 BST trough, so a single span carries both windows the
@@ -47,7 +47,7 @@ AGILE = (
 )
 
 # Published token spreads. Kept in sync with offpeak.prices by
-# test_night_report.py rather than by hand: the Action runs this script without
+# test_board_report.py rather than by hand: the Action runs this script without
 # installing the SDK, so these are duplicated on purpose, not importable.
 BATCH_DISCOUNT = 0.5
 
@@ -490,7 +490,7 @@ def build_record(
 BOARD_HEADER = (
     "# Offpeak Spread Board — marked sessions\n\n"
     "Quotes are open-data observation, not trade advice; settlements (real runs)\n"
-    "live elsewhere. Generated daily by `tools/night_report.py`.\n\n"
+    "live elsewhere. Generated daily by `tools/board_report.py`.\n\n"
     "Token spreads are published rather than observed: batch tiers are 50% off "
     f"list, a {1 / BATCH_DISCOUNT:.1f}x spread for work that can wait, and the same "
     f"model's fast tier is {URGENCY_SPREAD:.0f}x its batch tier — {URGENCY_MODEL} at "

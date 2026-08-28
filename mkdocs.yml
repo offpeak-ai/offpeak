@@ -29,13 +29,19 @@ nav:
   - Temporal: quickstart-temporal.md
   - Airflow: quickstart-airflow.md
   - The published sheet: price-sheet.md
-  - The Spread Board: night-board.md
+  - The Spread Board: spread-board.md
   - Spec: spec.md
   - API reference: reference.md
   - Roadmap: roadmap.md
 
 plugins:
   - search
+  # night-board.md became spread-board.md when the night frame was
+  # retired: the spread is priced by urgency, not by the clock. The old
+  # path is published and linked from outside, so it keeps resolving.
+  - redirects:
+      redirect_maps:
+        night-board.md: spread-board.md
   - mkdocstrings:
       handlers:
         python:
