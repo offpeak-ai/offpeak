@@ -94,8 +94,6 @@ RFT use cases
 Best practices
 Assistants API
 Migration guide
-Deep dive
-Tools
 Model catalog
 Choose a model
 Pricing

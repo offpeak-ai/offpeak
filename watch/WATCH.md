@@ -56,3 +56,4 @@ and no row about it should be read as rate coverage.
 | 2026-08-27 | `openai:pricing` | changed | +5 / −0 | unclassified | — | — | d6a925dd5749 -> f103352cd90d |
 | 2026-08-27 | `mistral:pricing` | changed | +2 / −1 | unclassified | — | — | ea1005b813fe -> c916c6693705 |
 | 2026-08-27 | `google:pricing` | changed | +82 / −256 | unclassified | — | — | 5acfb597938b -> c5e78760d87f |
+| 2026-08-28 | `openai:pricing` | changed | +0 / −2 | copy change | gpt-5.6-luna | $0.0000540 | Navigation links “Deep dive” and “Tools” were removed; no pricing numbers changed. |
