@@ -42,6 +42,7 @@ on:
 
 permissions:
   contents: write
+  issues: write
 
 # Everything that pushes board-data shares one queue (#19). Two workflows
 # writing different files on the same branch still race at the push.
@@ -102,9 +103,6 @@ jobs:
         # A venue whose key is absent does not stop the watch: the classifier
         # records why it could not run and every hash-diff row publishes
         # anyway. Same degradation rule the Spread Board uses for EIA.
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
           # The classifier's default deadline is the next 06:00Z. On the
           # 03:07 cron that is a three-hour window; on a catch-up at 20:43 it
@@ -116,10 +114,47 @@ jobs:
             --outdir board/watch \
             --cap "${{ inputs.cap || '0.01' }}" \
             --deadline "$deadline" \
-            ${{ (inputs.classify == false) && '--no-classify' || '' }}
+            $NO_CLASSIFY
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          # Why this is not `${{ inputs.classify == false }}`: on a `schedule`
+          # event the `inputs` context is empty, so `inputs.classify` is null —
+          # and GitHub's `==` is a *loose* comparison that casts both sides to a
+          # number, making `null == false` true. Every scheduled run therefore
+          # passed `--no-classify` and every diff it found published
+          # `unclassified` with no reason beside it. That is the whole cause of
+          # the four unclassified 2026-08-27 rows in WATCH.md: the classifier
+          # did not fail, it was never asked. Gating on the event name first
+          # means only a dispatch that actually said "false" can turn it off.
+          NO_CLASSIFY: >-
+            ${{ (github.event_name == 'workflow_dispatch' && inputs.classify == false)
+                && '--no-classify' || '' }}
+
+      - name: Reconcile the sheet against the pages
+        id: reconcile
+        # Deliberately *not* gated on the guard. The watch answers "did the page
+        # move since yesterday", so a skipped reading has nothing to add. This
+        # answers "does the page agree with src/offpeak/prices.py today", and
+        # that can change with no page movement at all — someone edits the sheet
+        # on main and the pages sit still. It reads only committed text, makes no
+        # network call, and costs nothing, so it runs every time.
+        #
+        # A mismatch is the finding, not a build error: the exit code is captured
+        # rather than allowed to fail the job, because the drift still has to be
+        # committed and filed after it is found.
+        run: |
+          set +e
+          python tools/sheet_reconcile.py --pages board/watch/pages --outdir board/watch
+          code=$?
+          set -e
+          if [ "$code" -eq 0 ]; then
+            echo "drift=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "drift=true" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Commit to board-data
-        if: steps.guard.outputs.run == 'true'
         working-directory: board
         run: |
           git config user.name "github-actions[bot]"
@@ -131,3 +166,63 @@ jobs:
           fi
           git commit -m "watch: $(date -u +%Y-%m-%d)"
           git push
+
+      - name: File the drift, one issue per source
+        # One issue per source, reopened and edited rather than duplicated: a
+        # source's drift is a conversation about one provider's page, and a new
+        # issue every morning would bury the thread the row belongs to.
+        #
+        # This step **never edits src/offpeak/prices.py**, and no step in this
+        # workflow may. That is the same rule the watch has kept since it
+        # shipped, for the same reason: a page moves for a dozen reasons that
+        # are not a price change, and CI that rewrote the sheet on a parse would
+        # eventually launder a table-layout change into a receipt. A human reads
+        # the issue and edits the sheet by hand.
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          [ -f board/watch/reconcile.json ] || exit 0
+
+          # The label may not exist yet, and `gh issue create --label` on a
+          # missing label is a hard failure rather than a warning.
+          gh label create sheet-drift \
+            --color B60205 \
+            --description "Bundled price sheet disagrees with a provider's published page" \
+            --force >/dev/null
+
+          python - <<'EOF' > sources.txt
+          import json, pathlib
+          payload = json.loads(pathlib.Path("board/watch/reconcile.json").read_text())
+          for source, item in sorted(payload.items()):
+              pathlib.Path(f"issue-{source}.md").write_text(item["body"])
+              print(f"{source}\t{item['title']}")
+          EOF
+
+          if [ ! -s sources.txt ]; then
+            echo "no drift to file"
+            exit 0
+          fi
+
+          # Read the work list on fd 3: `gh` reads stdin, and a loop fed from
+          # stdin would hand it the rest of the file as an issue body.
+          while IFS=$'\t' read -r source title <&3; do
+            existing=$(gh issue list --label sheet-drift --state all --limit 100 \
+              --json number,title,state \
+              --jq "map(select(.title == \"$title\")) | first")
+            if [ -z "$existing" ] || [ "$existing" = "null" ]; then
+              gh issue create --label sheet-drift \
+                --title "$title" --body-file "issue-$source.md"
+              echo "opened: $title"
+            else
+              number=$(echo "$existing" | jq -r .number)
+              state=$(echo "$existing" | jq -r .state)
+              # `if` rather than `[ ... ] && ...`: under `set -e` a false test as
+              # the whole statement kills the step.
+              if [ "$state" = "CLOSED" ]; then
+                gh issue reopen "$number"
+              fi
+              gh issue edit "$number" --body-file "issue-$source.md"
+              echo "updated #$number: $title"
+            fi
+          done 3< sources.txt
