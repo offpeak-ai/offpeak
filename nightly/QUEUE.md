@@ -23,4 +23,8 @@ Written by `tools/queue_probe.py`, never by hand.
 | 2026-08-27 | anthropic | claude-haiku-4-5 | 24h | 2 | 2m50s | 0.197% | completed | $0.0000360 |
 | 2026-08-27 | openai | gpt-5.6-luna | 24h | 2 | 1m32s | 0.107% | completed | $0.00000780 |
 | 2026-08-27 | gemini | gemini-3.7-flash | 24h | 2 | 3m20s | 0.232% | completed | $0.000527 |
-| 2026-08-27 | mistral | mistral-small-latest | 24h | 2 | — | — | open | — |
+| 2026-08-27 | mistral | mistral-small-latest | 24h | 2 | 509m30s | 35.382% | completed | $0.00000480 |
+| 2026-08-28 | anthropic | claude-haiku-4-5 | 24h | 2 | 2m18s | 0.160% | completed | $0.0000360 |
+| 2026-08-28 | openai | gpt-5.6-luna | 24h | 2 | 2m35s | 0.179% | completed | $0.00000780 |
+| 2026-08-28 | gemini | gemini-3.7-flash | 24h | 2 | 2m49s | 0.196% | completed | $0.000542 |
+| 2026-08-28 | mistral | mistral-small-latest | 24h | 2 | 18m49s | 1.307% | completed | $0.00000480 |

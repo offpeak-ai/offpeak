@@ -1,6 +1,6 @@
 {
-  "date": "2026-08-27",
-  "started_utc": "2026-08-27T16:37:34+00:00",
+  "date": "2026-08-28",
+  "started_utc": "2026-08-28T03:43:30+00:00",
   "cap_usd": 0.01,
   "legs": [
     {
@@ -9,10 +9,10 @@
       "declared_window": "24h",
       "declared_window_seconds": 86400,
       "jobs": 2,
-      "submitted_utc": "2026-08-27T16:37:34+00:00",
-      "completed_utc": "2026-08-27T16:40:25+00:00",
-      "elapsed_seconds": 170.2,
-      "fraction_of_window_used": 0.00197,
+      "submitted_utc": "2026-08-28T03:43:30+00:00",
+      "completed_utc": "2026-08-28T03:45:48+00:00",
+      "elapsed_seconds": 138.0,
+      "fraction_of_window_used": 0.001597,
       "status": "completed",
       "input_tokens": 32,
       "output_tokens": 8,
@@ -20,7 +20,7 @@
       "quoted_list_usd": 0.00034,
       "skipped_reason": null,
       "note": null,
-      "handle": "msgbatch_01QacETWr58mxL4o3iXoHq9A"
+      "handle": "msgbatch_01V21P9a3vjijoS17rqTjZjb"
     },
     {
       "venue": "openai",
@@ -28,10 +28,10 @@
       "declared_window": "24h",
       "declared_window_seconds": 86400,
       "jobs": 2,
-      "submitted_utc": "2026-08-27T16:40:25+00:00",
-      "completed_utc": "2026-08-27T16:41:58+00:00",
-      "elapsed_seconds": 92.9,
-      "fraction_of_window_used": 0.001075,
+      "submitted_utc": "2026-08-28T03:45:49+00:00",
+      "completed_utc": "2026-08-28T03:48:24+00:00",
+      "elapsed_seconds": 155.0,
+      "fraction_of_window_used": 0.001794,
       "status": "completed",
       "input_tokens": 30,
       "output_tokens": 8,
@@ -39,7 +39,7 @@
       "quoted_list_usd": 0.0006184,
       "skipped_reason": null,
       "note": null,
-      "handle": "batch_6a90687b63b48190a9c92f6660e2677e"
+      "handle": "batch_6a91046f5fcc8190beb2ae139851da77"
     },
     {
       "venue": "gemini",
@@ -47,18 +47,18 @@
       "declared_window": "24h",
       "declared_window_seconds": 86400,
       "jobs": 2,
-      "submitted_utc": "2026-08-27T16:41:58+00:00",
-      "completed_utc": "2026-08-27T16:45:18+00:00",
-      "elapsed_seconds": 200.1,
-      "fraction_of_window_used": 0.002316,
+      "submitted_utc": "2026-08-28T03:48:24+00:00",
+      "completed_utc": "2026-08-28T03:51:13+00:00",
+      "elapsed_seconds": 169.0,
+      "fraction_of_window_used": 0.001956,
       "status": "completed",
       "input_tokens": 20,
-      "output_tokens": 277,
-      "paid_usd": 0.000526875,
+      "output_tokens": 285,
+      "paid_usd": 0.000541875,
       "quoted_list_usd": 0.003855,
       "skipped_reason": null,
       "note": null,
-      "handle": "batches/i4nzyjf9cafb8bz6jn5g4cnvw1v3s3s90fji"
+      "handle": "batches/g2lcr12w67ebe0i7zrscg6yyz062vzm1d5oa"
     },
     {
       "venue": "mistral",
@@ -66,22 +66,22 @@
       "declared_window": "24h",
       "declared_window_seconds": 86400,
       "jobs": 2,
-      "submitted_utc": "2026-08-27T16:45:19+00:00",
-      "completed_utc": "2026-08-28T01:14:49+00:00",
-      "elapsed_seconds": 30570.0,
-      "fraction_of_window_used": 0.353819,
+      "submitted_utc": "2026-08-28T03:51:13+00:00",
+      "completed_utc": "2026-08-28T04:10:03+00:00",
+      "elapsed_seconds": 1129.7,
+      "fraction_of_window_used": 0.013075,
       "status": "completed",
       "input_tokens": 48,
       "output_tokens": 4,
       "paid_usd": 4.8e-06,
       "quoted_list_usd": 4.14e-05,
       "skipped_reason": null,
-      "note": "still open after 1800s; left running \u2014 this run stopped watching, the batch did not stop cooking. A later run resolves it to a real completion time from the handle.",
-      "handle": "c59fbd42-3b00-4ad6-b2bd-e5ccc84b5dc0"
+      "note": null,
+      "handle": "1250e0b0-7dbb-4047-b22d-57163db8ebea"
     }
   ],
   "window_probe": [],
-  "spent_usd": 0.000575475,
+  "spent_usd": 0.000590475,
   "offpeak_version": "0.2.6.dev0",
   "price_sheet": "2026-08-23"
 }
