@@ -54,6 +54,12 @@ BATCH_DISCOUNT = 0.5
 # The intra-venue urgency spread: the same model at one venue, priced for haste
 # against priced for patience. OpenAI's fast tier over its batch tier on
 # gpt-5.6-sol is $8/$40 per 1M tokens against $2/$10 — 4x for the hour alone.
+#
+# One model, not a claim about the market: as of 2026-08-28 Anthropic publishes
+# a fast tier too (Opus 5 / Opus 4.8, $10/$50 against a $2.50/$12.50 batch row —
+# the same 4x), and so does Google, as "priority". The board quotes sol because
+# it is one venue's published pair, and the note below says so; it has never
+# meant that sol's venue is the only one selling the hour.
 URGENCY_MODEL = "gpt-5.6-sol"
 URGENCY_SPREAD = 4.0
 URGENCY_LEGS = "$8/$40 vs $2/$10 per 1M"

@@ -9,10 +9,11 @@ to ``None`` rather than a guess.
 Batch tiers at OpenAI, Anthropic, Google, Groq and Mistral are publicly priced
 at 50% of list, which is what :data:`BATCH_DISCOUNT` encodes. OpenAI's flex tier prices
 identically to its batch tier on the gpt-5.6 family, and its *fast* tier at
-twice list — the same model, priced for urgency. Fast is stored rather than
-derived (:func:`get_fast_price`), because unlike batch it is not a discount
-rule but its own published row; :func:`urgency_spread` divides the two so the
-price of an hour is a computed number and not a claim in prose.
+twice list — the same model, priced for urgency. Anthropic publishes a fast
+tier too, on Claude Opus 5 and Opus 4.8, also at twice list. Fast is stored
+rather than derived (:func:`get_fast_price`), because unlike batch it is not a
+discount rule but its own published row; :func:`urgency_spread` divides the two
+so the price of an hour is a computed number and not a claim in prose.
 
 Some list prices are promotional and will step up on a published date. Those
 carry a :class:`PromoNote` in :data:`PROMO_NOTES` — the date and the post-promo
@@ -21,6 +22,25 @@ temporary number as permanent.
 
 Corrections
 -----------
+
+**2026-08-28** — two rows that had been wrong since before the sheet watch took
+its first reading, so no hash diff could have found them; ``tools/sheet_reconcile.py``
+did, by reading the committed page text against this table.
+
+*Fast mode is no longer an OpenAI-only tier.* Anthropic publishes one on Claude
+Opus 5 and Opus 4.8 at $10 / $50 per 1M — research preview, first-party Claude
+API only, and explicitly **not** available with the Batch API. The rows are in
+:data:`_FAST_PRICES`; :func:`urgency_spread` therefore answers 4.0 for those two
+models where it previously answered ``None``. Nothing that was priced before
+this date changes: a fast row is an addition, and no standard or batch number
+moved.
+
+*Claude Sonnet 5's $2 / $10 is now the standard price.* It shipped as
+introductory pricing through 2026-08-31, with a scheduled step up to $3 / $15 on
+2026-09-01; Anthropic has cancelled that increase. The **numbers here were
+already right** — Sonnet 5 never carried a :class:`PromoNote`, so no quote ever
+promised the step-up — but prose elsewhere that called the rate introductory was
+describing a decay that will not happen, and has been removed.
 
 **2026-08-23** — the Mistral and Google blocks were read off
 mistral.ai/pricing/api and ai.google.dev/pricing on this date, and the snapshot
@@ -72,7 +92,7 @@ __all__ = [
 
 #: The date of the sheet **bundled in this release**. It never moves at runtime:
 #: a receipt that names it must stay checkable against the same numbers later.
-PRICE_SHEET_DATE = "2026-08-23"
+PRICE_SHEET_DATE = "2026-08-28"
 
 #: The date of the sheet currently in force. Equal to :data:`PRICE_SHEET_DATE`
 #: until :func:`load_sheet` replaces it. Read it through :func:`sheet_date` —
@@ -90,7 +110,14 @@ BATCH_DISCOUNT = 0.5
 # family, still callable but no longer listed) resolve to None; use
 # :func:`register_price` if you run one at a privately known rate.
 _PRICES: dict[str, tuple[float, float]] = {
-    # Anthropic (per platform.claude.com/docs/en/about-claude/pricing)
+    # Anthropic (per platform.claude.com/docs/en/about-claude/pricing).
+    # Batch is the same published 50%-of-standard rule, so BATCH_DISCOUNT covers
+    # it. Opus 5 and Opus 4.8 carry a fast row — see _FAST_PRICES.
+    #
+    # claude-sonnet-5's $2 / $10 was introductory through 2026-08-31, scheduled
+    # to step up to $3 / $15 on 2026-09-01. Anthropic cancelled that increase and
+    # the rate is now standard, so there is deliberately no PromoNote for it: a
+    # decay that will not happen is not one this sheet should quote.
     "claude-fable-5": (10.00, 50.00),
     "claude-opus-5": (5.00, 25.00),
     "claude-sonnet-5": (2.00, 10.00),
@@ -166,16 +193,37 @@ _PRICES: dict[str, tuple[float, float]] = {
 }
 
 # model -> (input, output) USD per 1M on a venue's *fast* tier: the same model,
-# priced for urgency instead of patience. Only OpenAI publishes one today, for
-# the gpt-5.6 family, at 2x standard (developers.openai.com/api/docs/pricing).
+# priced for urgency instead of patience. Two venues publish one today, both at
+# 2x standard.
 #
 # This table is what makes the urgency spread a computed number rather than a
 # claim in prose: fast over batch on the same model is what a venue charges for
 # the hour, with the model held constant.
 _FAST_PRICES: dict[str, tuple[float, float]] = {
+    # OpenAI, "Fast mode" — the tier renamed from "priority" on 2026-07-30, so
+    # service_tier: "priority" and "fast" both name it
+    # (developers.openai.com/api/docs/pricing).
     "gpt-5.6-sol": (8.00, 40.00),
     "gpt-5.6-terra": (4.00, 24.00),
     "gpt-5.6-luna": (0.40, 2.40),
+    # Anthropic, "Fast mode" — research preview, and narrower than OpenAI's in
+    # three ways worth knowing before quoting it
+    # (platform.claude.com/docs/en/about-claude/pricing):
+    #
+    #   * Opus 5 and Opus 4.8 only. Opus 4.7 errors on speed: "fast"; Opus 4.6
+    #     accepts it, runs at standard speed and bills at standard rates. Both
+    #     are correctly absent here — a row for either would invent a price.
+    #   * First-party Claude API only: not on Claude Platform on AWS, Bedrock or
+    #     Google Cloud, which price these models on their own sheets.
+    #   * Not available with the Batch API. urgency_spread() still divides fast
+    #     by batch for them, and that is still the right number: it is the price
+    #     of an hour on one model at one venue, which is a comparison of two
+    #     published rates, not a claim that one request can be both.
+    #
+    # Unlike OpenAI's, the rate applies across the full context window,
+    # including requests over 200k input tokens.
+    "claude-opus-5": (10.00, 50.00),
+    "claude-opus-4-8": (10.00, 50.00),
 }
 
 
@@ -461,10 +509,10 @@ def get_price(model: str) -> tuple[float, float] | None:
 def get_fast_price(model: str) -> tuple[float, float] | None:
     """Fast-tier price for *model*, USD per 1M tokens.
 
-    ``None`` where the venue publishes no fast tier — which is everywhere
-    except OpenAI's gpt-5.6 family today. Unlike batch, fast is not a discount
-    rule applied to list: it is its own published row, so it is stored, not
-    derived.
+    ``None`` where the venue publishes no fast tier — which today is everywhere
+    except OpenAI's gpt-5.6 family and Anthropic's Opus 5 / Opus 4.8. Unlike
+    batch, fast is not a discount rule applied to list: it is its own published
+    row, so it is stored, not derived.
     """
     return _lookup(_FAST_PRICES, model)
 
@@ -518,7 +566,8 @@ def urgency_spread(model: str) -> float | None:
 
     This is the intra-venue price of an hour with the model held constant — one
     provider, one model, two deadlines. On gpt-5.6-sol that is $8/$40 per 1M
-    against $2/$10, a **4x** spread.
+    against $2/$10, a **4x** spread; on claude-opus-5, $10/$50 against
+    $2.50/$12.50, the same 4x at a different venue.
 
     Both legs are checked and the *lower* is returned, so the figure can never
     overstate what a venue publishes. ``None`` where the venue prices no fast

@@ -196,7 +196,7 @@ def test_a_quote_prints_the_loaded_sheet_date_not_the_bundled_one():
 def test_bundled_constant_never_moves():
     """A receipt naming it must stay checkable against the same numbers."""
     prices.load_sheet(sheet())
-    assert prices.PRICE_SHEET_DATE == "2026-08-23"
+    assert prices.PRICE_SHEET_DATE == "2026-08-28"
 
 
 def test_a_loaded_sheet_actually_changes_the_arithmetic():
