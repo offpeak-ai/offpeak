@@ -1,8 +1,12 @@
 {
   "schema": "offpeak.price-sheet-index/1",
-  "latest": "2026-08-28",
+  "latest": "2026-08-30",
   "offpeak_version": "0.2.6.dev0",
   "sheets": [
+    {
+      "sheet_date": "2026-08-30",
+      "path": "2026-08-30.json"
+    },
     {
       "sheet_date": "2026-08-28",
       "path": "2026-08-28.json"
