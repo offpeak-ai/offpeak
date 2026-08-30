@@ -196,7 +196,7 @@ def test_a_quote_prints_the_loaded_sheet_date_not_the_bundled_one():
 def test_bundled_constant_never_moves():
     """A receipt naming it must stay checkable against the same numbers."""
     prices.load_sheet(sheet())
-    assert prices.PRICE_SHEET_DATE == "2026-08-28"
+    assert prices.PRICE_SHEET_DATE == "2026-08-30"
 
 
 def test_a_loaded_sheet_actually_changes_the_arithmetic():
@@ -204,3 +204,56 @@ def test_a_loaded_sheet_actually_changes_the_arithmetic():
     # 9.00/1M in, 9.00/1M out under the loaded sheet.
     assert prices.list_cost_usd("claude-haiku-4-5", 1_000_000, 1_000_000) == pytest.approx(18.0)
     assert prices.batch_cost_usd("claude-haiku-4-5", 1_000_000, 1_000_000) == pytest.approx(9.0)
+
+
+# --------------------------------------------------------------------------- #
+# lanes
+# --------------------------------------------------------------------------- #
+
+
+def test_export_carries_lanes_without_moving_the_schema():
+    # Additive: every key an older reader knows keeps its shape and the major
+    # does not move, so a sheet published by this build still loads there.
+    doc = prices.export_sheet()
+    assert doc["schema"] == "offpeak.price-sheet/1"
+    assert set(doc) >= {
+        "schema",
+        "sheet_date",
+        "generated_utc",
+        "batch_discount",
+        "prices",
+        "fast_prices",
+        "promo_notes",
+    }
+    assert doc["lanes"] == {"deepseek-": "clock"}
+    assert doc["prices"]["deepseek-v4-flash"] == {"input_per_m": 0.44, "output_per_m": 1.32}
+
+
+def test_an_old_reader_of_the_export_sees_the_same_price_rows():
+    # What a pre-lanes consumer does with the document: read the four tables
+    # it knows and ignore the rest. Nothing it reads changed shape.
+    doc = prices.export_sheet()
+    legacy = {
+        k: doc[k]
+        for k in ("schema", "sheet_date", "batch_discount", "prices", "fast_prices", "promo_notes")
+    }
+    prices.load_sheet(legacy, replace=True)
+    assert prices.get_price("deepseek-v4-pro") == (1.32, 3.96)
+    # A sheet that says nothing about lanes retracts nothing.
+    assert prices.lane_for("deepseek-v4-pro") == "clock"
+
+
+def test_a_sheet_with_lanes_is_honoured_and_reset_puts_the_bundled_ones_back():
+    prices.load_sheet(sheet(lanes={"brand-new-model": "clock"}))
+    assert prices.lane_for("brand-new-model") == "clock"
+    assert prices.lane_for("deepseek-v4-flash") == "clock"  # merged, not replaced
+    prices.load_sheet(sheet(lanes={"brand-new-model": "clock"}), replace=True)
+    assert prices.lane_for("deepseek-v4-flash") is None  # its price row is gone
+    prices.reset_sheet()
+    assert prices.lane_for("deepseek-v4-flash") == "clock"
+    assert prices.lane_for("brand-new-model") is None
+
+
+def test_an_unknown_lane_is_refused():
+    with pytest.raises(ValueError, match="not batch or clock"):
+        prices.load_sheet(sheet(lanes={"brand-new-model": "spot"}))

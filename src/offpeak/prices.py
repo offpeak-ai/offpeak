@@ -6,8 +6,8 @@ prices, so verify against their published sheets and override at runtime with
 :func:`register_price` where they have moved. Costs for unknown models resolve
 to ``None`` rather than a guess.
 
-Batch tiers at OpenAI, Anthropic, Google, Groq and Mistral are publicly priced
-at 50% of list, which is what :data:`BATCH_DISCOUNT` encodes. OpenAI's flex tier prices
+Batch tiers at OpenAI, Anthropic, Google, Groq, Mistral and Alibaba are publicly
+priced at 50% of list, which is what :data:`BATCH_DISCOUNT` encodes. OpenAI's flex tier prices
 identically to its batch tier on the gpt-5.6 family, and its *fast* tier at
 twice list — the same model, priced for urgency. Anthropic publishes a fast
 tier too, on Claude Opus 5 and Opus 4.8, also at twice list. Fast is stored
@@ -20,8 +20,38 @@ carry a :class:`PromoNote` in :data:`PROMO_NOTES` — the date and the post-prom
 list — so a quote or a docs page can flag the decay instead of reading a
 temporary number as permanent.
 
+Two venues price the same 2.0x spread on a different axis. DeepSeek publishes
+no batch tier; it publishes a **clock**, with peak hours on weekdays and half
+price everywhere else. The sheet stores its peak rate as the standard row, so
+``BATCH_DISCOUNT`` reproduces the off-peak rate exactly — but the lane is a
+clock and not a queue, and :func:`lane_for` says which. See
+:mod:`offpeak.venues.deepseek_clock`.
+
 Corrections
 -----------
+
+**2026-08-30** — two venues added; nothing already on the sheet moved.
+
+*DeepSeek*, from the rendered page at api-docs.deepseek.com/quick_start/pricing
+(read 2026-08-28, re-read 2026-08-30 for the per-model columns). The standard
+row is the **peak** rate — $0.44 / $1.32 on deepseek-v4-flash, $1.32 / $3.96
+on deepseek-v4-pro — and the page's own words are "off-peak rates are half of
+the peak rates", so the batch rule gives $0.22 / $0.66 and $0.66 / $1.98,
+which is what the page prints. Cache-hit input ($0.007 / $0.022 off-peak) is
+on the page and **not on the sheet**: there is no cache dimension here, every
+input token settles at the miss rate, and a cache-heavy run overstates. The
+lane is ``"clock"`` in :data:`_LANES`, since DeepSeek has no batch API and the
+discount is decided per request by the wall clock.
+
+*Qwen*, from alibabacloud.com/help/en/model-studio/model-pricing, international
+(Singapore) region: qwen3.7-max at $2.50 / $7.50 (first read 2026-08-21,
+confirmed 2026-08-30) and qwen3.8-max at $2.00 / $6.00 (read 2026-08-30).
+Batch is 50% on both, per the same page and the batch-interface docs, so the
+rule covers it. The page marks qwen3.7-max's rate "Limited-time 50% off"
+without a date it runs through, and a :class:`PromoNote` needs one — so there
+is no note, and a reader of this sheet should know the number may step up
+unannounced. The Beijing region is priced separately and in its own currency;
+it is not on the sheet.
 
 **2026-08-28** — two rows that had been wrong since before the sheet watch took
 its first reading, so no hash diff could have found them; ``tools/sheet_reconcile.py``
@@ -84,6 +114,7 @@ __all__ = [
     "urgency_spread",
     "SHEET_SCHEMA",
     "SheetLoad",
+    "lane_for",
     "sheet_date",
     "export_sheet",
     "load_sheet",
@@ -92,7 +123,7 @@ __all__ = [
 
 #: The date of the sheet **bundled in this release**. It never moves at runtime:
 #: a receipt that names it must stay checkable against the same numbers later.
-PRICE_SHEET_DATE = "2026-08-28"
+PRICE_SHEET_DATE = "2026-08-30"
 
 #: The date of the sheet currently in force. Equal to :data:`PRICE_SHEET_DATE`
 #: until :func:`load_sheet` replaces it. Read it through :func:`sheet_date` —
@@ -190,6 +221,49 @@ _PRICES: dict[str, tuple[float, float]] = {
     # registering the family would silently price an image model at text rates.
     # Under-covering resolves to None, which is correct; over-covering invents a
     # number. Add it the day the image rate is on the sheet too.
+    #
+    # DeepSeek (per api-docs.deepseek.com/quick_start/pricing, rendered page
+    # read 2026-08-28, columns re-read 2026-08-30). These are the **peak**
+    # rates, which are the venue's standard rate: "off-peak rates are half of
+    # the peak rates", so BATCH_DISCOUNT reproduces the off-peak column
+    # exactly. There is no batch API — the lane is a clock, see _LANES — and
+    # no fast tier. Cache-hit input is priced on the page and not modelled
+    # here; see the module docstring.
+    #
+    # deepseek-v4-flash-vision-exp gets its own row even though the prefix
+    # would inherit flash's: the page prints it as its own column at the same
+    # figures, and an explicit row says that was checked rather than assumed.
+    "deepseek-v4-flash": (0.44, 1.32),
+    "deepseek-v4-flash-vision-exp": (0.44, 1.32),
+    "deepseek-v4-pro": (1.32, 3.96),
+    # Qwen on Alibaba Model Studio (per
+    # alibabacloud.com/help/en/model-studio/model-pricing, international region
+    # in USD; qwen3.7-max read 2026-08-21 and confirmed 2026-08-30, qwen3.8-max
+    # read 2026-08-30). Batch is 50% on input and output, so BATCH_DISCOUNT
+    # covers it. No fast tier.
+    #
+    # qwen3.7-max is marked "Limited-time 50% off" on the page with no end
+    # date, so it carries no PromoNote — a note needs a date to be one.
+    #
+    # Only the flagship rows are here. The plus/flash families are tiered by
+    # context length and priced differently in thinking and non-thinking
+    # mode, and this sheet has neither dimension; a single number for them
+    # would be wrong for most requests. They resolve to None until the sheet
+    # can express what the page says.
+    "qwen3.7-max": (2.50, 7.50),
+    "qwen3.8-max": (2.00, 6.00),
+}
+
+#: Which kind of lane a venue's discount is bought on, by model prefix.
+#:
+#: ``"batch"`` is the default and needs no row: submit, wait, collect, pay
+#: half. ``"clock"`` is a venue with no batch API whose half price is decided
+#: by the wall clock at the moment a request is made — DeepSeek today. The
+#: arithmetic is the same (``BATCH_DISCOUNT`` reproduces the off-peak rate),
+#: the mechanism is not, and a caller planning a run wants to know which it is
+#: getting. Prefix-matched like prices, longest match wins.
+_LANES: dict[str, str] = {
+    "deepseek-": "clock",
 }
 
 # model -> (input, output) USD per 1M on a venue's *fast* tier: the same model,
@@ -291,6 +365,7 @@ SHEET_SCHEMA = "offpeak.price-sheet/1"
 _BUNDLED_PRICES = dict(_PRICES)
 _BUNDLED_FAST = dict(_FAST_PRICES)
 _BUNDLED_PROMO = dict(PROMO_NOTES)
+_BUNDLED_LANES = dict(_LANES)
 
 
 @dataclass(frozen=True)
@@ -354,6 +429,9 @@ def export_sheet() -> dict:
             }
             for model, note in sorted(PROMO_NOTES.items())
         },
+        # Additive. A reader of schema /1 that predates this key ignores it —
+        # every key it does know keeps its shape — so the major does not move.
+        "lanes": {prefix: lane for prefix, lane in sorted(_LANES.items())},
     }
 
 
@@ -456,6 +534,19 @@ def load_sheet(source: str | Path | dict, *, replace: bool = False) -> SheetLoad
             note=str(note.get("note", "")),
         )
 
+    # Lanes are a fact about how a venue sells its discount, not a rate, so a
+    # sheet that says nothing about them retracts nothing: ``replace`` clears
+    # the rate tables and leaves the lane table alone unless the document
+    # carries one of its own.
+    lanes = document.get("lanes")
+    if isinstance(lanes, dict):
+        if replace:
+            _LANES.clear()
+        for prefix, lane in lanes.items():
+            if lane not in ("batch", "clock"):
+                raise ValueError(f"price sheet lane {prefix!r} is {lane!r}, not batch or clock")
+            _LANES[str(prefix)] = str(lane)
+
     _SHEET_DATE = str(date)
     _SHEET_SOURCE = origin
     return SheetLoad(
@@ -479,6 +570,8 @@ def reset_sheet() -> str:
     _FAST_PRICES.update(_BUNDLED_FAST)
     PROMO_NOTES.clear()
     PROMO_NOTES.update(_BUNDLED_PROMO)
+    _LANES.clear()
+    _LANES.update(_BUNDLED_LANES)
     _SHEET_DATE = PRICE_SHEET_DATE
     _SHEET_SOURCE = "bundled"
     return _SHEET_DATE
@@ -525,6 +618,20 @@ def get_promo_note(model: str) -> PromoNote | None:
     a price we were told, not a price we can date.
     """
     return _lookup(PROMO_NOTES, model)
+
+
+def lane_for(model: str) -> str | None:
+    """How *model*'s venue sells its discount: ``"batch"`` or ``"clock"``.
+
+    ``"batch"`` for every priced model that has no lane row — the default,
+    since it is what every venue but one publishes. ``"clock"`` for a venue
+    whose half price is a function of when the request is made rather than
+    how long it may wait. ``None`` for a model that is not on the sheet: a
+    lane for a rate nobody published is not information.
+    """
+    if get_price(model) is None:
+        return None
+    return _lookup(_LANES, model) or "batch"
 
 
 def promo_decay(model: str) -> tuple[float, float] | None:
