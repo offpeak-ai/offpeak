@@ -54,6 +54,24 @@ pip install "offpeak[openai]"
 
 Venues use the standard environment variables (`OPENAI_API_KEY`, `ANTHROPIC_API_KEY`), or pass a configured client: `OpenAIBatch(client=my_client)`.
 
+Five more venues are in the tree and opt-in — each wants its own key and its own extra, and is passed to `run()` explicitly rather than routed to by default:
+
+| Venue | Models | Extra | Key | Lane |
+| --- | --- | --- | --- | --- |
+| `groq:batch` | `openai/gpt-oss-*`, `groq/*` | `groq` | `GROQ_API_KEY` | batch, 24h–7d window |
+| `mistral:batch` | `mistral-*`, `codestral`, … | `mistral` | `MISTRAL_API_KEY` | batch, window in hours |
+| `gemini:batch` | `gemini-*` | `gemini` | `GEMINI_API_KEY` | batch, 24h |
+| `qwen:batch` | `qwen*` (Model Studio spelling) | `qwen` | `DASHSCOPE_API_KEY` | batch, 24h–336h window, per-region |
+| `deepseek:clock` | `deepseek-*` | `deepseek` | `DEEPSEEK_API_KEY` | **clock** — no batch API; half price off-peak, held until the boundary |
+
+```python
+from offpeak.venues import DeepSeekClock, QwenBatch
+
+results = offpeak.run(jobs, deadline="06:00", venues=[DeepSeekClock(), QwenBatch(region="intl")])
+```
+
+DeepSeek is the first venue that is not a batch tier: peak is 01:00–04:00 and 06:00–10:00 UTC on weekdays, everything else is off-peak at half the peak rate, and the driver holds a job until the clock is cheap rather than uploading it anywhere. Neither DeepSeek nor Qwen has a live receipt yet.
+
 ## The free quote
 
 What is the wait worth? Ask before you spend anything — `quote()` makes no API calls and needs no key.

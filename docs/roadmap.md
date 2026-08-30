@@ -36,8 +36,16 @@ misleading one:
   recording the attempt and what the sync fallback cost. Gemini was gated the
   same way until billing was enabled, so these are plan problems rather than
   code ones.
-- **No venues beyond the batch tiers.** Google batch, spot capacity, and
-  off-peak windows on your own GPUs are interface-shaped but unwritten. A Groq
+- **Two venues are written and have not run.** [DeepSeek](venues-deepseek.md)
+  is the first venue that is not a batch tier: it has no batch API and prices
+  by the clock — half price outside 01:00–04:00 and 06:00–10:00 UTC on
+  weekdays — so the driver *holds* jobs until the boundary instead of
+  uploading them. [Qwen](venues-qwen.md) on Alibaba Model Studio is an
+  OpenAI-shaped batch tier with a region and a 24h–336h window. Neither has
+  a receipt yet; both are opt-in, and the first sub-cent live run is what will
+  verify them.
+- **No venues beyond those.** Spot capacity and off-peak windows on your own
+  GPUs are interface-shaped but unwritten. A Groq
   batch driver exists in the tree, opt-in, excluded from the `all` extra and
   not in `default_venues()`. Its routing, request dialect, price rows and sync
   fallback are verified against the live API; its **batch tier is not**, and

@@ -29,6 +29,9 @@ nav:
   - Temporal: quickstart-temporal.md
   - Airflow: quickstart-airflow.md
   - The published sheet: price-sheet.md
+  - Venues:
+      - DeepSeek (clock-priced): venues-deepseek.md
+      - Qwen (Model Studio batch): venues-qwen.md
   - The Spread Board: spread-board.md
   - Spec: spec.md
   - API reference: reference.md

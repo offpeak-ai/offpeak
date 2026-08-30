@@ -44,6 +44,10 @@ anthropic = ["anthropic>=0.40"]
 groq = ["groq>=0.11"]
 mistral = ["mistralai>=2.9"]
 gemini = ["google-genai>=2.0"]
+# DeepSeek and Qwen speak OpenAI's dialect and ride its SDK; the extras are
+# aliases so an install can name the venue it wants.
+deepseek = ["openai>=1.50"]
+qwen = ["openai>=1.50"]
 all = ["openai>=1.50", "anthropic>=0.40"]
 dev = ["pytest>=8", "ruff>=0.6", "build", "twine"]
 docs = ["mkdocs>=1.6,<2", "mkdocs-material>=9.5,<10", "mkdocstrings[python]>=0.26",
