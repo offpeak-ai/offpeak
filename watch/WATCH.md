@@ -35,7 +35,7 @@ and no row about it should be read as rate coverage.
 | `google:pricing` | cited by prices.py | 485 | <https://ai.google.dev/pricing> |
 | `groq:plans` | watched, not yet priced | **0 — rendered client-side** | <https://console.groq.com/docs/service-tiers> |
 | `xai:pricing` | watched, not yet priced | 8 | <https://docs.x.ai/docs/models> |
-| `deepseek:pricing` | watched, not yet priced | 18 | <https://api-docs.deepseek.com/quick_start/pricing> |
+| `deepseek:pricing` | cited by prices.py | 18 | <https://api-docs.deepseek.com/quick_start/pricing> |
 | `qwen:pricing` | watched, not yet priced | **0 — rendered client-side** | <https://www.alibabacloud.com/help/en/model-studio/models> |
 
 ## Drift
@@ -61,3 +61,4 @@ and no row about it should be read as rate coverage.
 | 2026-08-29 | `openai:pricing` | changed | +7 / −6 | unclassified | — | — | 210b9c7d3674 -> 18761f53d324 |
 | 2026-08-29 | `google:pricing` | changed | +1 / −1 | unclassified | — | — | c5e78760d87f -> 38aacfed0a79 |
 | 2026-08-29 | `qwen:pricing` | changed | +14 / −702 | unclassified | — | — | e28982155951 -> 2433e55658a9 |
+| 2026-08-30 | `openai:pricing` | changed | +6 / −1 | copy change | gpt-5.6-luna | $0.0000469 | Navigation and documentation links were added; no pricing figures or chargeable rates changed. |

@@ -1,0 +1,16 @@
+{
+  "google": {
+    "body": "`tools/sheet_reconcile.py` on 2026-08-30, against `offpeak.prices` sheet **2026-08-30**.\n\nSheet watch's latest classification for this source: **unclassified (2026-08-29)**.\n\n### Mismatches\n\n```\ngemini-3.1-pro-preview fast_input: page $3.60, sheet \u2014\ngemini-3.1-pro-preview fast_output: page $21.60, sheet \u2014\ngemini-3.5-flash fast_input: page $2.70, sheet \u2014\ngemini-3.5-flash fast_output: page $16.20, sheet \u2014\ngemini-3.5-flash-lite fast_input: page $0.54, sheet \u2014\ngemini-3.5-flash-lite fast_output: page $4.50, sheet \u2014\ngemini-3.6-flash fast_input: page $1.35, sheet \u2014\ngemini-3.6-flash fast_output: page $6.75, sheet \u2014\ngemini-3.7-flash fast_input: page $1.35, sheet \u2014\ngemini-3.7-flash fast_output: page $6.75, sheet \u2014\n```\n\nThe reconciler **never edits `src/offpeak/prices.py`**, and neither may CI: a page moves for reasons that are not a price change. A human settles what these mean and edits the sheet by hand.\n\nFull report: `board-data:watch/RECONCILE.md`.",
+    "classification": "unclassified (2026-08-29)",
+    "mismatches": 10,
+    "missing": 0,
+    "title": "sheet drift: google"
+  },
+  "mistral": {
+    "body": "`tools/sheet_reconcile.py` on 2026-08-30, against `offpeak.prices` sheet **2026-08-30**.\n\nSheet watch's latest classification for this source: **unclassified (2026-08-27)**.\n\n### Missing from the page\n\n```\nglm-5-2: on the sheet, no row found on the page\n```\n\nThe reconciler **never edits `src/offpeak/prices.py`**, and neither may CI: a page moves for reasons that are not a price change. A human settles what these mean and edits the sheet by hand.\n\nFull report: `board-data:watch/RECONCILE.md`.",
+    "classification": "unclassified (2026-08-27)",
+    "mismatches": 0,
+    "missing": 1,
+    "title": "sheet drift: mistral"
+  }
+}
