@@ -32,4 +32,3 @@ HANDOFF.md
 site/
 docs/spec.md
 # The site lives here but is deployed from Vercel, not shipped with the SDK.
-web/

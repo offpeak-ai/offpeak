@@ -1,0 +1,2357 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#0B1017">
+<title>Offpeak — same models, half the price, by your deadline</title>
+<meta name="description" content="Deadline-priced inference. pip install offpeak, give unattended work a deadline, and it fills in batch tiers at half price — SLA-guarded, on your own keys, with a receipt you can check against the public sheet.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Offpeak — same models, half the price, by your deadline">
+<meta property="og:description" content="30–60% of AI spend has no human waiting. One argument — deadline= — and that work runs at batch prices, SLA-guarded, on your own keys.">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiBmaWxsPSIjMEIxMDE3Ii8+PHBvbHlsaW5lIHBvaW50cz0iNCw4IDEyLDggMTIsMTYgMjAsMTYgMjAsMjQgMjgsMjQiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzQ1RUFDRiIgc3Ryb2tlLXdpZHRoPSIyLjYiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPjxjaXJjbGUgY3g9IjI2IiBjeT0iMjIiIHI9IjMiIGZpbGw9IiNGRkI0NTQiLz48L3N2Zz4=">
+<style>:root{color-scheme:dark}html,body{margin:0;padding:0;background:#0B1017}img{max-width:100%}</style>
+</head>
+<body>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500;600;700&display=swap">
+<style>
+  /* ============================================================
+     OFFPEAK — one site, five surfaces. Design language "meridian"
+     (2026-08-25, supersedes "solarin"): brighter ink-blue dark,
+     electric aqua + amber, mixed-case display type, dev-first.
+     Money = amber. Carbon = leaf. Structure = aqua. Waves stay.
+     ============================================================ */
+  :root {
+    color-scheme: dark;
+    --bg: #0B1017; --surface: #111925;
+    --line: rgba(255,255,255,.09); --line2: rgba(255,255,255,.18);
+    --ink: #EAF2F7; --muted: #9FB1C1; --faint: #64798C;
+    --cyan: #45EACF; --cyan-60: rgba(69,234,207,.6); --cyan-30: rgba(69,234,207,.3);
+    --gold: #FFB454; --gold-60: rgba(255,180,84,.6);
+    --leaf: #7CE787; --leaf-60: rgba(124,231,135,.6); --leaf-20: rgba(124,231,135,.2);
+    --red: #FF6B6B; --green: #3DE8B0;
+    --fill: rgba(69,234,207,.05); --fill-line: rgba(69,234,207,.15);
+    --font-d: "Space Grotesk", "Avenir Next", "Helvetica Neue", sans-serif;
+    --font-s: "Instrument Sans", "Helvetica Neue", Arial, sans-serif;
+    --font-m: "JetBrains Mono", ui-monospace, "SF Mono", Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font-s); font-size: 15.5px; line-height: 1.65; -webkit-font-smoothing: antialiased; }
+  ::selection { background: rgba(69,234,207,.28); }
+  a { color: var(--cyan); text-decoration: none; }
+  a:hover, a:focus-visible { color: var(--ink); }
+  :focus-visible { outline: 1px solid var(--cyan); outline-offset: 2px; }
+
+  .ground { position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background-image:
+      radial-gradient(1000px 640px at 80% 10%, rgba(69,234,207,.07), transparent 65%),
+      radial-gradient(820px 720px at 10% 90%, rgba(255,180,84,.035), transparent 65%),
+      linear-gradient(90deg, rgba(69,234,207,.04) 1px, transparent 1px),
+      linear-gradient(rgba(69,234,207,.04) 1px, transparent 1px);
+    background-size: auto, auto, 56px 56px, 56px 56px; }
+  main { position: relative; z-index: 1; }
+  .lbl { font-family: var(--font-m); font-size: 10px; font-weight: 500; letter-spacing: .26em; text-transform: uppercase; color: var(--faint); }
+
+  /* ---------- masthead ---------- */
+  .mast { position: fixed; inset: 0 0 auto 0; z-index: 50; background: rgba(11,16,23,.8); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-bottom: 1px solid var(--line); }
+  .mast-in { max-width: 1220px; margin: 0 auto; padding: 0 32px; display: flex; align-items: center; gap: 22px; height: 60px; }
+  .logo { font-family: var(--font-d); font-weight: 700; font-size: 19px; letter-spacing: -.01em; color: var(--ink); background: none; border: 0; padding: 0; cursor: pointer; }
+  .logo b { color: var(--cyan); }
+  .mast nav { margin-left: auto; display: flex; align-items: center; gap: 22px; }
+  .mast nav a { position: relative; font-family: var(--font-m); font-size: 10.5px; letter-spacing: .18em; text-transform: uppercase; color: var(--muted); transition: color .2s; padding: 4px 0; }
+  .mast nav a:hover { color: var(--ink); }
+  .mast nav a[aria-current="page"] { color: var(--ink); }
+  .mast nav a[aria-current="page"]::after { content: ""; position: absolute; left: 0; right: 0; bottom: -2px; height: 2px; background: var(--cyan); box-shadow: 0 0 10px rgba(69,234,207,.7); }
+  .mast nav a.ext { color: var(--cyan); }
+  .mast nav a.ext::before { content: "↗ "; }
+  @media (max-width: 900px) { .mast-in { gap: 12px; padding: 0 18px; } .mast nav { gap: 13px; } .mast nav a { font-size: 9.5px; letter-spacing: .1em; } .logo { font-size: 16px; } }
+  @media (max-width: 620px) { .mast nav a.ext { display: none; } }
+
+  /* ---------- fixed corner telemetry ---------- */
+  .tele { position: fixed; z-index: 40; bottom: 22px; font-family: var(--font-m); font-size: 9.5px; letter-spacing: .14em; line-height: 1.9; pointer-events: none;
+    background: rgba(11,16,23,.72); box-shadow: 0 0 18px 10px rgba(11,16,23,.72); }
+  .tele .k { color: var(--cyan); }
+  .tele .v { color: var(--muted); font-variant-numeric: tabular-nums; }
+  .tele.tl2 { left: 26px; border-left: 1px solid var(--cyan-30); padding-left: 12px; }
+  .tele.tr2 { right: 26px; border-right: 1px solid var(--cyan-30); padding-right: 12px; text-align: right; }
+  @media (max-width: 1100px) { .tele { display: none; } }
+  body.no-tele .tele { display: none; }
+
+  .wrap { max-width: 1220px; margin: 0 auto; padding: 0 32px; }
+
+  /* ---------- routed pages ---------- */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* ---------- hero ---------- */
+  .hero { position: relative; min-height: 92vh; display: flex; align-items: center; }
+  .hero.short { min-height: 70vh; }
+  .hero-field { position: absolute; top: 0; left: 0; right: 0; height: 100vh; z-index: 0; pointer-events: none; overflow: hidden; }
+  .hero-field canvas { display: block; width: 100%; height: 100%; }
+  .hero-in { position: relative; z-index: 2; width: 100%; padding-top: 60px; }
+  h1.name { font-family: var(--font-d); font-weight: 700; letter-spacing: -.022em;
+    font-size: clamp(34px, 5.6vw, 68px); line-height: 1.05; margin: 22px 0 18px; text-wrap: balance; }
+  .role { font-family: var(--font-m); font-size: 11px; font-weight: 500; letter-spacing: .3em; text-transform: uppercase; color: var(--cyan); margin: 0 0 24px; }
+  .tag { font-size: clamp(15.5px, 1.6vw, 18px); font-weight: 400; line-height: 1.72; color: var(--muted); margin: 0 0 32px; max-width: 38em; }
+  .tag b { color: var(--ink); font-weight: 600; }
+  .tag .lf { color: var(--leaf); font-weight: 600; }
+  .welcome { display: inline-flex; align-items: center; gap: 9px; font-family: var(--font-m); font-size: 10px; font-weight: 500; letter-spacing: .24em; text-transform: uppercase; color: var(--muted); margin: 0; border: 1px solid var(--line2); padding: 7px 13px; }
+  .welcome::before { content: "●"; color: var(--green); font-size: 8px; }
+  .cta { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; }
+  .btn { display: inline-flex; align-items: center; gap: 10px; font-family: var(--font-m); font-size: 11.5px; font-weight: 600;
+    letter-spacing: .14em; text-transform: uppercase; padding: 13px 22px; transition: background .2s, border-color .2s, color .2s; border: 0; cursor: pointer; }
+  .btn-gold { border: 1px solid var(--cyan); color: #071310; background: var(--cyan); }
+  .btn-gold:hover { background: #6FF4DD; border-color: #6FF4DD; color: #071310; }
+  .btn-ghost { border: 1px solid var(--line2); color: var(--ink); background: none; }
+  .btn-ghost:hover { border-color: var(--cyan-60); color: var(--cyan); }
+  .code { display: inline-flex; align-items: center; font-family: var(--font-m); font-size: 12.5px; letter-spacing: .02em;
+    color: var(--green); border: 1px dashed var(--line2); background: rgba(255,255,255,.02); padding: 13px 18px; cursor: pointer; transition: border-color .2s; }
+  .code::before { content: "$ "; color: var(--faint); }
+  .code:hover { border-color: var(--cyan-60); }
+  .scroll-cue { position: absolute; left: 50%; bottom: 26px; transform: translateX(-50%); color: var(--faint); z-index: 2; animation: bob 2.4s ease-in-out infinite; }
+  @keyframes bob { 0%,100% { transform: translate(-50%,0); } 50% { transform: translate(-50%,8px); } }
+
+  /* hero headline stat strip — price first, carbon second */
+  .hstrip { display: flex; flex-wrap: wrap; gap: 0; margin: 0 0 32px; border: 1px solid var(--fill-line); background: var(--fill); max-width: 700px; }
+  .hstrip div { flex: 1 1 150px; padding: 14px 20px; border-right: 1px solid var(--line); }
+  .hstrip div:last-child { border-right: 0; }
+  .hstrip .n { font-family: var(--font-d); font-size: 24px; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
+  .hstrip .n.money { color: var(--gold); }
+  .hstrip .n.carbon { color: var(--leaf); }
+  .hstrip .c { display: block; font-family: var(--font-m); font-size: 9px; letter-spacing: .18em; text-transform: uppercase; color: var(--faint); margin-top: 6px; line-height: 1.7; }
+
+  /* ---------- sections ---------- */
+  section.sc { padding: 108px 0 48px; scroll-margin-top: 48px; }
+  section.sc.tight { padding-top: 76px; }
+  .sec-rule { height: 1px; background: var(--cyan-30); transform-origin: left; }
+  .rv .sec-rule { transform: scaleX(0); }
+  .rv.in .sec-rule { transform: scaleX(1); transition: transform .8s cubic-bezier(.22,.7,.3,1) .1s; }
+  .sec-eyebrow { font-family: var(--font-m); font-size: 11px; font-weight: 500; letter-spacing: .26em; text-transform: uppercase; color: var(--cyan); margin: 18px 0 8px; }
+  .sec-eyebrow.leaf { color: var(--leaf); }
+  h2.sec-title { font-family: var(--font-d); font-weight: 600; font-size: clamp(26px, 3.4vw, 44px); line-height: 1.14; letter-spacing: -.018em; margin: 0 0 36px; text-wrap: balance; }
+
+  .case { position: relative; padding: 34px 36px; }
+  @media (max-width: 620px) { .case { padding: 26px 20px; } .wrap { padding: 0 18px; } }
+  .ck { position: absolute; width: 14px; height: 14px; border: 0 solid var(--cyan-60); pointer-events: none; }
+  .ck.tl { top: 0; left: 0; border-top-width: 2px; border-left-width: 2px; }
+  .ck.tr { top: 0; right: 0; border-top-width: 2px; border-right-width: 2px; border-color: var(--gold-60); }
+  .ck.bl { bottom: 0; left: 0; border-bottom-width: 2px; border-left-width: 2px; border-color: var(--gold-60); }
+  .ck.br { bottom: 0; right: 0; border-bottom-width: 2px; border-right-width: 2px; }
+
+  .duo { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 48px; align-items: center; }
+  .duo > * { min-width: 0; max-width: 100%; }
+  @media (max-width: 920px) { .duo { grid-template-columns: 1fr; gap: 34px; } }
+
+  .case-eyebrow { font-family: var(--font-m); font-size: 11px; letter-spacing: .2em; text-transform: uppercase; color: var(--faint); margin: 0 0 10px; }
+  .case-eyebrow em { font-style: normal; color: var(--cyan); }
+  .case p.desc, p.desc { color: var(--muted); font-size: 15.5px; margin: 0 0 22px; max-width: 36em; }
+  .case p.desc b, p.desc b { color: var(--ink); font-weight: 600; }
+  p.desc .lf { color: var(--leaf); font-weight: 600; }
+  .facts { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 26px; margin: 0 0 24px; padding: 0; list-style: none; }
+  @media (max-width: 560px) { .facts { grid-template-columns: 1fr; } }
+  .facts li { display: flex; align-items: baseline; gap: 10px; font-family: var(--font-m); font-size: 12.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .facts li::before { content: ""; width: 5px; height: 5px; background: var(--cyan); flex: none; transform: translateY(-1px); }
+  .facts li b { color: var(--ink); font-weight: 600; }
+  .facts li.au::before { background: var(--gold); }
+  .facts li.lf::before { background: var(--leaf); }
+  .facts li.lf b { color: var(--leaf); }
+
+  details.brief { margin-top: 6px; }
+  details.brief summary { cursor: pointer; list-style: none; display: inline-flex; align-items: center; gap: 8px;
+    font-family: var(--font-m); font-size: 10.5px; letter-spacing: .18em; text-transform: uppercase; color: var(--cyan); }
+  details.brief summary::-webkit-details-marker { display: none; }
+  details.brief summary::before { content: "▸"; transition: transform .2s; }
+  details.brief[open] summary::before { transform: rotate(90deg); }
+  details.brief .bx { margin-top: 14px; font-family: var(--font-m); font-size: 11px; letter-spacing: .04em; line-height: 2; color: var(--faint); max-width: 74ch; border-left: 1px solid var(--cyan-30); padding-left: 16px; }
+  details.brief .bx b { color: var(--muted); }
+
+  .ev { position: relative; border: 1px solid var(--fill-line); padding: 30px 22px 20px; background: var(--fill); }
+  .ev .ck { border-color: var(--cyan-60); width: 12px; height: 12px; }
+  .ev .tag-tl { position: absolute; top: 8px; left: 12px; font-family: var(--font-m); font-size: 9px; letter-spacing: .2em; color: var(--faint); text-transform: uppercase; }
+  .ev .tag-br { position: absolute; bottom: 8px; right: 12px; font-family: var(--font-m); font-size: 9px; letter-spacing: .16em; color: var(--faint); text-transform: uppercase; }
+  svg.chart { width: 100%; height: auto; display: block; }
+  .ax { font-family: var(--font-m); font-size: 9px; fill: var(--faint); letter-spacing: .1em; }
+  .pt-lbl { font-family: var(--font-m); font-size: 10px; fill: var(--ink); font-weight: 600; }
+  .dashline { stroke-dasharray: 5 5; }
+  .flow .dashline { animation: dashflow 30s linear infinite; }
+  @keyframes dashflow { to { stroke-dashoffset: -600; } }
+
+  .steps3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; }
+  .step3 { position: relative; padding: 26px 28px; background: var(--fill); border: 1px solid var(--fill-line); }
+  .step3 .n { font-family: var(--font-m); font-size: 11px; letter-spacing: .22em; color: var(--gold); margin-bottom: 12px; }
+  .step3 h3 { font-family: var(--font-d); font-weight: 600; font-size: 17px; letter-spacing: -.01em; margin: 0 0 10px; }
+  .step3 p { margin: 0; color: var(--muted); font-size: 14px; }
+  .step3 p b { color: var(--ink); font-weight: 600; }
+  .step3 .mono-line { display: block; font-family: var(--font-m); font-size: 12px; color: var(--green); margin-top: 12px; letter-spacing: .02em; word-break: break-word; }
+
+  /* ---------- quickstart ---------- */
+  .qstep { display: grid; grid-template-columns: minmax(240px,.72fr) minmax(0,1.28fr); gap: 44px; padding: 36px 0; border-top: 1px solid var(--line); align-items: start; }
+  .qstep:last-of-type { border-bottom: 1px solid var(--line); }
+  @media (max-width: 880px) { .qstep { grid-template-columns: 1fr; gap: 20px; } }
+  .qs-n { font-family: var(--font-m); font-size: 11px; letter-spacing: .22em; color: var(--gold); margin-bottom: 12px; }
+  .qstep h3 { font-family: var(--font-d); font-weight: 600; font-size: 21px; letter-spacing: -.012em; margin: 0 0 12px; }
+  .qstep .desc { font-size: 14.5px; }
+  .codeblock { border: 1px solid var(--fill-line); background: #0D141D; min-width: 0; }
+  .cb-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 14px; border-bottom: 1px solid var(--line);
+    font-family: var(--font-m); font-size: 9.5px; letter-spacing: .2em; text-transform: uppercase; color: var(--faint); }
+  .codeblock pre { margin: 0; padding: 18px 20px; overflow-x: auto; font-family: var(--font-m); font-size: 13px; line-height: 1.8; color: var(--ink); }
+  .codeblock.out pre { color: var(--muted); font-size: 12.5px; }
+  .cbtn { background: none; border: 1px solid var(--line2); color: var(--muted); font-family: var(--font-m); font-size: 9px; font-weight: 600; letter-spacing: .18em; text-transform: uppercase; padding: 4px 10px; cursor: pointer; transition: color .2s, border-color .2s; }
+  .cbtn:hover { color: var(--cyan); border-color: var(--cyan-60); }
+  .tk-k { color: #7FB4FF; } .tk-s { color: var(--gold); } .tk-c { color: var(--faint); font-style: italic; }
+  .tk-f { color: var(--cyan); } .tk-n { color: var(--green); }
+
+  .booktbl { overflow-x: auto; background: var(--fill); border: 1px solid var(--fill-line); }
+  table { border-collapse: collapse; width: 100%; min-width: 640px; }
+  th { font-family: var(--font-m); font-size: 9.5px; font-weight: 500; letter-spacing: .16em; text-transform: uppercase; color: var(--faint); text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line2); white-space: nowrap; }
+  td { padding: 12px 14px; border-bottom: 1px solid var(--line); font-family: var(--font-m); font-size: 12.5px; font-variant-numeric: tabular-nums; color: var(--muted); white-space: nowrap; }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover td { background: rgba(69,234,207,.035); }
+  td.first { color: var(--ink); font-weight: 500; white-space: normal; }
+  td .sub { display: block; font-size: 9px; color: var(--faint); letter-spacing: .1em; margin-top: 2px; }
+  td.num, th.num { text-align: right; }
+  table.regtbl { min-width: 860px; }
+  table.regtbl td.first { min-width: 168px; }
+  .st { font-size: 9.5px; letter-spacing: .14em; font-weight: 600; }
+  .st::before { content: "●"; font-size: 8px; margin-right: 6px; vertical-align: 1px; }
+  .st.filled { color: var(--green); } .st.working { color: var(--gold); } .st.reroute { color: var(--red); } .st.idle { color: var(--faint); }
+  table.covtbl { min-width: 900px; }
+  table.covtbl td.first { min-width: 170px; }
+  table.covtbl td.note { white-space: normal; min-width: 300px; max-width: 440px; color: var(--muted); font-family: var(--font-s); font-size: 13px; line-height: 1.5; }
+  .up { color: var(--green); font-weight: 600; } .down { color: var(--red); font-weight: 600; } .flat { color: var(--faint); }
+
+  .event { display: flex; gap: 16px; align-items: baseline; font-family: var(--font-m); font-size: 12.5px; color: var(--muted); border-left: 2px solid var(--red); padding: 6px 0 6px 16px; margin-top: 26px; }
+  .event .t { color: var(--faint); white-space: nowrap; }
+  .event b { color: var(--ink); font-weight: 600; }
+  .event .g { color: var(--green); } .event .r { color: var(--red); }
+  .event.leaf { border-left-color: var(--leaf); }
+
+  .settle { display: flex; flex-wrap: wrap; margin-top: 8px; background: var(--fill); border: 1px solid var(--fill-line); }
+  .settle .cell { flex: 1 1 138px; padding: 18px 22px 16px; border-right: 1px solid var(--line); }
+  .settle .cell:last-child { border-right: none; }
+  .settle .k { margin-bottom: 8px; }
+  .settle .v { font-family: var(--font-d); font-size: 23px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .settle .v.big { font-size: 34px; color: var(--gold); text-shadow: 0 0 26px rgba(255,180,84,.25); }
+  .settle .v.leaf { color: var(--leaf); text-shadow: 0 0 26px rgba(124,231,135,.22); }
+  .g { color: var(--green); }
+
+  footer { position: relative; z-index: 1; border-top: 1px solid var(--line); margin-top: 90px; padding: 30px 0 150px; }
+  footer .in { max-width: 1220px; margin: 0 auto; padding: 0 32px; font-family: var(--font-m); font-size: 9.5px; color: var(--faint); letter-spacing: .1em; line-height: 2.1; }
+  footer b { color: var(--muted); font-weight: 500; }
+  .flinks { display: flex; flex-wrap: wrap; gap: 18px; margin-bottom: 18px; }
+  .flinks a { font-family: var(--font-m); font-size: 10px; letter-spacing: .18em; text-transform: uppercase; }
+
+  .rv { opacity: 0; transform: translateY(16px); }
+  .rv.in { opacity: 1; transform: none; transition: opacity .7s ease, transform .7s cubic-bezier(.22,.7,.3,1); }
+  .boot-el { opacity: 0; }
+  .boot .boot-el { animation: bootin .6s ease forwards; }
+  @keyframes bootin { to { opacity: 1; } }
+
+  /* ---------- calculator ---------- */
+  .tabs { display: flex; gap: 0; border: 1px solid var(--fill-line); background: var(--fill); width: fit-content; max-width: 100%; margin-bottom: 26px; flex-wrap: wrap; }
+  .tabs button { background: none; border: 0; border-right: 1px solid var(--line); color: var(--muted); font-family: var(--font-m); font-size: 10.5px; letter-spacing: .18em; text-transform: uppercase; padding: 13px 22px; cursor: pointer; transition: color .2s, background .2s; }
+  .tabs button:last-child { border-right: 0; }
+  .tabs button:hover { color: var(--ink); }
+  .tabs button[aria-selected="true"] { color: #071310; background: var(--cyan); font-weight: 600; }
+  .tabpanel[hidden] { display: none; }
+
+  .calc { display: grid; grid-template-columns: minmax(0,1.05fr) minmax(0,.95fr); gap: 34px; align-items: start; }
+  .calc > * { min-width: 0; max-width: 100%; }
+  @media (max-width: 980px) { .calc { grid-template-columns: 1fr; } }
+
+  .inputs { position: relative; border: 1px solid var(--fill-line); background: var(--fill); padding: 28px 28px 24px; }
+  .fieldset { border: 0; margin: 0 0 26px; padding: 0; }
+  .fieldset:last-of-type { margin-bottom: 6px; }
+  .fieldset > legend { font-family: var(--font-m); font-size: 9.5px; letter-spacing: .24em; text-transform: uppercase; color: var(--cyan); padding: 0 0 14px; }
+  .fld { margin-bottom: 22px; }
+  .fld:last-child { margin-bottom: 0; }
+  .fld .top { display: flex; align-items: baseline; justify-content: space-between; gap: 14px; margin-bottom: 9px; }
+  .fld label { font-family: var(--font-s); font-size: 13.5px; font-weight: 400; color: var(--muted); }
+  .fld .hint { display: block; font-family: var(--font-m); font-size: 9.5px; letter-spacing: .12em; color: var(--faint); margin-top: 5px; text-transform: uppercase; }
+  .fld .val { font-family: var(--font-m); font-size: 15px; font-weight: 600; color: var(--ink); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .fld .val.money { color: var(--gold); }
+
+  input[type="range"] { -webkit-appearance: none; appearance: none; width: 100%; height: 22px; background: transparent; cursor: pointer; display: block; }
+  input[type="range"]::-webkit-slider-runnable-track { height: 2px; background: var(--line2); }
+  input[type="range"]::-moz-range-track { height: 2px; background: var(--line2); }
+  input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 13px; height: 13px; margin-top: -5.5px; background: var(--cyan); box-shadow: 0 0 10px rgba(69,234,207,.7); border: 0; border-radius: 0; }
+  input[type="range"]::-moz-range-thumb { width: 13px; height: 13px; background: var(--cyan); border: 0; border-radius: 0; box-shadow: 0 0 10px rgba(69,234,207,.7); }
+  input[type="range"]:focus-visible::-webkit-slider-thumb { outline: 1px solid var(--ink); outline-offset: 2px; }
+
+  input[type="number"], input[type="text"], select {
+    font-family: var(--font-m); font-size: 13px; font-variant-numeric: tabular-nums; color: var(--ink);
+    background: rgba(11,16,23,.6); border: 1px solid var(--line2); padding: 9px 11px; width: 100%; }
+  input[type="number"]:focus, input[type="text"]:focus, select:focus { border-color: var(--cyan-60); outline: none; }
+  select { cursor: pointer; }
+  select option { background: #111925; color: var(--ink); }
+
+  .seg { display: flex; border: 1px solid var(--line2); width: fit-content; max-width: 100%; flex-wrap: wrap; }
+  .seg button { background: none; border: 0; border-right: 1px solid var(--line2); color: var(--muted); font-family: var(--font-m); font-size: 10px; letter-spacing: .14em; text-transform: uppercase; padding: 9px 15px; cursor: pointer; }
+  .seg button:last-child { border-right: 0; }
+  .seg button[aria-pressed="true"] { background: rgba(69,234,207,.18); color: var(--ink); }
+  .seg button:hover { color: var(--ink); }
+
+  /* readout */
+  .readout { position: relative; border: 1px solid var(--fill-line); background: var(--fill); padding: 30px 30px 26px; position: sticky; top: 80px; }
+  @media (max-width: 980px) { .readout { position: static; } }
+  .ro-lead { font-family: var(--font-m); font-size: 9.5px; letter-spacing: .24em; text-transform: uppercase; color: var(--faint); margin: 0 0 6px; }
+  .ro-big { font-family: var(--font-d); font-weight: 700; font-size: clamp(40px, 6vw, 62px); line-height: 1.02; color: var(--gold); text-shadow: 0 0 34px rgba(255,180,84,.22); font-variant-numeric: tabular-nums; letter-spacing: -.02em; margin: 0; }
+  .ro-sub { font-family: var(--font-m); font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); margin: 8px 0 0; }
+  .ro-rows { margin: 26px 0 0; border-top: 1px solid var(--line); }
+  .ro-row { display: flex; align-items: baseline; justify-content: space-between; gap: 14px; padding: 13px 0; border-bottom: 1px solid var(--line); font-family: var(--font-m); font-size: 12.5px; font-variant-numeric: tabular-nums; }
+  .ro-row .k { color: var(--faint); letter-spacing: .12em; text-transform: uppercase; font-size: 10px; }
+  .ro-row .v { color: var(--ink); font-weight: 600; }
+  .ro-row .v.money { color: var(--gold); }
+  .ro-row .v.leaf { color: var(--leaf); }
+  .ro-row .v.dim { color: var(--muted); font-weight: 400; }
+
+  .readout.wide { position: static; margin-top: 22px; display: grid; gap: 30px;
+    grid-template-columns: minmax(230px,.85fr) minmax(0,1fr) minmax(250px,.95fr); align-items: start; }
+  .readout.wide .ro-rows { margin-top: 0; }
+  .readout.wide .ro-big { font-size: clamp(34px, 4.4vw, 52px); }
+  @media (max-width: 900px) { .readout.wide { grid-template-columns: 1fr; gap: 24px; } }
+
+  .badge { font-family: var(--font-m); font-size: 8.5px; font-weight: 600; letter-spacing: .18em; text-transform: uppercase; border: 1px solid currentColor; padding: 2px 6px; white-space: nowrap; }
+  .badge.est { color: var(--gold); }
+  .badge.meas { color: var(--leaf); }
+  .badge.warn { color: var(--red); }
+
+  .note-line { font-family: var(--font-m); font-size: 10px; letter-spacing: .08em; line-height: 1.95; color: var(--faint); margin: 18px 0 0; }
+  .note-line b { color: var(--muted); }
+  .note-line code { color: var(--green); }
+
+  /* workload rows */
+  .rows { overflow-x: auto; max-width: 100%; border: 1px solid var(--fill-line); background: var(--fill); }
+  table.rowtbl { min-width: 900px; }
+  table.rowtbl td { padding: 8px 10px; white-space: nowrap; vertical-align: middle; }
+  table.rowtbl th { padding: 10px; }
+  table.rowtbl input[type="number"], table.rowtbl input[type="text"], table.rowtbl select { padding: 7px 8px; font-size: 12px; }
+  table.rowtbl .w-name { min-width: 210px; } table.rowtbl .w-model { min-width: 168px; }
+  table.rowtbl .w-num { width: 108px; } table.rowtbl .w-lane { min-width: 108px; }
+  .row-x { background: none; border: 1px solid var(--line2); color: var(--faint); font-family: var(--font-m); font-size: 12px; line-height: 1; padding: 7px 9px; cursor: pointer; }
+  .row-x:hover { color: var(--red); border-color: var(--red); }
+  .rowtools { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 16px; align-items: center; }
+
+  .legend { display: flex; gap: 22px; flex-wrap: wrap; margin: 0 0 22px; font-family: var(--font-m); font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--faint); }
+  .legend span { display: inline-flex; align-items: center; gap: 8px; }
+  .legend i { width: 10px; height: 10px; display: inline-block; }
+
+  /* ---------- prices page (charts) ---------- */
+  .pv-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+  .pv-grid > * { min-width: 0; }
+  .pv-panel { position: relative; border: 1px solid var(--fill-line); background: var(--fill); padding: 26px 20px 18px; min-width: 0; }
+  .pv-panel .tag-tl { position: absolute; top: 8px; left: 12px; font-family: var(--font-m); font-size: 9px; letter-spacing: .2em; color: var(--faint); text-transform: uppercase; }
+  .pv-head { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; margin: 4px 0 14px; }
+  .pv-head h3 { font-family: var(--font-d); font-weight: 600; font-size: 17px; letter-spacing: -.01em; margin: 0; }
+  .pv-head .u { font-family: var(--font-m); font-size: 9.5px; letter-spacing: .18em; text-transform: uppercase; color: var(--faint); margin-left: 10px; }
+  .pv-ctl { display: inline-flex; gap: 0; border: 1px solid var(--line2); }
+  .pv-ctl button { background: none; border: 0; border-right: 1px solid var(--line2); color: var(--muted); font-family: var(--font-m); font-size: 9px; font-weight: 600; letter-spacing: .18em; text-transform: uppercase; padding: 6px 11px; cursor: pointer; transition: color .2s, background .2s; }
+  .pv-ctl button:last-child { border-right: 0; }
+  .pv-ctl button:hover { color: var(--ink); }
+  .pv-ctl button[aria-pressed="true"] { background: rgba(69,234,207,.14); color: var(--cyan); }
+  .pv-legend { display: flex; gap: 20px; flex-wrap: wrap; margin: 0 0 14px; font-family: var(--font-m); font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--faint); }
+  .pv-legend span { display: inline-flex; align-items: center; gap: 8px; }
+  .pv-legend i { width: 14px; height: 2px; display: inline-block; }
+  .pv-legend i.dot { width: 8px; height: 8px; border-radius: 50%; }
+  .pv-legend i.ring { width: 6px; height: 6px; border-radius: 50%; border: 2px solid currentColor; background: none; }
+  svg.pv { width: 100%; height: auto; display: block; overflow: visible; font-family: var(--font-m); }
+  svg.pv .grid { stroke: rgba(255,255,255,.06); stroke-width: 1; }
+  svg.pv .axis { stroke: rgba(255,255,255,.14); stroke-width: 1; }
+  svg.pv .tick { font-size: 9px; fill: var(--faint); letter-spacing: .08em; }
+  svg.pv .lab { font-size: 10px; fill: var(--ink); font-weight: 600; }
+  svg.pv .grp { font-size: 9px; fill: var(--cyan); letter-spacing: .22em; font-weight: 600; }
+  svg.pv .dim { fill: var(--muted); font-weight: 400; }
+  svg.pv .hit { fill: transparent; cursor: crosshair; }
+  svg.pv .row:hover .rowbg, svg.pv .row:focus-visible .rowbg { fill: rgba(69,234,207,.06); }
+  svg.pv .mk { transition: r .12s, opacity .12s; }
+  svg.pv .hit:hover + .mk, svg.pv .pt:hover circle.mk { stroke: var(--bg); stroke-width: 2; }
+  svg.pv .xh { stroke: rgba(234,242,247,.35); stroke-width: 1; pointer-events: none; }
+  .pv-tip { position: fixed; z-index: 60; pointer-events: none; display: none; min-width: 150px; max-width: 280px; background: rgba(13,20,29,.96); border: 1px solid var(--line2); box-shadow: 0 8px 30px rgba(0,0,0,.45); padding: 10px 12px; font-family: var(--font-m); font-size: 11px; line-height: 1.7; color: var(--muted); }
+  .pv-tip.on { display: block; }
+  .pv-tip .th { color: var(--faint); font-size: 9px; letter-spacing: .18em; text-transform: uppercase; margin-bottom: 4px; }
+  .pv-tip .r { display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+  .pv-tip .r i { width: 12px; height: 2px; flex: none; display: inline-block; }
+  .pv-tip .r b { color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
+  .pv-tip .r .n { color: var(--faint); }
+  .pv-tbl { overflow-x: auto; }
+  .pv-tbl table { min-width: 520px; }
+  .pv-tbl td.first { white-space: nowrap; }
+  .pv-note { font-family: var(--font-m); font-size: 10px; letter-spacing: .08em; line-height: 1.95; color: var(--faint); margin: 14px 0 0; }
+  .pv-note b { color: var(--muted); }
+  .pv-live { display: inline-flex; align-items: center; gap: 8px; font-family: var(--font-m); font-size: 9.5px; letter-spacing: .18em; text-transform: uppercase; color: var(--faint); }
+  .pv-live::before { content: "●"; font-size: 8px; color: var(--faint); }
+  .pv-live.on::before { color: var(--green); }
+  .pv-live.on { color: var(--muted); }
+  #pvSheetChart, #pvSpreadChart, #pvQueueChart { overflow-x: auto; }
+  #pvSheetChart svg { min-width: 720px; } #pvSpreadChart svg, #pvQueueChart svg { min-width: 560px; }
+  @media (max-width: 620px) { .pv-panel { padding: 24px 12px 14px; } }
+
+  .srcgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px,1fr)); gap: 16px; }
+  .srccard { position: relative; border: 1px solid var(--fill-line); background: var(--fill); padding: 20px 22px; }
+  .srccard .h { font-family: var(--font-m); font-size: 10px; letter-spacing: .2em; text-transform: uppercase; color: var(--cyan); margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .srccard .h.leaf { color: var(--leaf); }
+  .srccard p { margin: 0; font-size: 13.5px; color: var(--muted); }
+  .srccard code { font-family: var(--font-m); font-size: 11.5px; color: var(--ink); word-break: break-all; }
+  .srccard .stat { font-family: var(--font-m); font-size: 9.5px; letter-spacing: .16em; text-transform: uppercase; margin-top: 12px; display: block; }
+  .stat.live { color: var(--green); } .stat.wait { color: var(--gold); }
+
+  .toast { position: fixed; left: 50%; bottom: 34px; transform: translateX(-50%) translateY(12px); z-index: 90;
+    background: rgba(11,16,23,.95); border: 1px solid var(--cyan-60); color: var(--ink);
+    font-family: var(--font-m); font-size: 10.5px; letter-spacing: .16em; text-transform: uppercase; padding: 12px 20px;
+    opacity: 0; pointer-events: none; transition: opacity .25s, transform .25s; }
+  .toast.on { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    .rv, .rv.in { opacity: 1; transform: none; transition: none; }
+    .rv .sec-rule, .rv.in .sec-rule { transform: none; transition: none; }
+    .boot-el, .boot .boot-el { opacity: 1; animation: none; }
+    .scroll-cue { animation: none; }
+    .flow .dashline { animation: none; }
+  }
+</style>
+
+<div class="ground" aria-hidden="true"></div>
+<div class="hero-field" aria-hidden="true"><canvas id="field"></canvas></div>
+
+<div class="mast boot-el">
+  <div class="mast-in">
+    <button class="logo" data-go="/" type="button">offpeak<b>.</b></button>
+    <nav id="nav">
+      <a href="#/" data-route="/">Desk</a>
+      <a href="#/calculator" data-route="/calculator">Savings</a>
+      <a href="#/board" data-route="/board">Board</a>
+      <a href="#/prices" data-route="/prices">Prices</a>
+      <a href="#/receipts" data-route="/receipts">Receipts</a>
+      <a class="ext" href="https://offpeak-ai.github.io/offpeak/" rel="noopener" target="_blank">Docs</a>
+      <a class="ext" href="https://github.com/offpeak-ai/offpeak" rel="noopener" target="_blank">GitHub</a>
+    </nav>
+  </div>
+</div>
+<div class="tele tl2" aria-hidden="true">
+  <div><span class="k">SCROLL</span> <span class="v" id="scrl">00%</span></div>
+  <div><span class="k">SURFACE</span> <span class="v" id="tSurface">DESK</span></div>
+  <div><span class="k">QUOTE</span> <span class="v">19:00Z DAILY</span></div>
+  <div><span class="k">MARK</span> <span class="v">06:30Z DAILY</span></div>
+</div>
+<div class="tele tr2" aria-hidden="true">
+  <div><span class="v" id="utc">--:--:--Z</span> <span class="k">UTC</span></div>
+  <div><span class="v">QUOTING DAILY</span> <span class="k">BOARD</span></div>
+  <div><span class="v">GB·CAISO·ERCOT</span> <span class="k">ZONES</span></div>
+  <div><span class="v">OPEN DATA · $0 SPEND</span> <span class="k">MODE</span></div>
+</div>
+
+<main id="app">
+
+<section class="page active" id="p-home">
+  <div class="hero">
+    <div class="wrap hero-in">
+      <p class="welcome boot-el" style="animation-delay:.15s">The desk is open</p>
+      <h1 class="name boot-el" style="animation-delay:.3s">Same models.<br>Half the price.<br>By your deadline.</h1>
+      <p class="role boot-el" style="animation-delay:.42s">Offpeak — deadline-priced inference</p>
+      <p class="tag boot-el" style="animation-delay:.5s">30–60% of your AI spend has <b>no human waiting</b> — evals, embeddings, backfills, unattended agents. Give that work a deadline and it fills in batch tiers and off-peak windows at up to <b>half price — SLA-guarded, on your own keys.</b></p>
+      <div class="hstrip boot-el" style="animation-delay:.58s">
+        <div><div class="n money">50% off</div><span class="c">Batch tier<br>six venues, published</span></div>
+        <div><div class="n">4×</div><span class="c">Fastest → batch<br>same model, computed live</span></div>
+        <div><div class="n">50.0%</div><span class="c">Captured on every run<br>that kept its batch</span></div>
+      </div>
+      <div class="cta boot-el" style="animation-delay:.65s">
+        <a class="btn btn-gold" href="#quickstart">Quickstart</a>
+        <a class="btn btn-ghost" href="#/calculator">Estimate savings</a>
+        <button class="code" type="button" data-copy='pip install "offpeak[all]"'>pip install offpeak</button>
+      </div>
+      <p class="note-line boot-el" style="animation-delay:.72s">APACHE-2.0 · OPEN SOURCE · YOUR KEYS, PROVIDER-DIRECT · <b>THE QUOTE IS FREE</b></p>
+    </div>
+  </div>
+
+  <section class="sc rv" id="quickstart">
+    <div class="wrap">
+      <div class="sec-rule"></div>
+      <p class="sec-eyebrow">01 // Quickstart</p>
+      <h2 class="sec-title">Half price in three steps</h2>
+
+      <div class="qstep">
+        <div>
+          <div class="qs-n">STEP 01</div>
+          <h3>Install</h3>
+          <p class="desc">Zero-dependency core; provider SDKs load only via extras. Python 3.10+, Apache-2.0, <a href="https://github.com/offpeak-ai/offpeak" rel="noopener" target="_blank">built in the open</a>.</p>
+        </div>
+        <div class="codeblock">
+          <div class="cb-head"><span>shell</span><button class="cbtn" type="button" data-copy='pip install "offpeak[all]"'>Copy</button></div>
+          <pre><span class="tk-c">$</span> pip install <span class="tk-s">"offpeak[all]"</span>   <span class="tk-c"># or [openai] / [anthropic]</span></pre>
+        </div>
+      </div>
+
+      <div class="qstep">
+        <div>
+          <div class="qs-n">STEP 02</div>
+          <h3>Give work a deadline</h3>
+          <p class="desc">One argument on work you already run — batching, submission, polling, and result matching are handled. Your keys via the standard env vars; payloads go provider-direct and <b>never transit Offpeak</b>. If a batch runs long, the stragglers re-run synchronously at list: <b>you state the deadline; it gets met.</b></p>
+        </div>
+        <div class="codeblock">
+          <div class="cb-head"><span>batch_summarize.py</span><button class="cbtn" type="button" data-copy='import offpeak
+
+jobs = [offpeak.job("claude-haiku-4-5", f"Summarize:\n\n{doc}")
+        for doc in docs]
+
+results = offpeak.run(jobs, deadline="06:00")  # done by 6am, batch prices
+print(offpeak.receipt(results))'>Copy</button></div>
+          <pre><span class="tk-k">import</span> <span class="tk-f">offpeak</span>
+
+jobs = [offpeak.job(<span class="tk-s">"claude-haiku-4-5"</span>, <span class="tk-s">f"Summarize:\n\n{doc}"</span>)
+        <span class="tk-k">for</span> doc <span class="tk-k">in</span> docs]
+
+results = offpeak.run(jobs, deadline=<span class="tk-s">"06:00"</span>)  <span class="tk-c"># done by 6am, batch prices</span>
+<span class="tk-k">print</span>(offpeak.receipt(results))</pre>
+        </div>
+      </div>
+
+      <div class="qstep">
+        <div>
+          <div class="qs-n">STEP 03</div>
+          <h3>Settle the receipt</h3>
+          <p class="desc">Every run prints one — list, paid, captured, arithmetic against the published sheet. This one is from a real settled run on Google's batch tier: <b>50.0% captured, 5/5 SLAs, zero fallbacks</b>. <a href="#/receipts">The ledger</a> holds every receipt.</p>
+        </div>
+        <div class="codeblock out">
+          <div class="cb-head"><span>receipt · 2026-08-24-gemini-1 · real run</span></div>
+          <pre>OFFPEAK SETTLEMENT ────────────────────────────
+jobs      5 (5 ok, 0 sync fallback)
+sla       <span class="tk-n">5/5 met</span>
+venues    gemini:batch 5
+tokens    124 in · 2,427 out
+list      $0.00919
+paid      $0.00460
+captured  <span class="tk-s">$0.00460 (50.0%)</span>
+prices    snapshot <span class="sd">2026-08-30</span> — offpeak.prices
+───────────────────────────────────────────────</pre>
+        </div>
+      </div>
+
+      <p class="note-line">No key yet? <b>The quote is free</b> — <code>python -m offpeak quote --model gpt-5.6-luna --jobs 5000 …</code> prices a run against the published sheets with <b>no API calls and no key at all</b>.</p>
+    </div>
+  </section>
+
+  <section class="sc rv" id="how">
+    <div class="wrap">
+      <div class="sec-rule"></div>
+      <p class="sec-eyebrow">02 // How it works</p>
+      <h2 class="sec-title">One argument</h2>
+      <div class="steps3">
+        <div class="case step3">
+          <i class="ck tl"></i><i class="ck tr"></i><i class="ck bl"></i><i class="ck br"></i>
+          <div class="n">STEP 01</div>
+          <h3>Say it can wait</h3>
+          <p>Work you already run gains <b>one argument</b>. Nothing else changes. Urgent traffic is never touched.</p>
+          <span class="mono-line">offpeak.run(jobs, deadline="06:00")</span>
+        </div>
+        <div class="case step3">
+          <i class="ck tl"></i><i class="ck tr"></i><i class="ck bl"></i><i class="ck br"></i>
+          <div class="n">STEP 02</div>
+          <h3>The desk places it</h3>
+          <p>Portfolio-scheduled across <b>batch tiers, off-peak windows and clock-priced lanes</b> — a fallback venue guards every deadline. Your runner, your keys: <b>payloads never transit the desk.</b></p>
+        </div>
+        <div class="case step3">
+          <i class="ck tl"></i><i class="ck tr"></i><i class="ck bl"></i><i class="ck br"></i>
+          <div class="n">STEP 03</div>
+          <h3>Settle the receipt</h3>
+          <p>At the deadline: <b>spread captured, SLA met</b>, energy logged. Every dollar checkable against a public price sheet.</p>
+          <span class="mono-line">captured $10.56 · 50.0% · SLA 6,000/6,000</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sc rv" id="spread">
+    <div class="wrap">
+      <div class="sec-rule"></div>
+      <p class="sec-eyebrow">03 // The spread</p>
+      <h2 class="sec-title">The price of urgency</h2>
+      <div class="case">
+        <i class="ck tl"></i><i class="ck tr"></i><i class="ck bl"></i><i class="ck br"></i>
+        <div class="duo">
+          <div>
+            <p class="case-eyebrow">Exhibit 01 <em>//</em> published sheets · <span class="sd">2026-08-30</span></p>
+            <p class="desc">The spread is old. <b>Batch tiers at half of list have sat on published sheets for years</b>, and day-ahead power markets have priced the same valley for decades — same model, same tokens, the only difference is when it lands. Venues now price urgency in explicit tiers, fastest to batch <b>4× apart</b>. The premium is a published number, not our estimate.</p>
+            <ul class="facts">
+              <li class="au"><b>4×</b> fastest ↔ batch tier</li>
+              <li><b>50% off</b> batch — six venues</li>
+              <li><b>80% off</b> clock-promo lane</li>
+              <li><b>$0</b> modeled — all printed</li>
+            </ul>
+            <details class="brief">
+              <summary>Full brief</summary>
+              <div class="bx">BATCH AT HALF OF LIST, PUBLISHED: OAI · ANTHROPIC · GOOGLE · MISTRAL · GROQ · BEDROCK — THE STRUCTURAL SPREAD, STABLE UNTIL A VENDOR MOVES A SHEET. THE 4× IS THE CURRENT FASTEST-TO-BATCH RANGE AT OPENAI AND, IN PREVIEW, AT ANTHROPIC, <b>COMPUTED LIVE VIA urgency_spread()</b> AGAINST WHATEVER THE SHEET SAYS TODAY — PART OF IT RIDES ON PROMOTIONAL PRICING AND RE-DERIVES WHEN THAT LAPSES. CLOCK-PRICED LANES (80% OFF OFF-PEAK; ANOTHER ≈0.5× PEAK) ARE REGIONAL AND TIME-BOUND. <b>NO SPREAD IS QUOTED FROM A STALE SHEET</b> — DECAYING RATES ARE RE-VERIFIED BEFORE ANY CUSTOMER-FACING MATH.</div>
+            </details>
+          </div>
+          <div class="ev flow">
+            <i class="ck tl"></i><i class="ck tr"></i><i class="ck bl"></i><i class="ck br"></i>
+            <span class="tag-tl">Evidence 01 · multiple of spot</span>
+            <svg class="chart" viewBox="0 0 560 230" role="img" aria-label="Step chart: fast at two times spot, spot at one, batch at half, clock promo at one fifth — a four-times gap from fast to batch">
+              <text x="6" y="42" class="ax">2.0×</text><line x1="42" y1="38" x2="516" y2="38" stroke="rgba(255,255,255,.06)"/>
+              <text x="6" y="104" class="ax">1.0×</text><line x1="42" y1="100" x2="516" y2="100" stroke="rgba(255,255,255,.06)"/>
+              <text x="6" y="145" class="ax">0.5×</text><line x1="42" y1="141" x2="516" y2="141" stroke="rgba(255,255,255,.06)"/>
+              <text x="6" y="178" class="ax">0.2×</text><line x1="42" y1="174" x2="516" y2="174" stroke="rgba(255,255,255,.06)"/>
+              <line x1="532" y1="38" x2="532" y2="141" stroke="#FFB454" stroke-width="1" class="dashline" opacity=".8"/>
+              <line x1="526" y1="38" x2="538" y2="38" stroke="#FFB454"/>
+              <line x1="526" y1="141" x2="538" y2="141" stroke="#FFB454"/>
+              <text x="544" y="93" class="pt-lbl" fill="#FFB454" transform="rotate(90 544 93)" text-anchor="middle">4×</text>
+              <polyline fill="none" stroke="#45EACF" stroke-width="2" class="dashline" opacity=".9"
+                points="64,38 148,38 148,100 240,100 240,141 420,141 420,174 516,174"/>
+              <circle cx="104" cy="38" r="4" fill="#45EACF"/><text x="70" y="26" class="pt-lbl">FAST 2.00</text>
+              <circle cx="194" cy="100" r="4" fill="#EAF2F7"/><text x="168" y="88" class="pt-lbl">SPOT 1.00</text>
+              <circle cx="330" cy="141" r="4" fill="#3DE8B0"/><text x="288" y="129" class="pt-lbl" fill="#3DE8B0">BATCH 0.50</text>
+              <circle cx="468" cy="174" r="4" fill="#FFB454"/><text x="396" y="164" class="pt-lbl" fill="#FFB454">PROMO 0.20</text>
+              <text x="64" y="216" class="ax">NOW</text><text x="250" y="216" class="ax">≤ 24 H</text><text x="470" y="216" class="ax">CLOCK</text>
+            </svg>
+            <span class="tag-br">Uplink 0x551A · live sheets</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sc rv" id="book">
+    <div class="wrap">
+      <div class="sec-rule"></div>
+      <p class="sec-eyebrow">04 // The book</p>
+      <h2 class="sec-title">The open book</h2>
+      <div class="case">
+        <i class="ck tl"></i><i class="ck tr"></i><i class="ck bl"></i><i class="ck br"></i>
+        <p class="case-eyebrow">Exhibit 02 <em>//</em> deadline contracts · 6,000 rows · showing 5</p>
+        <ul class="facts" style="max-width:760px">
+          <li><b>6,000</b> contracts · 12.68M tokens</li>
+          <li><b>$21.12</b> list — the run-it-now price</li>
+          <li class="au"><b>$10.56</b> projected paid · 50.0% captured</li>
+          <li><b>$23.24</b> hard ceiling, all-sync worst case</li>
+        </ul>
+        <div class="booktbl">
+          <table>
+            <thead><tr><th>Contract</th><th>Model</th><th>Venue</th><th class="num">Deadline</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr><td class="first">EMB-BACKFILL ×1,000<span class="sub">EMBEDDINGS</span></td><td>sonnet-5</td><td>anthropic batch</td><td class="num">06:00</td><td><span class="st filled">FILLED</span></td></tr>
+              <tr><td class="first">EVAL-SUITE ×800<span class="sub">REGRESSION</span></td><td>haiku-4-5</td><td>anthropic batch</td><td class="num">05:00</td><td><span class="st filled">FILLED</span></td></tr>
+              <tr><td class="first">EVAL-LONGTAIL ×120<span class="sub">SLOW EVALS</span></td><td>terra</td><td>openai → own-GPU 02:30</td><td class="num">04:30</td><td><span class="st reroute">RE-ROUTED</span></td></tr>
+              <tr><td class="first">CLASSIFY ×2,000<span class="sub">TICKET TRIAGE</span></td><td>luna</td><td>openai batch</td><td class="num">06:00</td><td><span class="st working">WORKING</span></td></tr>
+              <tr><td class="first">URGENT CONTROL ×80<span class="sub">INTERACTIVE — NEVER TOUCHED</span></td><td>sonnet-5</td><td>spot · standard</td><td class="num">—</td><td><span class="st filled">SPOT</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <details class="brief" style="margin-top:20px">
+          <summary>Full brief</summary>
+          <div class="bx">FULL BOOK: SUMM-CORPUS ×700 (TERRA, OAI BATCH) · AGENT-MAINT ×900 + RERANK ×400 ON OWN-GPU vLLM 00–05 · TENORS T+6.5H → T+8H. CONTROL PLANE ONLY — <b>PAYLOADS NEVER TRANSIT THE DESK</b>; THE CUSTOMER'S RUNNER EXECUTES ON THEIR KEYS. URGENT TRAFFIC IS NEVER TOUCHED. QUOTES FROM OPEN DATA COST NOTHING; <b>SETTLEMENTS ONLY EVER COME FROM REAL RUNS.</b></div>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <section class="sc rv" id="valley">
+    <div class="wrap">
+      <div class="sec-rule"></div>
+      <p class="sec-eyebrow">05 // The valley</p>
+      <h2 class="sec-title">Into the valley</h2>
+      <div class="case">
+        <i class="ck tl"></i><i class="ck tr"></i><i class="ck bl"></i><i class="ck br"></i>
+        <div class="duo">
+          <div class="ev flow">
+            <i class="ck tl"></i><i class="ck tr"></i><i class="ck bl"></i><i class="ck br"></i>
+            <span class="tag-tl">Evidence 03 · GB power, day-ahead · p/kWh</span>
+            <svg class="chart" viewBox="0 0 560 150" role="img" aria-label="Half-hourly power prices falling into the low-demand window, 00:00 to 05:00 shaded">
+              <rect x="307.9" y="8" width="186.2" height="118" fill="rgba(69,234,207,.07)"/>
+              <line x1="10" y1="126" x2="550" y2="126" stroke="rgba(255,255,255,.12)"/>
+              <polyline fill="none" stroke="#FFB454" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"
+                points="10.0,66.6 28.6,57.1 47.2,43.6 65.9,34.2 84.5,24.9 103.1,19.0 121.7,80.4 140.3,79.1 159.0,78.0 177.6,75.2 196.2,76.2 214.8,77.7 233.4,90.9 252.1,99.2 270.7,103.4 289.3,101.1 307.9,111.9 326.6,113.2 345.2,115.7 363.8,115.0 382.4,115.8 401.0,118.5 419.7,116.5 438.3,119.0 456.9,111.2 475.5,112.5 494.1,91.8 512.8,88.8 531.4,81.5 550.0,77.8"/>
+              <circle cx="103.1" cy="19.0" r="3.5" fill="#FFB454"/><text x="93" y="36" class="pt-lbl">41.6p</text>
+              <circle cx="438.3" cy="119.0" r="3.5" fill="#FFB454"/><text x="422" y="109" class="pt-lbl">24.0p</text>
+              <text x="10" y="140" class="ax">16:00</text><text x="330" y="140" class="ax">00–05</text><text x="518" y="140" class="ax">06:30</text>
+            </svg>
+            <span class="tag-br">Agile day-ahead · real marked session</span>
+          </div>
+          <div>
+            <p class="case-eyebrow">Exhibit 03 <em>//</em> known, not forecast</p>
+            <p class="desc">The same kilowatt-hour, <b>1.74× apart inside 24 hours</b>. Day-ahead clears before delivery — the next period's prices are knowledge, not forecast. The desk schedules into the valley and holds a fallback venue for every deadline.</p>
+            <ul class="facts">
+              <li><b>1.43×</b> GB · <b>1.27×</b> CAISO</li>
+              <li class="au"><b>3.94×</b> ERCOT, same 24 hours</li>
+            </ul>
+            <div class="event"><span class="t">01:38:52</span><span><span class="r">QUEUE P95 BREACH</span> → <b>re-route 120 → own-GPU</b> · <span class="g">SLA HELD</span></span></div>
+            <details class="brief" style="margin-top:22px">
+              <summary>Full brief</summary>
+              <div class="bx">MARKS, SESSION 08-20→21 (POWER, DAY-AHEAD): GB 1.43× · CAISO 1.27× · ERCOT 3.94×. CARBON GB 1.03× — NEAR-FLAT, REPORTED AS-IS. RISK: P95 QUEUE LATENCY VS BUFFER PER VENUE; A BREACH TRIGGERS RE-ROUTE TO THE OWN-GPU WINDOW (00–05, 24.7p/kWh, 8×4090). A RESCUED JOB PAYS LIST — IT NEVER BREACHES.</div>
+            </details>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sc rv" id="receipt">
+    <div class="wrap">
+      <div class="sec-rule"></div>
+      <p class="sec-eyebrow">06 // The receipt</p>
+      <h2 class="sec-title">Settled, on time</h2>
+      <div class="case">
+        <i class="ck tl"></i><i class="ck tr"></i><i class="ck bl"></i><i class="ck br"></i>
+        <div class="settle">
+          <div class="cell"><div class="k lbl">Captured</div><div class="v big" id="cap2">$4.9104</div></div>
+          <div class="cell"><div class="k lbl">Filled</div><div class="v">2,786<span style="color:var(--faint);font-size:13px"> / 6,000</span></div></div>
+          <div class="cell"><div class="k lbl">SLA</div><div class="v g">100%</div></div>
+          <div class="cell"><div class="k lbl">Energy</div><div class="v">2.1 kWh</div></div>
+        </div>
+        <p class="note-line" style="margin:14px 0 0"><b>DEMO BOOK · REAL CURVES.</b> The dollar figures above are a simulated 6,000-job book.<br><b style="color:var(--green)">REAL SETTLEMENTS EXIST.</b> Every run that reached a batch tier <em>and kept it</em> settled at <b>exactly 50.0% of list</b> — real bills, <b>four capturing venues</b>, every receipt public and checkable against the published sheet. The runs that captured nothing — a gated venue, and one night offpeak's own driver discarded a batch that had already succeeded — are on the same ledger. <a href="#/receipts">The ledger</a>.</p>
+        <p class="desc" style="margin:22px 0 22px">Every dollar reproducible from a public price sheet. <b>Quotes ≠ settlements</b> — settlements only ever come from real runs.</p>
+        <div class="cta">
+          <a class="btn btn-gold" href="#/calculator">Estimate your savings</a>
+          <a class="btn btn-ghost" href="#/receipts">The settled runs</a>
+          <button class="code" type="button" data-copy='pip install "offpeak[all]"'>pip install offpeak</button>
+        </div>
+      </div>
+    </div>
+  </section>
+</section>
+
+<!-- ========================= CALCULATOR ========================= -->
+<section class="page" id="p-calculator">
+  <div class="hero short">
+    <div class="wrap hero-in">
+      <p class="welcome">What waiting is worth</p>
+      <h1 class="name">Savings calculator</h1>
+      <p class="role">Estimate your monthly spread</p>
+      <p class="tag">Two ways in. Start from a <b>monthly bill</b> and a guess at how much of it has no human waiting — or <b>build the book</b> workload by workload against the real published sheet. Both price the same thing: the urgency premium you are paying today.</p>
+    </div>
+  </div>
+
+  <section class="sc tight rv">
+    <div class="wrap">
+      <div class="sec-rule"></div>
+      <p class="sec-eyebrow">01 // Estimate</p>
+      <h2 class="sec-title">What a deadline is worth</h2>
+
+      <div class="tabs" role="tablist" aria-label="Calculator mode">
+        <button role="tab" id="tab-quick" aria-controls="pane-quick" aria-selected="true" type="button">Quick estimate</button>
+        <button role="tab" id="tab-book" aria-controls="pane-book" aria-selected="false" type="button">Build the book</button>
+      </div>
+
+      <!-- ---------- TAB A ---------- -->
+      <div class="tabpanel" id="pane-quick" role="tabpanel" aria-labelledby="tab-quick">
+        <div class="calc">
+          <div class="inputs">
+            <i class="ck tl"></i><i class="ck tr"></i><i class="ck bl"></i><i class="ck br"></i>
+            <fieldset class="fieldset">
+              <legend>Your stack</legend>
+              <div class="fld">
+                <div class="top"><label for="q-spend">Monthly inference spend</label><span class="val money" id="q-spend-v">$40,000</span></div>
+                <input type="range" id="q-spend" min="0" max="100" step="0.5" value="48.5">
+                <span class="hint">Provider API bills only — not seats, not infra</span>
+              </div>
+              <div class="fld">
+                <div class="top"><label for="q-defer">Share with no human waiting</label><span class="val" id="q-defer-v">40%</span></div>
+                <input type="range" id="q-defer" min="0" max="100" step="1" value="40">
+                <span class="hint">Evals, embeddings, backfills, unattended agents</span>
+              </div>
+            </fieldset>
+            <fieldset class="fieldset">
+              <legend>Where that work lands</legend>
+              <div class="fld">
+                <div class="top"><label for="q-batch">Fits a batch tier — 50% off</label><span class="val" id="q-batch-v">85%</span></div>
+                <input type="range" id="q-batch" min="0" max="100" step="1" value="85">
+                <span class="hint">Of the deferrable spend. Six venues publish this tier</span>
+              </div>
+              <div class="fld">
+                <div class="top"><label for="q-clock">Fits a clock-priced lane — 80% off</label><span class="val" id="q-clock-v">0%</span></div>
+                <input type="range" id="q-clock" min="0" max="100" step="1" value="0">
+                <span class="hint">Regional and time-bound promos. Remainder stays at spot</span>
+              </div>
+            </fieldset>
+          </div>
+
+          <div class="readout">
+            <i class="ck tl"></i><i class="ck tr"></i><i class="ck bl"></i><i class="ck br"></i>
+            <p class="ro-lead">You would stop paying</p>
+            <p class="ro-big" id="q-out-mo">$6,800</p>
+            <p class="ro-sub">per month · <span id="q-out-pct">17.0%</span> off the whole bill</p>
+            <div class="ro-rows">
+              <div class="ro-row"><span class="k">Per year</span><span class="v money" id="q-out-yr">$81,600</span></div>
+              <div class="ro-row"><span class="k">Deferrable spend</span><span class="v dim" id="q-out-def">$16,000 / mo</span></div>
+              <div class="ro-row"><span class="k">New monthly bill</span><span class="v dim" id="q-out-paid">$33,200 / mo</span></div>
+              <div class="ro-row"><span class="k">Discount on that work</span><span class="v" id="q-out-eff">42.5%</span></div>
+            </div>
+            <p class="note-line">Every number here is arithmetic on a published price sheet — no modeled inputs, no assumed energy, nothing that needs a footnote. Actual capture depends on how much of your work really has slack.</p>
+            <div class="cta" style="margin-top:22px">
+              <button class="btn btn-gold" id="q-share" type="button">Copy estimate link</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ---------- TAB B ---------- -->
+      <div class="tabpanel" id="pane-book" role="tabpanel" aria-labelledby="tab-book" hidden>
+        <div class="rows">
+          <table class="rowtbl">
+            <thead>
+              <tr>
+                <th>Workload</th><th>Model</th><th class="num">Requests / mo</th>
+                <th class="num">Tokens in</th><th class="num">Tokens out</th><th>Paying now</th><th>Deadline</th><th></th>
+              </tr>
+            </thead>
+            <tbody id="b-rows"></tbody>
+          </table>
+        </div>
+        <div class="rowtools">
+          <button class="btn btn-ghost" id="b-add" type="button">+ Add workload</button>
+          <button class="btn btn-ghost" id="b-load" type="button">Load the parked book</button>
+          <button class="btn btn-ghost" id="b-clear" type="button">Clear</button>
+          <button class="btn btn-gold" id="b-share" type="button">Copy estimate link</button>
+        </div>
+
+        <div class="readout wide">
+          <i class="ck tl"></i><i class="ck tr"></i><i class="ck bl"></i><i class="ck br"></i>
+          <div>
+            <p class="ro-lead">You would stop paying</p>
+            <p class="ro-big" id="b-out-mo">$0</p>
+            <p class="ro-sub">per month · <span id="b-out-pct">0%</span> off this book</p>
+          </div>
+          <div class="ro-rows" style="border-top:1px solid var(--line)">
+            <div class="ro-row"><span class="k">Per year</span><span class="v money" id="b-out-yr">$0</span></div>
+            <div class="ro-row"><span class="k">Paying now</span><span class="v dim" id="b-out-now">$0 / mo</span></div>
+            <div class="ro-row"><span class="k">On a deadline</span><span class="v money" id="b-out-new">$0 / mo</span></div>
+            <div class="ro-row"><span class="k">Tokens</span><span class="v dim" id="b-out-tok">0 / mo</span></div>
+            <div class="ro-row"><span class="k">Requests</span><span class="v dim" id="b-out-req">0 / mo</span></div>
+          </div>
+        </div>
+        <p class="note-line">Prices are the sheet the SDK ships — <b>offpeak.prices</b>, snapshot <span class="sd">2026-08-30</span>, re-verified against the rendered provider pages 2026-08-30, reproduced in <b>02 // The sheet</b> below. Batch is exactly half of standard on every venue — on DeepSeek the same half is the <b>off-peak clock rate</b>, not a batch queue; fast tiers are published on the gpt-5.6 family and, as a research preview, on Claude Opus 5 and Opus 4.8. Loaded by default: the real <a href="#/receipts">parked book</a> — 6,000 jobs, 12.68M tokens, $28.05 list.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="sc rv">
+    <div class="wrap">
+      <div class="sec-rule"></div>
+      <p class="sec-eyebrow">02 // The sheet</p>
+      <h2 class="sec-title">What the prices are</h2>
+      <div class="case">
+        <i class="ck tl"></i><i class="ck tr"></i><i class="ck bl"></i><i class="ck br"></i>
+        <p class="case-eyebrow">offpeak.prices <em>//</em> snapshot <span class="sd">2026-08-30</span> · USD per 1M tokens</p>
+        <div class="booktbl">
+          <table>
+            <thead><tr><th>Model</th><th class="num">Standard in</th><th class="num">Standard out</th><th class="num">Batch / off-peak in</th><th class="num">Batch / off-peak out</th><th class="num">Fast in</th><th class="num">Fast out</th></tr></thead>
+            <tbody id="sheet-rows"></tbody>
+          </table>
+        </div>
+        <p class="note-line"><b>gpt-5.6-sol's standard rate is promotional</b> at least through 2026-11-21; post-promo list is $5 / $30 and both tiers move with it, so the ratio is the durable figure, not the dollars. Batch is exactly 50% of standard. The <b>openai/gpt-oss</b> rows are Groq's, the <b>mistral</b> rows are from <b>mistral.ai/pricing/api</b>, and the <b>gemini</b> rows from <b>ai.google.dev/pricing</b> — all three at the same 50% batch rule. Groq and Mistral publish no per-model fast rate, so this sheet carries none; Google prices a <b>priority</b> tier that this sheet does not carry yet, and <code>tools/sheet_reconcile.py</code> reports the gap rather than the sheet implying a spread it has not verified. Gemini 3.7 and 3.6 Flash are introductory through 2026-12-31 and then double to $1.50 / $7.50 on both legs, which moves the dollars and leaves the batch ratio alone. The <b>deepseek</b> rows (api-docs.deepseek.com) carry the <b>peak</b> rate as standard; DeepSeek has no batch API, and its half price is the <b>off-peak clock</b> — peak is 01:00–04:00 and 06:00–10:00 UTC on weekdays, everything else and all weekend is half — so the discount is decided per request by the wall clock, not by a queue. The <b>qwen</b> rows are Alibaba Model Studio's international region, batch at 50%; qwen3.7-max is "limited-time 50% off" with no published end date, so it carries no expiry and may step up unannounced. Fast tiers are published on the gpt-5.6 family and on <b>Claude Opus 5 / Opus 4.8</b> ($10 / $50, research preview, first-party API only, not combinable with batch) — fastest to batch is <b>4×</b> at both venues, computed live by <b>urgency_spread()</b>, never cached. Sonnet 5's $2 / $10 is now Anthropic's standard price; the scheduled 09-01 rise to $3 / $15 will not occur.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="sc rv">
+    <div class="wrap">
+      <div class="sec-rule"></div>
+      <p class="sec-eyebrow">03 // Honest caveats</p>
+      <h2 class="sec-title">What this does not prove</h2>
+      <div class="case">
+        <i class="ck tl"></i><i class="ck tr"></i><i class="ck bl"></i><i class="ck br"></i>
+        <div class="steps3">
+          <div class="step3"><div class="n" style="color:var(--red)">ESTIMATE</div><h3>Not a quote</h3><p>Actual capture depends on what share of your work really has slack, and on rates holding. <b>A quote comes from your own metadata</b>, free, in the flexibility report.</p></div>
+          <div class="step3"><div class="n" style="color:var(--red)">RESCUES</div><h3>Insurance costs</h3><p>A job rescued at its deadline pays list, not batch. Smoke runs to date: <b>zero fallbacks, 6/6 SLAs</b> — but the model above assumes none, and real books have some.</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+</section>
+
+<!-- =========================== BOARD ============================ -->
+<section class="page" id="p-board">
+  <div class="hero short">
+    <div class="wrap hero-in">
+      <p class="welcome">Quoting daily</p>
+      <h1 class="name">Spread Board</h1>
+      <p class="role">Offpeak's public track record</p>
+      <p class="tag">What waiting is worth, in public: the three spreads a deadline can capture — <b>tokens, power, carbon</b> — quoted from open data at <b>19:00Z</b>, marked against actuals at <b>06:30Z</b>, daily, against the deadline and not the clock.</p>
+      <div class="hstrip">
+        <div><div class="n money">2.0×</div><span class="c">Tokens<br>batch at half of list</span></div>
+        <div><div class="n">1.38×</div><span class="c">Power · GB<br>day-ahead, this session</span></div>
+        <div><div class="n carbon">1.44×</div><span class="c">Carbon · GB<br>chosen window</span></div>
+      </div>
+      <div class="cta">
+        <a class="btn btn-gold" href="https://github.com/offpeak-ai/offpeak/tree/board-data/nightly" rel="noopener" target="_blank">Raw session JSON</a>
+      </div>
+      <p style="margin:26px 0 0; font-family:var(--font-m); font-size:10px; letter-spacing:.2em; color:var(--faint)">QUOTES COST NOTHING · <span style="color:var(--muted)">SETTLEMENTS ONLY EVER COME FROM REAL RUNS</span></p>
+    </div>
+  </div>
+
+  <section class="sc tight rv">
+    <div class="wrap">
+      <div class="sec-rule"></div>
+      <p class="sec-eyebrow">01 // The live quote</p>
+      <h2 class="sec-title">Three legs, latest session</h2>
+      <div class="duo" style="grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:20px; align-items:stretch">
+        <div class="case step3">
+          <i class="ck tl"></i><i class="ck tr"></i><i class="ck bl"></i><i class="ck br"></i>
+          <p class="case-eyebrow">Tokens <em>//</em> both venues</p>
+          <div style="font-family:var(--font-m); font-size:40px; font-weight:600; color:var(--gold); text-shadow:0 0 24px rgba(255,180,84,.22); margin:6px 0 12px">2.0×</div>
+          <p style="margin:0;color:var(--muted);font-size:14px">Batch at <b style="color:var(--ink)">50% of list</b> on both published sheets. Fast → batch, at both venues that sell one: <b style="color:var(--ink)">4×</b>.</p>
+        </div>
+        <div class="case step3">
+          <i class="ck tl"></i><i class="ck tr"></i><i class="ck bl"></i><i class="ck br"></i>
+          <p class="case-eyebrow">Power <em>//</em> GB · Agile day-ahead</p>
+          <div style="font-family:var(--font-m); font-size:40px; font-weight:600; color:var(--green); text-shadow:0 0 24px rgba(69,234,207,.22); margin:6px 0 12px">1.38×</div>
+          <p style="margin:0;color:var(--muted);font-size:14px"><b style="color:var(--ink)">34.85p</b> across the 17–21 peak → <b style="color:var(--ink)">25.23p</b> in the 00–05 window. Extremes 40.99p / 23.61p.</p>
+        </div>
+        <div class="case step3">
+          <i class="ck tl"></i><i class="ck tr"></i><i class="ck bl"></i><i class="ck br"></i>
+          <p class="case-eyebrow">Carbon <em>//</em> GB · NESO forecast</p>
+          <div style="font-family:var(--font-m); font-size:40px; font-weight:600; color:var(--leaf); text-shadow:0 0 24px rgba(124,231,135,.22); margin:6px 0 12px">1.44×</div>
+          <p style="margin:0;color:var(--muted);font-size:14px">Cleanest 5h <b style="color:var(--ink)">110.9g</b> · dirtiest <b style="color:var(--ink)">159.5g</b>. The naive 00–05 shift is <b style="color:var(--red)">0.74× — worse than peak.</b></p>
+        </div>
+      </div>
+      <details class="brief" style="margin-top:22px">
+        <summary>Full brief</summary>
+        <div class="bx">WORKED: A 12.68M-TOKEN CORPUS — $21.12 RUN NOW, $10.56 ON A DEADLINE. SAME MODELS, SAME TOKENS. THE FASTEST→BATCH RANGE ON EITHER VENUE THAT SELLS A FAST TIER IS CURRENTLY 4×, PART OF IT PROMOTIONAL — RE-DERIVED EACH SESSION, NEVER CACHED. POWER IS <b>KNOWN, NOT FORECAST</b> — DAY-AHEAD AUCTIONS CLEAR BEFORE DELIVERY. ONLY THE CARBON LEG IS A FORECAST AT QUOTE TIME, AND IT IS MARKED AGAINST ACTUALS AT 06:30Z. THIS SESSION THE CARBON LEG IS <b>INVERTED ON THE NAIVE WINDOW</b> AND IS PUBLISHED THAT WAY.</div>
+      </details>
+    </div>
+  </section>
+
+  <section class="sc rv">
+    <div class="wrap">
+      <div class="sec-rule"></div>
+      <p class="sec-eyebrow">02 // Marked</p>
+      <h2 class="sec-title">Marked against actuals</h2>
+      <div class="case">
+        <i class="ck tl"></i><i class="ck tr"></i><i class="ck bl"></i><i class="ck br"></i>
+        <p class="case-eyebrow">Marked sessions <em>//</em> actuals</p>
+        <div class="booktbl">
+          <table>
+            <thead><tr><th>Leg · zone</th><th class="num">High · latest</th><th class="num">Low · latest</th><th class="num">Prior session</th><th class="num">Latest marked</th><th>Note</th></tr></thead>
+            <tbody>
+              <tr><td class="first">POWER · GB<span class="sub">AGILE, DAY-AHEAD</span></td><td class="num">37.17p</td><td class="num">24.82p</td><td class="num up">1.43×</td><td class="num up">1.50×</td><td>extremes 1.74× and 2.28×</td></tr>
+              <tr><td class="first">POWER · CAISO SP15<span class="sub">DA LMP $/MWh</span></td><td class="num">$82.52</td><td class="num">$50.06</td><td class="num up">1.27×</td><td class="num up">1.65×</td><td>evening peak, solar rolled off</td></tr>
+              <tr><td class="first">POWER · ERCOT HOU<span class="sub">DA LMP $/MWh</span></td><td class="num">$93.83</td><td class="num">$23.70</td><td class="num up">3.94×</td><td class="num up">3.96×</td><td>widest zone on the board, twice</td></tr>
+              <tr><td class="first">CARBON · GB<span class="sub">NESO · CHOSEN WINDOW</span></td><td class="num">146.1 g</td><td class="num">65.0 g</td><td class="num up">1.13×</td><td class="num up">2.25×</td><td>naive 00–05 reads 1.03× and 2.10×</td></tr>
+              <tr><td class="first">CARBON · CISO + ERCO<span class="sub">EIA-930 · DERIVED · BACKFILLED</span></td><td class="num">—</td><td class="num">—</td><td class="num down">0.80× / 0.80×</td><td class="num">—</td><td>both sub-parity; the prior session awaits its following-morning trough</td></tr>
+              <tr><td class="first">TOKENS · OAI + ANT<span class="sub">PUBLISHED SHEETS</span></td><td class="num">list</td><td class="num">50% list</td><td class="num up">2.0×</td><td class="num up">2.0×</td><td>constant until a vendor moves a sheet — which this board catches</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="event" style="border-left-color:var(--gold)"><span class="t">CAISO · MARKED</span><span><b style="color:var(--gold)">CARBON SPREAD 0.76× — BELOW 1.</b> Evening solar is gone by midnight: <b>cheap hours are not automatically clean hours.</b> Every carbon claim here is computed per-hour.</span></div>
+        <details class="brief" style="margin-top:22px">
+          <summary>Methodology &amp; sources</summary>
+          <div class="bx">SOURCES, OPEN AND KEYLESS WHERE NOTED: GB CARBON — NESO CARBON INTENSITY API (KEYLESS, WITH FORECASTS) · GB POWER — OCTOPUS AGILE DAY-AHEAD (KEYLESS, REGION C) · TOKEN PRICES — OPENAI + ANTHROPIC PUBLISHED SHEETS, SNAPSHOT 2026-08, ENCODED IN <b>offpeak.prices</b> · US ZONES — CAISO + ERCOT DA LMP VIA <b>gridstatus</b> · US CARBON — EIA-930 HOURLY GENERATION MIX, KEY WIRED 08-22; A SESSION'S SPREAD IS MEASURED AGAINST THE FOLLOWING MORNING'S TROUGH, SO THE DATA LANDS ~TWO DAYS AFTER THE MARK AND EVERY MARK BACKFILLS THE SESSIONS THAT WERE TOO EARLY — UNTIL THEN THEY READ UNAVAILABLE-AND-DOCUMENTED. A DAILY JOB QUOTES 19:00Z AND MARKS 06:30Z, COMMITTING PER-SESSION JSON TO THE OPEN REPO — EVERY NUMBER RECOMPUTABLE FROM CITED PUBLIC ENDPOINTS: <a href="https://github.com/offpeak-ai/offpeak" rel="noopener" target="_blank">github.com/offpeak-ai/offpeak</a></div>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <section class="sc rv">
+    <div class="wrap">
+      <div class="sec-rule"></div>
+      <p class="sec-eyebrow">03 // The carbon leg</p>
+      <h2 class="sec-title">Cheap hours are not clean hours</h2>
+      <div class="case">
+        <i class="ck tl"></i><i class="ck tr"></i><i class="ck bl"></i><i class="ck br"></i>
+        <div class="duo" style="align-items:start">
+          <div>
+            <p class="case-eyebrow">Exhibit 03 <em>//</em> GB carbon · every session marked</p>
+            <p class="desc">The board's third leg is the one that misbehaves. Run the naive version — "shift it to 00:00–05:00" — and the carbon result is a coin flip: <b>1.03×, 2.10×, and 0.74×</b>. That last one means the window was <b>dirtier than the evening peak</b>. Evening solar is gone by midnight and what backfills it is not clean. CAISO has done the same, at 0.76×.</p>
+            <p class="desc">Pick the window from the curve instead of assuming it and the same sessions read <b>1.13×, 2.25× and 1.44×</b> — never below parity. Price and carbon are two different curves and get optimized separately.</p>
+            <div class="event" style="border-left-color:var(--gold)"><span class="t">WHAT WE DO NOT CLAIM</span><span><b>On an API batch tier, Offpeak does not choose the hour or the region — the provider does.</b> So this is a measurement of what a scheduler with that control could capture, not a carbon saving we book on your behalf. That claim waits for the metered self-hosted lane.</span></div>
+            <details class="brief" style="margin-top:22px">
+              <summary>Definitions &amp; sources</summary>
+              <div class="bx"><b>NAIVE</b> = MEAN gCO2/kWh OVER 17:00–21:00 LOCAL ÷ MEAN OVER 00:00–05:00 — THE RATIO A CRON GETS. <b>CHOSEN</b> = DIRTIEST CONTIGUOUS 5-HOUR MEAN ÷ CLEANEST, INSIDE THE SAME 16:00Z–07:00Z SESSION — THE RATIO A SCHEDULER GETS WHEN IT READS THE CURVE. BOTH COMPUTED BY <b>tools/night_report.py</b> FROM ONE HALF-HOURLY SERIES AND COMMITTED AS PER-SESSION JSON. GB CARBON: NESO CARBON INTENSITY API, KEYLESS. US CARBON: EIA-930, KEY WIRED 08-22. A SESSION'S SPREAD NEEDS THE FOLLOWING MORNING'S 00:00–05:00 LOCAL HOURS, SO THE FEED IS ROUGHLY <b>TWO DAYS</b> BEHIND THE MARK, NOT ONE — EVERY MARK NOW GOES BACK AND BACKFILLS THE SESSIONS THAT WERE TOO EARLY. <b>08-20 HAS FILLED: CISO 0.80×, ERCO 0.80×.</b> 08-21 AND 08-22 STILL RECORD <b>UNAVAILABLE-AND-DOCUMENTED</b>, WITH THE DAY THEY ARE WAITING ON NAMED, RATHER THAN A NUMBER NOBODY MEASURED. <b id="cbN">n = 2 MARKED SESSIONS + 1 QUOTED.</b> THE SUB-PARITY RESULT IS PUBLISHED THE SAME WAY THE GOOD ONES ARE.</div>
+            </details>
+          </div>
+          <div class="ev">
+            <i class="ck tl"></i><i class="ck tr"></i><i class="ck bl"></i><i class="ck br"></i>
+            <span class="tag-tl">Evidence 03 · carbon spread · multiple</span>
+            <div class="legend" style="margin-top:14px">
+              <span><i style="background:rgba(69,234,207,.6)"></i>Naive 00–05</span>
+              <span><i style="background:rgba(124,231,135,.6)"></i>Chosen window</span>
+              <span><i style="background:rgba(255,107,107,.6)"></i>Worse than peak</span>
+            </div>
+            <div id="cbChart"></div>
+            <p class="note-line" style="margin-top:16px">Anything left of <b>parity</b> is a session where shifting the work would have <b>added</b> carbon. <span id="cbNever">The chosen window has never landed there.</span></p>
+            <span class="tag-br" id="cbTag">NESO · keyless · marked 06:30Z</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sc rv">
+    <div class="wrap">
+      <div class="sec-rule"></div>
+      <p class="sec-eyebrow">04 // Settlements</p>
+      <h2 class="sec-title">Real runs only</h2>
+      <div class="case">
+        <i class="ck tl"></i><i class="ck tr"></i><i class="ck bl"></i><i class="ck br"></i>
+        <p class="case-eyebrow">The settled record <em>//</em> real money, real venues · <a href="https://github.com/offpeak-ai/offpeak/blob/board-data/nightly/SETTLED.md" rel="noopener" target="_blank">SETTLED.md</a></p>
+        <div class="booktbl">
+          <table>
+            <thead><tr><th>Run</th><th>Venues</th><th class="num">Jobs</th><th class="num">List</th><th class="num">Paid</th><th class="num">Captured</th><th class="num">SLA</th></tr></thead>
+            <tbody data-ledger="home">
+              <tr><td class="first">mechanics-1<span class="sub">TWO VENUES · OPENAI LEG REJECTED</span></td><td>anthropic + openai batch</td><td class="num">48</td><td class="num">$0.00156</td><td class="num">$0.000781</td><td class="num up">50.0%</td><td class="num down">24/48</td></tr>
+              <tr><td class="first">mechanics-2<span class="sub">CEILING TOO LOW · EMPTY OUTPUTS</span></td><td>openai batch</td><td class="num">24</td><td class="num">$0.000594</td><td class="num">$0.000297</td><td class="num up">50.0%</td><td class="num up">24/24</td></tr>
+              <tr><td class="first">mechanics-3<span class="sub">CEILING SIZED TO THE MODEL</span></td><td>openai batch</td><td class="num">24</td><td class="num">$0.00131</td><td class="num">$0.000655</td><td class="num up">50.0%</td><td class="num up">24/24</td></tr>
+              <tr><td class="first">groq-1<span class="sub">BATCH TIER GATED · SYNC FALLBACK AT LIST</span></td><td>groq · sync fallback</td><td class="num">24</td><td class="num">$0.00236</td><td class="num">$0.00236</td><td class="num down">0.0%</td><td class="num up">24/24</td></tr>
+              <tr><td class="first">mistral-1<span class="sub">BATCH TIER GATED · SYNC FALLBACK AT LIST</span></td><td>mistral · sync fallback</td><td class="num">24</td><td class="num">$0.000199</td><td class="num">$0.000199</td><td class="num down">0.0%</td><td class="num up">24/24</td></tr>
+              <tr><td class="first">gemini-1<span class="sub">BATCH TIER · FIRST THIRD VENUE TO CAPTURE</span></td><td>gemini batch</td><td class="num">5</td><td class="num">$0.00919</td><td class="num">$0.00460</td><td class="num up">50.0%</td><td class="num up">5/5</td></tr>
+              <tr><td class="first">08-26 openai-1<span class="sub">BATCH TIER</span></td><td>openai batch</td><td class="num">24</td><td class="num">$0.00127</td><td class="num">$0.000636</td><td class="num up">50.0%</td><td class="num up">24/24</td></tr>
+              <tr><td class="first">08-26 anthropic-1<span class="sub">BATCH TIER</span></td><td>anthropic batch</td><td class="num">6</td><td class="num">$0.000378</td><td class="num">$0.000189</td><td class="num up">50.0%</td><td class="num up">6/6</td></tr>
+              <tr><td class="first">08-26 gemini-1<span class="sub">BATCH TIER · REPEATED TWO DAYS ON</span></td><td>gemini batch</td><td class="num">5</td><td class="num">$0.00918</td><td class="num">$0.00459</td><td class="num up">50.0%</td><td class="num up">5/5</td></tr>
+              <tr><td class="first">08-26 mistral-2<span class="sub">BATCH COMPLETED, THEN DISCARDED · CLIENT BUG</span></td><td>mistral · sync fallback</td><td class="num">24</td><td class="num">$0.000198</td><td class="num">$0.000198</td><td class="num down">0.0%</td><td class="num up">24/24</td></tr>
+              <tr><td class="first">08-26 mistral-3<span class="sub">BATCH TIER · FOURTH VENUE TO CAPTURE</span></td><td>mistral batch</td><td class="num">24</td><td class="num">$0.000200</td><td class="num">$0.0000999</td><td class="num up">50.0%</td><td class="num up">24/24</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="note-line">Scale is on every row on purpose: these are <b>mechanics proofs</b>, not production volume — the evidence they carry is that the submit → poll → settle path works and prices out at exactly half of list on a real bill. <b>Three rows captured nothing, and they stay.</b> Groq (<b>403 not_available_for_plan</b>) still gates the batch API behind a plan, so those jobs took the sync fallback and paid list. Mistral was gated the same way (<b>402</b>) until billing was switched on — and then failed a second time for a different reason: on 08-26 the batch <b>completed and was thrown away</b> by a bug in offpeak's own driver, which reached for a streaming response's text before reading it. That run paid twice for the same answers and captured nothing. It is on the board next to the fixed re-run, because <b>a client that loses a batch costs exactly what a venue that refuses one costs</b>, and is harder to notice. <a href="#/receipts">The full record</a>.</p>
+      </div>
+    </div>
+  </section>
+</section>
+
+<!-- ========================== RECEIPTS ========================== -->
+<section class="page" id="p-receipts">
+  <div class="hero short">
+    <div class="wrap hero-in">
+      <p class="welcome">Real money, published whole</p>
+      <h1 class="name">Settled runs</h1>
+      <p class="role">The settled record</p>
+      <p class="tag">Real runs on real bills, across five venues — <b>four of them now capturing</b>: OpenAI, Anthropic, Google Gemini and Mistral. Every run that reached a batch tier <em>and kept it</em> captured <b>exactly 50.0%</b> against the published sheet. Runs that captured <b>nothing</b> are published anyway — a gated venue, and one night where the batch completed and offpeak's own driver threw it away. The failures are the reason to believe the rest. Scale is printed on every row on purpose: this ledger proves the <b>path</b>, not the volume.</p>
+      <div class="hstrip">
+        <div><div class="n money">50.0%</div><span class="c">Captured on every run<br>that kept its batch</span></div>
+        <div><div class="n" data-ledger-stat="venues">4</div><span class="c">Venues capturing<br>at the batch tier</span></div>
+        <div><div class="n" style="color:var(--red)">100%</div><span class="c">Of failures published<br>rather than dropped</span></div>
+      </div>
+    </div>
+  </div>
+
+  <section class="sc tight rv">
+    <div class="wrap">
+      <div class="sec-rule"></div>
+      <p class="sec-eyebrow">01 // The record</p>
+      <h2 class="sec-title">The record, whole</h2>
+      <div class="case">
+        <i class="ck tl"></i><i class="ck tr"></i><i class="ck bl"></i><i class="ck br"></i>
+        <p class="case-eyebrow">Receipts <em>//</em> generated by tools/mechanics_run.py + settle_report.py · <a href="https://github.com/offpeak-ai/offpeak/blob/board-data/nightly/SETTLED.md" rel="noopener" target="_blank">SETTLED.md</a></p>
+        <div class="booktbl">
+          <table>
+            <thead><tr><th>Run</th><th>Venues</th><th class="num">Jobs</th><th class="num">Tokens</th><th class="num">List</th><th class="num">Paid</th><th class="num">Captured</th><th class="num">SLA</th></tr></thead>
+            <tbody data-ledger="receipts">
+              <tr><td class="first">mechanics-1<span class="sub">48 JOBS, TWO VENUES</span></td><td>anthropic 24 · openai 24</td><td class="num">48</td><td class="num">787 / 155</td><td class="num">$0.00156</td><td class="num">$0.000781</td><td class="num up">50.0%</td><td class="num down">24/48</td></tr>
+              <tr><td class="first">mechanics-2<span class="sub">CEILING TOO LOW</span></td><td>openai batch</td><td class="num">24</td><td class="num">728 / 374</td><td class="num">$0.000594</td><td class="num">$0.000297</td><td class="num up">50.0%</td><td class="num up">24/24</td></tr>
+              <tr><td class="first">mechanics-3<span class="sub">CEILING SIZED TO THE MODEL</span></td><td>openai batch</td><td class="num">24</td><td class="num">728 / 971</td><td class="num">$0.00131</td><td class="num">$0.000655</td><td class="num up">50.0%</td><td class="num up">24/24</td></tr>
+              <tr><td class="first">groq-1<span class="sub">BATCH TIER GATED · SYNC FALLBACK AT LIST</span></td><td>groq · sync fallback</td><td class="num">24</td><td class="num">2,288 / 7,307</td><td class="num">$0.00236</td><td class="num">$0.00236</td><td class="num down">0.0%</td><td class="num up">24/24</td></tr>
+              <tr><td class="first">mistral-1<span class="sub">BATCH TIER GATED · SYNC FALLBACK AT LIST</span></td><td>mistral · sync fallback</td><td class="num">24</td><td class="num">948 / 94</td><td class="num">$0.000199</td><td class="num">$0.000199</td><td class="num down">0.0%</td><td class="num up">24/24</td></tr>
+              <tr><td class="first">gemini-1<span class="sub">BATCH TIER · FIRST THIRD VENUE TO CAPTURE</span></td><td>gemini batch</td><td class="num">5</td><td class="num">124 / 2,427</td><td class="num">$0.00919</td><td class="num">$0.00460</td><td class="num up">50.0%</td><td class="num up">5/5</td></tr>
+              <tr><td class="first">08-26 openai-1<span class="sub">BATCH TIER · 8m07s</span></td><td>openai batch</td><td class="num">24</td><td class="num">728 / 938</td><td class="num">$0.00127</td><td class="num">$0.000636</td><td class="num up">50.0%</td><td class="num up">24/24</td></tr>
+              <tr><td class="first">08-26 anthropic-1<span class="sub">BATCH TIER · 4m05s</span></td><td>anthropic batch</td><td class="num">6</td><td class="num">188 / 38</td><td class="num">$0.000378</td><td class="num">$0.000189</td><td class="num up">50.0%</td><td class="num up">6/6</td></tr>
+              <tr><td class="first">08-26 gemini-1<span class="sub">BATCH TIER · 2m04s</span></td><td>gemini batch</td><td class="num">5</td><td class="num">124 / 2,422</td><td class="num">$0.00918</td><td class="num">$0.00459</td><td class="num up">50.0%</td><td class="num up">5/5</td></tr>
+              <tr><td class="first">08-26 mistral-2<span class="sub">BATCH COMPLETED, THEN DISCARDED · CLIENT BUG</span></td><td>mistral · sync fallback</td><td class="num">24</td><td class="num">948 / 93</td><td class="num">$0.000198</td><td class="num">$0.000198</td><td class="num down">0.0%</td><td class="num up">24/24</td></tr>
+              <tr><td class="first">08-26 mistral-3<span class="sub">BATCH TIER · FOURTH VENUE TO CAPTURE · 33s</span></td><td>mistral batch</td><td class="num">24</td><td class="num">948 / 96</td><td class="num">$0.000200</td><td class="num">$0.0000999</td><td class="num up">50.0%</td><td class="num up">24/24</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="note-line">Tokens shown as <b>in / out</b>. Every figure is emitted by the settlement code from counted tokens against the published sheet — none of it is typed in by hand, and the arithmetic reproduces in the <a href="#/calculator">calculator</a>.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="sc rv">
+    <div class="wrap">
+      <div class="sec-rule"></div>
+      <p class="sec-eyebrow">02 // What went wrong</p>
+      <h2 class="sec-title">Five failures, published</h2>
+      <div class="case">
+        <i class="ck tl"></i><i class="ck tr"></i><i class="ck bl"></i><i class="ck br"></i>
+        <div class="steps3">
+          <div class="step3">
+            <div class="n" style="color:var(--red)">RUN 1 · HALF REJECTED</div>
+            <h3>The venue said no</h3>
+            <p>Anthropic settled 24/24. OpenAI rejected all 24 with an <b>HTTP 400</b> — the driver sent a token-ceiling parameter the gpt-5.6 family no longer accepts. Nothing was billed on the failed leg.</p>
+            <span class="mono-line">SLA 24/48 · $0 on the rejected venue</span>
+          </div>
+          <div class="step3">
+            <div class="n" style="color:var(--red)">RUN 2 · EMPTY ANSWERS</div>
+            <h3>Billed for nothing useful</h3>
+            <p>The OpenAI leg re-ran and settled 24/24 — and returned <b>24 empty strings</b>, because a 16-token ceiling was spent entirely on reasoning. Billed, SLA met, output worthless. Published rather than dropped.</p>
+            <span class="mono-line">SLA 24/24 · 374 output tokens · 0 answers</span>
+          </div>
+          <div class="step3">
+            <div class="n" style="color:var(--green)">RUN 3 · CLEAN</div>
+            <h3>Same lines, right ceiling</h3>
+            <p>The same 24 lines at a <b>256-token ceiling</b>: 24/24 real answers, 971 output tokens, zero fallbacks, every deadline met, half of list paid.</p>
+            <span class="mono-line">SLA 24/24 · captured $0.000655 · 50.0%</span>
+          </div>
+          <div class="step3">
+            <div class="n" style="color:var(--red)">RUN 4 · TIER NOT ON SALE</div>
+            <h3>The venue was gated</h3>
+            <p>Groq's entire batch surface answered <b>403 not_available_for_plan</b> — file upload and batch listing alike — so submission never completed and all 24 jobs took the <b>sync fallback at list price</b>. Billed, every deadline met, <b>nothing captured</b>. The blocker is plan entitlement, not the driver.</p>
+            <span class="mono-line">SLA 24/24 · $0.00236 paid · 0.0% captured</span>
+          </div>
+          <div class="step3">
+            <div class="n" style="color:var(--red)">RUN 5 · GATED AGAIN</div>
+            <h3>And the probe missed it</h3>
+            <p>Mistral answered <b>402 · enable billing via the console</b> on batch create. Worse, an entitlement probe had cleared it a day earlier: a malformed request came back with a field-level validation error, so it looked reachable. <b>Validation runs before the billing check</b> — a request that cannot succeed can never reach the paywall.</p>
+            <span class="mono-line">SLA 24/24 · $0.000199 paid · 0.0% captured</span>
+          </div>
+          <div class="step3">
+            <div class="n" style="color:var(--green)">RUN 6 · A THIRD VENUE</div>
+            <h3>Gemini captures</h3>
+            <p>Google Gemini batch, once billing was enabled: <b>5/5, zero sync fallbacks, 50.0% captured</b>, 2m36s end to end. The first venue here beyond OpenAI and Anthropic to collect the spread rather than record why it could not.</p>
+            <span class="mono-line">SLA 5/5 · captured $0.00460 · 50.0%</span>
+          </div>
+          <div class="step3">
+            <div class="n" style="color:var(--red)">RUN 7 · WE LOST IT</div>
+            <h3>The batch worked. We didn't.</h3>
+            <p>Mistral's paywall was gone and the batch <b>succeeded — 24/24 in 6m16s</b>. offpeak threw it away: <code>_download</code> reached for a streaming response's <code>.text</code> before reading it, which raises <code>ResponseNotRead</code> — a <b>RuntimeError</b>, so the <code>getattr(…, None)</code> guard never applied. <code>run()</code> booked a finished batch as a polling failure and paid list for all 24. It had completed <b>32 seconds earlier</b>.</p>
+            <span class="mono-line">SLA 24/24 · paid twice · 0.0% captured</span>
+          </div>
+          <div class="step3">
+            <div class="n" style="color:var(--green)">RUN 8 · A FOURTH VENUE</div>
+            <h3>Mistral captures</h3>
+            <p>Same twenty-four lines, ninety minutes later, on the fixed driver: <b>24/24, zero fallbacks, 50.0% captured</b>, 33 seconds end to end. Nothing about the venue changed — only whether offpeak could read the file it was already being handed.</p>
+            <span class="mono-line">SLA 24/24 · captured $0.0000999 · 50.0%</span>
+          </div>
+        </div>
+        <div class="event"><span class="t">LESSON</span><span><b>The sync fallback rescues jobs that never came back — not jobs that came back failed.</b> Run 1 found that distinction the only way it can be found, and the driver now carries the fix. Run 7 found the sharper version: <b>a fallback that fires on a batch which already succeeded is not a rescue, it is a second bill.</b> Both were found by spending real money and publishing what it bought.</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sc rv">
+    <div class="wrap">
+      <div class="sec-rule"></div>
+      <p class="sec-eyebrow">03 // The parked book</p>
+      <h2 class="sec-title">The 6,000-job exhibit</h2>
+      <div class="case">
+        <i class="ck tl"></i><i class="ck tr"></i><i class="ck bl"></i><i class="ck br"></i>
+        <p class="desc" style="max-width:76ch">Re-priced against current published rates, the full demonstration book came to <b>$28.05 list against a $23.24 authorized ceiling</b> — over, so it was never built and never submitted. It stays parked until a partner conversation needs the exhibit, or until a partner's own runner settles it on their keys, which costs Offpeak nothing.</p>
+        <div class="booktbl">
+          <table>
+            <thead><tr><th>Job class</th><th>Model · venue</th><th class="num">Jobs</th><th class="num">Tokens / job</th><th class="num">List $</th><th class="num">Batch $</th></tr></thead>
+            <tbody>
+              <tr><td class="first">Summarize 5k-token doc chunks<span class="sub">ANTHROPIC BATCH</span></td><td>claude-sonnet-5</td><td class="num">1,000</td><td class="num">5,000 / 300</td><td class="num">13.00</td><td class="num g">6.50</td></tr>
+              <tr><td class="first">Summarize 5k-token doc chunks<span class="sub">OPENAI BATCH</span></td><td>gpt-5.6-terra</td><td class="num">1,000</td><td class="num">5,000 / 300</td><td class="num">13.60</td><td class="num g">6.80</td></tr>
+              <tr><td class="first">Classify short passages<span class="sub">ANTHROPIC BATCH</span></td><td>claude-haiku-4-5</td><td class="num">2,000</td><td class="num">500 / 20</td><td class="num">1.20</td><td class="num g">0.60</td></tr>
+              <tr><td class="first">Classify short passages<span class="sub">OPENAI BATCH</span></td><td>gpt-5.6-luna</td><td class="num">2,000</td><td class="num">500 / 20</td><td class="num">0.25</td><td class="num g">0.12</td></tr>
+              <tr><td class="first">Re-priced at current rates<span class="sub">~12.7M TOKENS</span></td><td>—</td><td class="num">6,000</td><td class="num" style="color:var(--red)">28.05</td><td class="num" style="color:var(--gold)">14.02</td><td class="num"></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="cta" style="margin-top:24px">
+          <a class="btn btn-gold" href="#/calculator">Price your own book</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sc rv">
+    <div class="wrap">
+      <div class="sec-rule"></div>
+      <p class="sec-eyebrow">03 // Honest caveats</p>
+      <h2 class="sec-title">What this record does not prove</h2>
+      <div class="case">
+        <i class="ck tl"></i><i class="ck tr"></i><i class="ck bl"></i><i class="ck br"></i>
+        <div class="steps3">
+          <div class="step3"><div class="n" style="color:var(--red)">SCALE</div><h3>Sub-cent is sub-cent</h3><p>The captured dollars are deliberately tiny. What is proved is the <b>path and the arithmetic</b>, on real bills. Production volume is a different claim and is not made here.</p></div>
+          <div class="step3"><div class="n" style="color:var(--red)">OWN KEYS</div><h3>Offpeak's own work</h3><p>These ran on Offpeak's keys against Offpeak's own book. <b>No buyer receipt is on this ledger yet</b> — that is the open half of the proof, and the point of the design-partner program.</p></div>
+          <div class="step3"><div class="n" style="color:var(--red)">RESCUES</div><h3>Insurance costs</h3><p>A job rescued at its deadline pays list, not batch. Zero fallbacks on the clean runs — but run 1 showed the fallback has a blind spot, and a real book will find more.</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+</section>
+
+<section class="page" id="p-prices">
+  <div class="hero short">
+    <div class="wrap hero-in">
+      <p class="welcome">Sheets watched daily</p>
+      <h1 class="name">Prices</h1>
+      <p class="role">Every number the desk quotes against, drawn</p>
+      <p class="tag">Three series, one page: the <b>token sheet</b> every venue publishes and the desk prices against, the <b>power marks</b> that show the same valley in three grids, and the <b>batch turnaround</b> our canaries measure — the number no sheet prints.</p>
+      <div class="hstrip">
+        <div><div class="n money" id="pvS1">4.0×</div><span class="c">Fast → batch<br>same model, same tokens</span></div>
+        <div><div class="n" id="pvS2">—</div><span class="c">Power · ERCOT<br>peak over off-peak, latest marked</span></div>
+        <div><div class="n" id="pvS3">—</div><span class="c">Batch turnaround<br>median, completed canaries</span></div>
+      </div>
+      <div class="cta">
+        <a class="btn btn-gold" href="https://github.com/offpeak-ai/offpeak/tree/board-data" rel="noopener" target="_blank">Raw data on board-data</a>
+        <a class="btn btn-ghost" href="#/calculator">Price your own book</a>
+      </div>
+      <p style="margin:26px 0 0"><span class="pv-live" id="pvLive">Sheet snapshot · board-data as committed</span></p>
+    </div>
+  </div>
+
+  <section class="sc tight rv">
+    <div class="wrap">
+      <div class="sec-rule"></div>
+      <p class="sec-eyebrow">01 // The sheet</p>
+      <h2 class="sec-title">Same model, three prices</h2>
+      <div class="case">
+        <i class="ck tl"></i><i class="ck tr"></i><i class="ck bl"></i><i class="ck br"></i>
+        <p class="desc">Every row is one model at one venue. The dim end is the <b>batch tier</b> — or, on DeepSeek, the <b>off-peak clock rate</b>, half of peak by time of day rather than by queue — the bright end is <b>standard</b>, and where a venue sells a <b>fast</b> tier it sits further right. The gap is what waiting is worth — log scale, because the sheet spans three orders of magnitude and the ratio is the durable figure, not the dollars.</p>
+        <div class="pv-panel">
+          <span class="tag-tl">Exhibit 01 · price sheet · $/M tokens</span>
+          <div class="pv-head">
+            <h3>Batch → standard → fast<span class="u" id="pvSheetUnit">output · $/M tokens</span></h3>
+            <div style="display:flex; gap:10px; flex-wrap:wrap">
+              <div class="pv-ctl" role="group" aria-label="Token leg"><button data-leg="o" aria-pressed="true">Output</button><button data-leg="i" aria-pressed="false">Input</button></div>
+              <div class="pv-ctl" role="group" aria-label="View"><button data-view="chart" data-for="sheet" aria-pressed="true">Chart</button><button data-view="table" data-for="sheet" aria-pressed="false">Table</button></div>
+            </div>
+          </div>
+          <div class="pv-legend">
+            <span><i class="dot" style="background:rgba(255,180,84,.45)"></i>Batch · half of standard</span>
+            <span><i class="dot" style="background:#FFB454"></i>Standard</span>
+            <span><i class="ring" style="color:#EAF2F7"></i>Fast · gpt-5.6 family · Opus 5 / 4.8 (preview)</span>
+            <span><i class="dot" style="background:rgba(255,180,84,.45)"></i>Off-peak · DeepSeek's clock lane · half of peak</span>
+          </div>
+          <div id="pvSheetChart"></div>
+          <div id="pvSheetTable" class="pv-tbl" hidden></div>
+          <p class="pv-note">SOURCE: <b>offpeak.prices</b>, PROVIDER PUBLIC SHEETS, SNAPSHOT <span class="sd">2026-08-30</span>, RE-VERIFIED FROM RENDERED PAGES. BATCH = EXACTLY HALF OF STANDARD ON EVERY ROW SHOWN. DEEPSEEK SELLS NO BATCH: ITS STANDARD ROW IS THE PEAK RATE (01:00–04:00 + 06:00–10:00 UTC, MON–FRI) AND THE DIM END IS THE OFF-PEAK RATE, HALF OF PEAK BY THE WALL CLOCK — SAME ARITHMETIC, DIFFERENT LANE. QWEN (ALIBABA MODEL STUDIO, INTERNATIONAL REGION) BATCHES AT 50%; QWEN3.7-MAX IS "LIMITED-TIME 50% OFF" WITH NO PUBLISHED END DATE. FAST = 2× STANDARD WHERE SOLD: THE GPT-5.6 FAMILY, AND CLAUDE OPUS 5 / OPUS 4.8 AS A RESEARCH PREVIEW (FIRST-PARTY API ONLY, NOT WITH BATCH) — 4× FAST → BATCH AT BOTH VENUES. SHEET RE-VERIFIED AGAINST THE RENDERED PROVIDER PAGES 2026-08-30. PROMOTIONAL RATES (SOL ≥ 2026-11-21 · GEMINI 3.6/3.7 FLASH ≤ 2026-12-31) CARRY THEIR EXPIRY AND RE-DERIVE, NEVER CACHED. CACHED-INPUT AND LONG-CONTEXT COLUMNS ARE NOT DRAWN.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sc rv">
+    <div class="wrap">
+      <div class="sec-rule"></div>
+      <p class="sec-eyebrow">02 // The marks</p>
+      <h2 class="sec-title">The same valley, three grids</h2>
+      <div class="case">
+        <i class="ck tl"></i><i class="ck tr"></i><i class="ck bl"></i><i class="ck br"></i>
+        <p class="desc">Power is the leg with a public day-ahead price. Each session the board quotes the <b>17:00–21:00 local</b> evening peak against the <b>00:00–05:00</b> trough and marks it the next morning. The ratio panel puts all three grids on one axis; the level panels show the dollars behind it, in each grid's own unit.</p>
+        <div class="pv-grid">
+          <div class="pv-panel" style="grid-column:1 / -1">
+            <span class="tag-tl">Exhibit 02 · window spread · marked sessions</span>
+            <div class="pv-head">
+              <h3>Peak over off-peak<span class="u">ratio · marked at 06:30Z</span></h3>
+              <div class="pv-ctl" role="group" aria-label="View"><button data-view="chart" data-for="spread" aria-pressed="true">Chart</button><button data-view="table" data-for="spread" aria-pressed="false">Table</button></div>
+            </div>
+            <div class="pv-legend" id="pvSpreadLegend"></div>
+            <div id="pvSpreadChart"></div>
+            <div id="pvSpreadTable" class="pv-tbl" hidden></div>
+          </div>
+          <div class="pv-panel"><span class="tag-tl">GB · Octopus Agile · region C</span><div class="pv-head"><h3>GB<span class="u">p/kWh</span></h3></div><div id="pvLvl0"></div></div>
+          <div class="pv-panel"><span class="tag-tl">CAISO · SP15 · day-ahead LMP</span><div class="pv-head"><h3>CAISO<span class="u">$/MWh</span></h3></div><div id="pvLvl1"></div></div>
+          <div class="pv-panel"><span class="tag-tl">ERCOT · Houston · day-ahead LMP</span><div class="pv-head"><h3>ERCOT<span class="u">$/MWh</span></h3></div><div id="pvLvl2"></div></div>
+        </div>
+        <p class="pv-note">SOURCES: GB — OCTOPUS AGILE DAY-AHEAD (KEYLESS, REGION C), HALF-HOURLY. CAISO SP15 AND ERCOT HOUSTON — DAY-AHEAD LMP VIA <b>gridstatus</b>, HOURLY. A SESSION SPANS 16:00Z–07:00Z; THE OFF-PEAK WINDOW LANDS THE FOLLOWING LOCAL MORNING, SO THE US LEGS MARK ONE DAY BEHIND GB. GAPS ARE SESSIONS WHOSE TROUGH HOURS HAD NOT LANDED WHEN THE MARK WAS TAKEN — RECORDED AS UNAVAILABLE, NEVER FILLED IN. EACH POINT IS ONE <b>nightly/&lt;session&gt;-mark.json</b> ON BOARD-DATA; RELATIVE LABELS ON THE AXIS, THE SESSION DATE ON HOVER AND IN THE TABLE.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="sc rv">
+    <div class="wrap">
+      <div class="sec-rule"></div>
+      <p class="sec-eyebrow">03 // The queue</p>
+      <h2 class="sec-title">How long the cheap lane takes</h2>
+      <div class="case">
+        <i class="ck tl"></i><i class="ck tr"></i><i class="ck bl"></i><i class="ck br"></i>
+        <p class="desc">No venue publishes this. Every session the desk submits a two-job canary into each venue's batch tier with a <b>24-hour window</b> and records how long it actually took. Most clear in minutes; one took eight and a half hours. A hollow marker at the top is a <b>censored</b> leg — still running when the session closed, so all we know is "longer than we watched."</p>
+
+        <p class="case-eyebrow" style="margin-top:8px">Coverage <em>//</em> what is measured, and what is not · as of <span class="sd">2026-08-30</span></p>
+        <p class="desc">The chart below draws only venues with a <b>measured queue</b> — four today. DeepSeek's clock lane is measured differently: there is no batch to wait for, so the probe records which <b>regime</b> the clock is in and the <b>synchronous latency</b> of a request made in it. Hourly rows stay in the private probe repo; this page carries the daily series, per-venue percentiles and counts — never hour-of-day.</p>
+        <div class="booktbl" style="margin-bottom:22px">
+          <table class="covtbl">
+            <thead><tr><th>Venue</th><th>Lane</th><th class="num">Discount</th><th>Status</th><th>Since</th><th>Note</th></tr></thead>
+            <tbody>
+              <tr><td class="first">OpenAI<span class="sub">BATCH API</span></td><td>batch</td><td class="num">50% off</td><td><span class="st filled">MEASURED</span></td><td>daily 08-23 · hourly 08-30</td><td class="note">Capturing. Two-job canary, 24 h window; the daily series is public, the hourly rows are private.</td></tr>
+              <tr><td class="first">Anthropic<span class="sub">MESSAGE BATCHES</span></td><td>batch</td><td class="num">50% off</td><td><span class="st filled">MEASURED</span></td><td>daily 08-23 · hourly 08-30</td><td class="note">Capturing. Same canary, same window.</td></tr>
+              <tr><td class="first">Google Gemini<span class="sub">BATCH MODE</span></td><td>batch</td><td class="num">50% off</td><td><span class="st filled">MEASURED</span></td><td>daily 08-26 · hourly 08-30</td><td class="note">Capturing. Same canary, same window.</td></tr>
+              <tr><td class="first">Mistral<span class="sub">BATCH API</span></td><td>batch</td><td class="num">50% off</td><td><span class="st filled">MEASURED</span></td><td>daily 08-26 · hourly 08-30</td><td class="note">Capturing. Same canary; the one eight-and-a-half-hour turnaround on the chart is this venue's.</td></tr>
+              <tr><td class="first">DeepSeek<span class="sub">CLOCK LANE · NO BATCH API</span></td><td>clock</td><td class="num">50% off-peak</td><td><span class="st filled">MEASURED</span></td><td>hourly 08-30</td><td class="note">Not a queue, so not on the chart. Observable is regime plus synchronous latency: first two observations 2.3 s and 2.6 s, off-peak, 2,000 / 300 tokens.</td></tr>
+              <tr><td class="first">Qwen<span class="sub">ALIBABA MODEL STUDIO · INTL</span></td><td>batch</td><td class="num">50% off</td><td><span class="st working">PROBATION</span></td><td>first live run 08-30</td><td class="note">Driver shipped in 0.2.7. Joins the chart once it has settled repeatedly.</td></tr>
+              <tr><td class="first">Groq<span class="sub">BATCH API</span></td><td>batch</td><td class="num">50% off</td><td><span class="st reroute">BLOCKED</span></td><td>—</td><td class="note">Batch tier answers 403 — plan-gated, and plan sales are suspended. Sync fallback only.</td></tr>
+              <tr><td class="first">xAI<span class="sub">FLAGSHIP</span></td><td>—</td><td class="num">−20% legacy only</td><td><span class="st idle">NO LANE</span></td><td>—</td><td class="note">No batch lane on the flagship; the discount is on legacy models only. Watched, not probed.</td></tr>
+              <tr><td class="first">AWS Bedrock<span class="sub">BATCH INFERENCE</span></td><td>batch</td><td class="num">50% off</td><td><span class="st idle">NOT BUILT</span></td><td>—</td><td class="note">Published; driver on partner pull.</td></tr>
+              <tr><td class="first">Azure<span class="sub">BATCH</span></td><td>batch</td><td class="num">—</td><td><span class="st idle">NOT BUILT</span></td><td>—</td><td class="note">On partner pull.</td></tr>
+              <tr><td class="first">Kimi<span class="sub">MOONSHOT</span></td><td>batch</td><td class="num">40% off</td><td><span class="st idle">NOT BUILT</span></td><td>—</td><td class="note">Published at 40%; not built.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="pv-panel">
+          <span class="tag-tl">Exhibit 03 · batch turnaround · canaries</span>
+          <div class="pv-head">
+            <h3>Turnaround by venue<span class="u">log scale · 24 h window</span></h3>
+            <div class="pv-ctl" role="group" aria-label="View"><button data-view="chart" data-for="queue" aria-pressed="true">Chart</button><button data-view="table" data-for="queue" aria-pressed="false">Table</button></div>
+          </div>
+          <div class="pv-legend" id="pvQueueLegend"></div>
+          <div id="pvQueueChart"></div>
+          <div id="pvQueueTable" class="pv-tbl" hidden></div>
+          <p style="margin:14px 0 0"><span class="pv-live" id="pvQueueStatus">Inline series · the floor</span></p>
+          <div id="pvQueueSummary" hidden>
+            <div class="pv-head" style="margin-top:22px"><h3>Per-venue summary<span class="u" id="pvQueueSummaryUnit">percentiles · counts</span></h3></div>
+            <div class="pv-tbl" id="pvQueueSummaryTable"></div>
+          </div>
+          <p class="pv-note">SOURCE: THE DAILY SERIES ABOVE IS <b>nightly/&lt;session&gt;-queue.json</b> ON BOARD-DATA AS COMMITTED, WRITTEN BY <b>tools/queue_probe.py</b>; THE PROBE NOW RUNS HOURLY FROM A PRIVATE REPO AND PUBLISHES BACK <b>nightly/QUEUE.md</b> AND <b>nightly/queue-summary.json</b> — PER-VENUE PERCENTILES AND COUNTS, NEVER HOUR-OF-DAY, NEVER A PER-ROW HOURLY SERIES. TWO JOBS PER LEG, ~30 TOKENS IN, SUB-CENT SPEND CAPPED AT $0.01 PER SESSION. SKIPPED LEGS (NO KEY IN THE ENVIRONMENT) ARE NOT DRAWN AND STAY IN THE TABLE. THIS IS THE REALIZED HALF OF THE RECORD — THE SHEET SAYS "WITHIN 24 HOURS"; THIS SAYS WHAT THAT MEANT.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+</section>
+
+</main>
+
+<footer>
+  <div class="in">
+    <div class="flinks">
+      <a href="#/">Desk</a><a href="#/calculator">Savings</a><a href="#/board">Board</a><a href="#/prices">Prices</a><a href="#/receipts">Receipts</a>
+      <a href="https://offpeak-ai.github.io/offpeak/" rel="noopener" target="_blank">↗ Docs</a>
+      <a href="https://github.com/offpeak-ai/offpeak" rel="noopener" target="_blank">↗ GitHub</a>
+      <a href="https://pypi.org/project/offpeak/" rel="noopener" target="_blank">↗ PyPI</a>
+    </div>
+    <b>OFFPEAK · INFERENCE FUTURES</b> — SAME MODEL · SAME TOKENS · MINUS THE URGENCY PREMIUM<br>
+    EVERYONE BUYS INTELLIGENCE AT SPOT; OFFPEAK IS THE FUTURES MARKET. QUOTES ARE MARKET OBSERVATION FROM OPEN DATA; SETTLEMENTS ARE TRACK RECORD FROM REAL RUNS — THIS SITE NEVER CONFUSES THE TWO.<br>
+    PRICES: PROVIDER PUBLIC SHEETS, SNAPSHOT <span class="sd">2026-08-30</span>, RE-VERIFIED FROM RENDERED PAGES; PROMOTIONAL RATES CARRY THEIR EXPIRY AND RE-DERIVE, NEVER CACHED. GRID: NESO · EIA-930 · OCTOPUS AGILE · GRIDSTATUS. DEMO BOOK CONTRACTS ARE SIMULATED AND LABELLED; CURVES, SHEETS AND SETTLED RECEIPTS ARE REAL.
+  </div>
+</footer>
+
+<div class="toast" id="toast" role="status" aria-live="polite">Link copied</div>
+
+<script>
+(function () {
+  "use strict";
+  var reduced = false;
+  try { reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) {}
+  document.documentElement.classList.add("boot");
+  document.body.classList.add("boot");
+
+  /* ======================= data of record ======================= */
+  /* offpeak.prices — the sheet this deploy shipped with, dated SHEET_DATE
+     below. USD per 1M tokens. A newer published sheet may replace it on load —
+     see adoptSheet(). */
+  var PRICES = {
+    /* Anthropic — platform.claude.com/docs/en/about-claude/pricing, re-verified
+       2026-08-28. Fast mode (research preview, first-party API only, not
+       combinable with Batch) is published on Opus 5 and Opus 4.8 at $10 / $50.
+       Sonnet 5's $2 / $10 is now the standard price — the scheduled 09-01 rise
+       to $3 / $15 will not occur. */
+    "claude-fable-5":   { i: 10,   o: 50   },
+    "claude-opus-5":    { i: 5,    o: 25,  fi: 10,  fo: 50, v: "FAST · RESEARCH PREVIEW · FIRST-PARTY ONLY" },
+    "claude-sonnet-5":  { i: 2,    o: 10,  v: "$2 / $10 NOW STANDARD, NOT PROMO" },
+    "claude-opus-4-8":  { i: 5,    o: 25,  fi: 10,  fo: 50, v: "FAST · RESEARCH PREVIEW · FIRST-PARTY ONLY" },
+    "claude-opus-4-7":  { i: 5,    o: 25   },
+    "claude-opus-4-6":  { i: 5,    o: 25   },
+    "claude-opus-4-5":  { i: 5,    o: 25   },
+    "claude-sonnet-4-6":{ i: 3,    o: 15   },
+    "claude-sonnet-4-5":{ i: 3,    o: 15   },
+    "claude-haiku-4-5": { i: 1,    o: 5    },
+    "gpt-5.6-sol":      { i: 4,    o: 20,  fi: 8,   fo: 40  },
+    "gpt-5.6-terra":    { i: 2,    o: 12,  fi: 4,   fo: 24  },
+    "gpt-5.6-luna":     { i: 0.20, o: 1.20, fi: 0.40, fo: 2.40 },
+    /* Groq — groq.com/pricing. Batch is the same 50%-of-standard rule, so it
+       derives like every other row. No fast tier: Groq does not sell one, and
+       a sheet should not imply an urgency spread nobody offers. */
+    "openai/gpt-oss-120b": { i: 0.15,  o: 0.60, v: "GROQ" },
+    "openai/gpt-oss-20b":  { i: 0.075, o: 0.30, v: "GROQ" },
+    /* Mistral — mistral.ai/pricing/api. Batch 50%, no fast tier. */
+    "mistral-medium":      { i: 1.50,  o: 7.50, v: "MISTRAL" },
+    "mistral-large":       { i: 0.50,  o: 1.50, v: "MISTRAL" },
+    "mistral-small":       { i: 0.15,  o: 0.60, v: "MISTRAL" },
+    "codestral":           { i: 0.30,  o: 0.90, v: "MISTRAL" },
+    /* Google — ai.google.dev/pricing. 3.7/3.6 Flash are introductory through
+       2026-12-31, then $1.50 / $7.50. Batch 50%, no fast tier. */
+    "gemini-3.7-flash":    { i: 0.75,  o: 3.75, v: "GOOGLE · INTRO ≤ 2026-12-31" },
+    "gemini-3.6-flash":    { i: 0.75,  o: 3.75, v: "GOOGLE · INTRO ≤ 2026-12-31" },
+    "gemini-3.5-flash":    { i: 1.50,  o: 9.00, v: "GOOGLE" },
+    "gemini-3.5-flash-lite": { i: 0.30, o: 2.50, v: "GOOGLE" },
+    /* DeepSeek — api-docs.deepseek.com/quick_start/pricing, read 2026-08-30.
+       The standard row is the PEAK rate; the page's own words are "off-peak
+       rates are half of the peak rates", so BATCH reproduces the off-peak
+       column exactly — but the lane is a clock, not a queue: peak is
+       01:00–04:00 and 06:00–10:00 UTC Mon–Fri, everything else and all
+       weekend is off-peak, decided per request. No batch API, no fast tier.
+       `l: "clock"` is what prices.lane_for() says, and every place this page
+       prints the word "batch" for a row reads it. */
+    "deepseek-v4-flash":            { i: 0.44, o: 1.32, v: "DEEPSEEK · CLOCK LANE, NOT BATCH", l: "clock" },
+    "deepseek-v4-pro":              { i: 1.32, o: 3.96, v: "DEEPSEEK · CLOCK LANE, NOT BATCH", l: "clock" },
+    "deepseek-v4-flash-vision-exp": { i: 0.44, o: 1.32, v: "DEEPSEEK · CLOCK LANE, NOT BATCH", l: "clock" },
+    /* Qwen — alibabacloud.com/help/en/model-studio/model-pricing, international
+       region, USD. Batch 50% on both legs, no fast tier. qwen3.7-max is marked
+       "limited-time 50% off" with no end date, so it carries no promo expiry —
+       a note needs a date to be one. */
+    "qwen3.7-max":                  { i: 2.50, o: 7.50, v: "QWEN · ALIBABA MODEL STUDIO, INTL" },
+    "qwen3.8-max":                  { i: 2.00, o: 6.00, v: "QWEN · ALIBABA MODEL STUDIO, INTL" }
+  };
+  var BATCH = 0.5;
+  /* "batch" for every row but the clock venue's; the word the page prints
+     beside a row's half price. */
+  function laneOf(p) { return p && p.l === "clock" ? "clock" : "batch"; }
+  function cheapWord(p) { return laneOf(p) === "clock" ? "off-peak" : "batch"; }
+
+  /* The date of the sheet inlined above — the one this deploy shipped with, and
+     the one every "snapshot ____" citation on the page reads from. It is not a
+     string typed into six paragraphs any more: `stampSheet()` writes it into
+     every `.sd` span, so a stale citation beside a fresh number is no longer a
+     thing that can happen by forgetting one. */
+  var SHEET_DATE = "2026-08-30";
+  var SHEET_SOURCE = "inline";
+
+  /* The same sheet, published as data. `tools/publish_sheet.py` writes it to the
+     board-data branch on every release; this page is deployed from Vercel on its
+     own cadence, so the two drift apart between deploys. On load we try to pick
+     the newer one up — and if anything at all is wrong with it, we keep the
+     inline object and say nothing. A pricing page that renders is worth more
+     than one that is current, and the inline sheet is never *wrong*, only old. */
+  var SHEET_URL = "https://raw.githubusercontent.com/offpeak-ai/offpeak/board-data/sheet/latest.json";
+  var SHEET_SCHEMA = "offpeak.price-sheet";
+
+  /* Venue tag for a model the inline sheet has never seen. The published sheet
+     is prices only — it carries no display metadata — so the label the charts
+     group by has to be derived from the id, the same way prices.py routes one. */
+  function venueTag(m) {
+    if (m.indexOf("claude") === 0) return "ANTHROPIC";
+    if (m.indexOf("gpt-5.6") === 0) return "OPENAI";
+    if (m.indexOf("openai/") === 0) return "GROQ";
+    if (m.indexOf("gemini") === 0) return "GOOGLE";
+    if (m.indexOf("deepseek") === 0) return "DEEPSEEK";
+    if (m.indexOf("qwen") === 0) return "QWEN";
+    if (m.indexOf("mistral") === 0 || m.indexOf("ministral") === 0
+        || m.indexOf("codestral") === 0 || m.indexOf("glm-") === 0
+        || m.indexOf("zai-") === 0) return "MISTRAL";
+    return "OTHER";
+  }
+
+  /* =========================== helpers ========================== */
+  function $(id) { return document.getElementById(id); }
+  function pad(n) { return (n < 10 ? "0" : "") + n; }
+  function usd(v) {
+    if (!isFinite(v)) v = 0;
+    if (v !== 0 && Math.abs(v) < 100) return "$" + v.toFixed(2);
+    return "$" + Math.round(v).toLocaleString("en-US");
+  }
+  function num(v, d) { return (isFinite(v) ? v : 0).toLocaleString("en-US", { maximumFractionDigits: d === undefined ? 0 : d }); }
+  function pct(v, d) { return (isFinite(v) ? v * 100 : 0).toFixed(d === undefined ? 1 : d) + "%"; }
+  function niceSpend(v) {
+    if (v < 10000) return Math.round(v / 500) * 500;
+    if (v < 100000) return Math.round(v / 1000) * 1000;
+    if (v < 1000000) return Math.round(v / 10000) * 10000;
+    return Math.round(v / 50000) * 50000;
+  }
+  function spendFromSlider(v) { return niceSpend(Math.pow(10, 3 + (v / 100) * 3.30103)); }
+  function sliderFromSpend(s) { return Math.max(0, Math.min(100, (Math.log(s) / Math.LN10 - 3) / 3.30103 * 100)); }
+
+  var toastEl = $("toast"), toastT = 0;
+  function toast(msg) {
+    if (!toastEl) return;
+    toastEl.textContent = msg; toastEl.classList.add("on");
+    clearTimeout(toastT); toastT = setTimeout(function () { toastEl.classList.remove("on"); }, 2200);
+  }
+
+
+  /* ======================= prices page (charts) ======================= */
+  /* Three series drawn from board-data. MARKS and QUEUE are mirrored inline
+     from nightly/*.json as committed; on load the page also asks board-data
+     for any newer sessions and appends them, so the charts keep up with the
+     cron without a redeploy. The sheet is PRICES above — one source on the
+     site, the same one the calculator prices against. */
+  var PV_MARKS = [
+    /* session, GB agile p/kWh [peak, off], CAISO SP15 $/MWh, ERCOT Houston $/MWh */
+    { d: "2026-08-20", gb: [35.41, 24.71], ca: [80.11, 63.18], er: [97.86, 24.81] },
+    { d: "2026-08-21", gb: [37.17, 24.82], ca: [82.52, 50.06], er: [93.83, 23.70] },
+    { d: "2026-08-22", gb: [34.85, 25.23], ca: [65.68, 45.00], er: [77.66, 26.07] },
+    { d: "2026-08-23", gb: [36.95, 24.56], ca: [71.81, 51.31], er: [58.17, 24.45] },
+    { d: "2026-08-24", gb: [37.50, 24.33], ca: [95.99, 71.23], er: [61.82, 22.34] },
+    { d: "2026-08-25", gb: [39.07, 23.17], ca: [null, null],   er: [72.69, 28.10] },
+    { d: "2026-08-26", gb: [38.41, 22.30], ca: [127.14, 78.09], er: [103.85, 49.42] },
+    { d: "2026-08-27", gb: [37.79, 25.78], ca: [124.14, 83.45], er: [83.81, 39.38] },
+    { d: "2026-08-28", gb: [null, null],   ca: [102.26, null],  er: [67.63, 29.15] },
+    { d: "2026-08-29", gb: [38.47, null],  ca: [64.44, 46.94],  er: [51.27, 21.28] }
+  ];
+  var PV_QUEUE = [
+    /* session, venue, model, elapsed seconds (null = censored), status */
+    { d: "2026-08-23", v: "anthropic", m: "claude-haiku-4-5", s: null, st: "skipped" },
+    { d: "2026-08-23", v: "openai", m: "gpt-5.6-luna", s: null, st: "skipped" },
+    { d: "2026-08-24", v: "anthropic", m: "claude-haiku-4-5", s: 122.8, st: "completed" },
+    { d: "2026-08-24", v: "openai", m: "gpt-5.6-luna", s: 94.9, st: "completed" },
+    { d: "2026-08-25", v: "anthropic", m: "claude-haiku-4-5", s: 291.0, st: "completed" },
+    { d: "2026-08-25", v: "openai", m: "gpt-5.6-luna", s: null, st: "censored" },
+    { d: "2026-08-26", v: "anthropic", m: "claude-haiku-4-5", s: 155.0, st: "completed" },
+    { d: "2026-08-26", v: "openai", m: "gpt-5.6-luna", s: null, st: "censored" },
+    { d: "2026-08-26", v: "gemini", m: "gemini-3.7-flash", s: 306.5, st: "completed" },
+    { d: "2026-08-26", v: "mistral", m: "mistral-small-latest", s: null, st: "censored" },
+    { d: "2026-08-27", v: "anthropic", m: "claude-haiku-4-5", s: 170.2, st: "completed" },
+    { d: "2026-08-27", v: "openai", m: "gpt-5.6-luna", s: 92.9, st: "completed" },
+    { d: "2026-08-27", v: "gemini", m: "gemini-3.7-flash", s: 200.1, st: "completed" },
+    { d: "2026-08-27", v: "mistral", m: "mistral-small-latest", s: 30570.0, st: "completed" },
+    { d: "2026-08-28", v: "anthropic", m: "claude-haiku-4-5", s: 138.0, st: "completed" },
+    { d: "2026-08-28", v: "openai", m: "gpt-5.6-luna", s: 155.0, st: "completed" },
+    { d: "2026-08-28", v: "gemini", m: "gemini-3.7-flash", s: 169.0, st: "completed" },
+    { d: "2026-08-28", v: "mistral", m: "mistral-small-latest", s: 1129.7, st: "completed" },
+    { d: "2026-08-29", v: "anthropic", m: "claude-haiku-4-5", s: 77.6, st: "completed" },
+    { d: "2026-08-29", v: "openai", m: "gpt-5.6-luna", s: 1577.3, st: "completed" },
+    { d: "2026-08-29", v: "gemini", m: "gemini-3.7-flash", s: 276.3, st: "completed" },
+    { d: "2026-08-29", v: "mistral", m: "mistral-small-latest", s: null, st: "open" }
+  ];
+  /* The daily queue files end here: the probe has moved to a private repo and
+     runs hourly, and what comes back to board-data is nightly/QUEUE.md plus
+     nightly/queue-summary.json — per-venue percentiles and counts. The inline
+     rows above are the floor of the chart, not a series that keeps growing;
+     the summary table under the chart is what grows. */
+  var PV_QUEUE_SUMMARY_URL = "https://raw.githubusercontent.com/offpeak-ai/offpeak/board-data/nightly/queue-summary.json";
+
+  /* GB carbon, the board's third leg: the naive 17–21 ÷ 00–05 ratio a cron
+     gets, and the dirtiest-5h ÷ cleanest-5h ratio a scheduler gets from the
+     same half-hourly NESO series. `kind` is mark (actuals, 06:30Z) or quote
+     (forecast, 19:00Z). Hand-entered for the three sessions the prose beside
+     the chart discusses; every later session is read from
+     nightly/<session>-mark.json on load — carbon_gb.cleanest_5h.avg and
+     carbon_gb.dirtiest_5h.avg for the chosen window, the two named windows
+     for the naive one. A null on either side is a gap, never a fill. */
+  var SESSIONS = [
+    { d: "2026-08-20", kind: "mark",  naive: 1.03, chosen: 1.13 },
+    { d: "2026-08-21", kind: "mark",  naive: 2.10, chosen: 2.25 },
+    { d: "2026-08-22", kind: "quote", naive: 0.74, chosen: 1.44 }
+  ];
+  /* Validated categorical order (dark surface, CVD ΔE ≥ 11, normal ≥ 18). Color
+     follows the entity: a grid or venue keeps its hue whatever else is drawn. */
+  var PV_GRID = [
+    { k: "gb", name: "GB · Agile", unit: "p/kWh", c: "#FFB454" },
+    { k: "ca", name: "CAISO · SP15", unit: "$/MWh", c: "#45EACF" },
+    { k: "er", name: "ERCOT · Houston", unit: "$/MWh", c: "#7FB4FF" }
+  ];
+  var PV_VENUE = { anthropic: "#FFB454", openai: "#45EACF", gemini: "#7FB4FF", mistral: "#F48FB1" };
+  var PV_VENUE_ORDER = ["anthropic", "openai", "gemini", "mistral"];
+
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;" }[c]; }); }
+  function fmt(v, d) { return v != null && isFinite(v) ? v.toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d }) : "—"; }
+  function fmtDur(s) {
+    if (s == null) return "—";
+    if (s < 60) return Math.round(s) + "s";
+    if (s < 3600) return Math.floor(s / 60) + "m " + pad(Math.round(s % 60)) + "s";
+    return Math.floor(s / 3600) + "h " + pad(Math.round((s % 3600) / 60)) + "m";
+  }
+  function relLabel(i, n) { return i === n - 1 ? "LATEST" : "−" + (n - 1 - i); }
+  function shortDate(d) { return d.slice(5).replace("-", "·"); }
+
+  /* one tooltip for every chart */
+  var tip = document.createElement("div"); tip.className = "pv-tip"; tip.setAttribute("role", "status"); document.body.appendChild(tip);
+  function tipShow(x, y, head, rows) {
+    while (tip.firstChild) tip.removeChild(tip.firstChild);
+    var h = document.createElement("div"); h.className = "th"; h.textContent = head; tip.appendChild(h);
+    rows.forEach(function (r) {
+      var d = document.createElement("div"); d.className = "r";
+      var i = document.createElement("i"); i.style.background = r.c || "transparent"; d.appendChild(i);
+      var b = document.createElement("b"); b.textContent = r.v; d.appendChild(b);
+      var n = document.createElement("span"); n.className = "n"; n.textContent = r.n; d.appendChild(n);
+      tip.appendChild(d);
+    });
+    tip.classList.add("on");
+    var w = tip.offsetWidth, hh = tip.offsetHeight;
+    var left = x + 16, top = y + 16;
+    if (left + w > window.innerWidth - 12) left = x - w - 16;
+    if (top + hh > window.innerHeight - 12) top = y - hh - 16;
+    tip.style.left = left + "px"; tip.style.top = top + "px";
+  }
+  function tipHide() { tip.classList.remove("on"); }
+  function bindTips(svg) {
+    Array.prototype.forEach.call(svg.querySelectorAll("[data-tip]"), function (el) {
+      var show = function (e) {
+        var t = JSON.parse(el.getAttribute("data-tip"));
+        var p = e && e.clientX != null ? e : (function () { var b = el.getBoundingClientRect(); return { clientX: b.left + b.width / 2, clientY: b.top }; })();
+        tipShow(p.clientX, p.clientY, t.h, t.r);
+        var xh = svg.querySelector(".xh"); if (xh && el.hasAttribute("data-x")) { xh.setAttribute("x1", el.getAttribute("data-x")); xh.setAttribute("x2", el.getAttribute("data-x")); xh.style.display = ""; }
+      };
+      var hide = function () { tipHide(); var xh = svg.querySelector(".xh"); if (xh) xh.style.display = "none"; };
+      el.addEventListener("pointermove", show); el.addEventListener("pointerleave", hide);
+      el.addEventListener("focus", show); el.addEventListener("blur", hide);
+      el.setAttribute("tabindex", "0");
+    });
+  }
+  function mount(id, html) { var el = $(id); if (el) el.innerHTML = html; var s = el && el.querySelector("svg"); if (s) bindTips(s); return s; }
+
+  /* ---------- 01 the sheet: dumbbell on a log axis ---------- */
+  var PV_LEG = "o";
+  function venueOf(m, p) {
+    if (m.indexOf("claude") === 0) return "ANTHROPIC";
+    if (p.v) return p.v.split(" ·")[0];
+    if (m.indexOf("gpt-5.6") === 0) return "OPENAI";
+    return "OTHER";
+  }
+  function sheetRows() {
+    var groups = {}, order = [];
+    Object.keys(PRICES).forEach(function (m) {
+      var p = PRICES[m], v = venueOf(m, p);
+      if (!groups[v]) { groups[v] = []; order.push(v); }
+      var std = PV_LEG === "o" ? p.o : p.i, fast = PV_LEG === "o" ? p.fo : p.fi;
+      groups[v].push({ m: m, v: v, std: std, batch: std * BATCH, fast: fast, promo: p.v && p.v.indexOf("INTRO") >= 0, lane: laneOf(p) });
+    });
+    order.forEach(function (v) { groups[v].sort(function (a, b) { return b.std - a.std; }); });
+    return { order: order, groups: groups };
+  }
+  function renderSheet() {
+    var data = sheetRows(), W = 900, L = 208, R = 70, rowH = 21, gapH = 26;
+    var rows = []; data.order.forEach(function (v) { rows.push({ hdr: v }); data.groups[v].forEach(function (r) { rows.push(r); }); });
+    var min = Infinity, max = 0;
+    rows.forEach(function (r) { if (r.hdr) return; min = Math.min(min, r.batch); max = Math.max(max, r.fast || r.std); });
+    var lo = Math.log10(min) - 0.15, hi = Math.log10(max) + 0.15;
+    var X = function (v) { return L + (Math.log10(v) - lo) / (hi - lo) * (W - L - R); };
+    var top = 30, y = top, H;
+    var body = "", ticks = "";
+    rows.forEach(function (r) {
+      if (r.hdr) { y += gapH; body += '<text class="grp" x="0" y="' + (y - 8) + '">' + esc(r.hdr) + "</text>"; return; }
+      var cy = y + rowH / 2, isSol = r.m === "gpt-5.6-sol", clock = r.lane === "clock", cheap = clock ? "off-peak" : "batch";
+      var xb = X(r.batch), xs = X(r.std), xf = r.fast ? X(r.fast) : null;
+      var tipRows = [{ c: "rgba(255,180,84,.45)", v: "$" + fmt(r.batch, 2), n: cheap + (clock ? " · clock lane" : "") }, { c: "#FFB454", v: "$" + fmt(r.std, 2), n: clock ? "standard · peak" : "standard" }];
+      if (r.fast) tipRows.push({ c: "#EAF2F7", v: "$" + fmt(r.fast, 2), n: "fast · " + fmt(r.fast / r.batch, 1) + "× " + cheap });
+      var tipj = esc(JSON.stringify({ h: r.m + " · " + r.v + " · " + (PV_LEG === "o" ? "output" : "input") + " $/M", r: tipRows }));
+      body += '<g class="row" data-tip="' + tipj + '">';
+      body += '<rect class="rowbg" x="0" y="' + y + '" width="' + W + '" height="' + rowH + '" fill="transparent"/>';
+      body += '<text class="lab' + (isSol ? "" : " dim") + '" x="' + (L - 14) + '" y="' + (cy + 3.5) + '" text-anchor="end">' + esc(r.m) + (r.promo ? ' <tspan class="tick">PROMO</tspan>' : "") + "</text>";
+      body += '<line x1="' + xb + '" y1="' + cy + '" x2="' + (xf || xs) + '" y2="' + cy + '" stroke="#FFB454" stroke-opacity="' + (isSol ? ".55" : ".28") + '" stroke-width="2"/>';
+      body += '<circle class="mk" cx="' + xb + '" cy="' + cy + '" r="4.5" fill="#FFB454" fill-opacity=".45"/>';
+      body += '<circle class="mk" cx="' + xs + '" cy="' + cy + '" r="4.5" fill="#FFB454"/>';
+      if (xf) body += '<circle class="mk" cx="' + xf + '" cy="' + cy + '" r="4" fill="#111925" stroke="#EAF2F7" stroke-width="2"/>';
+      /* the clock venue's cheap end is a time of day, not a queue — say so on the row */
+      if (clock) body += '<text class="tick" x="' + (xb - 9) + '" y="' + (cy + 3.5) + '" text-anchor="end" style="fill:var(--muted); letter-spacing:.16em">OFF-PEAK</text>';
+      body += '<text class="tick" x="' + (W - R + 14) + '" y="' + (cy + 3.5) + '" style="fill:var(--muted)">$' + fmt(r.std, 2) + "</text>";
+      if (isSol) body += '<text class="tick" x="' + ((xb + xf) / 2) + '" y="' + (cy - 8) + '" text-anchor="middle" style="fill:#FFB454; letter-spacing:.18em">' + fmt(r.fast / r.batch, 1) + "× FAST → BATCH</text>";
+      body += "</g>";
+      y += rowH;
+    });
+    H = y + 34;
+    var tv = [0.1, 0.3, 1, 3, 10, 30]; tv.forEach(function (t) { if (t < min / 1.5 || t > max * 1.5) return; var x = X(t);
+      ticks += '<line class="grid" x1="' + x + '" y1="' + top + '" x2="' + x + '" y2="' + (H - 30) + '"/><text class="tick" x="' + x + '" y="' + (H - 12) + '" text-anchor="middle">$' + t + "</text>"; });
+    var head = '<text class="tick" x="' + (W - R + 14) + '" y="' + (top + 14) + '">STANDARD</text><text class="tick" x="' + L + '" y="' + (top + 14) + '">$/M TOKENS · LOG</text>';
+    mount("pvSheetChart", '<svg class="pv" viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="Dumbbell chart of batch, standard and fast prices per model on a log axis">' + ticks + head + body + "</svg>");
+    $("pvSheetUnit").textContent = (PV_LEG === "o" ? "output" : "input") + " · $/M tokens";
+    var t = '<table><thead><tr><th>Model</th><th>Venue</th><th>Lane</th><th class="num">Batch / off-peak</th><th class="num">Standard</th><th class="num">Fast</th><th class="num">Fast → cheap</th></tr></thead><tbody>';
+    rows.forEach(function (r) { if (r.hdr) return; t += '<tr><td class="first">' + esc(r.m) + "</td><td>" + esc(r.v) + "</td><td>" + (r.lane === "clock" ? "clock · off-peak" : "batch") + '</td><td class="num">$' + fmt(r.batch, 2) + '</td><td class="num">$' + fmt(r.std, 2) + '</td><td class="num">' + (r.fast ? "$" + fmt(r.fast, 2) : "—") + '</td><td class="num">' + (r.fast ? fmt(r.fast / r.batch, 1) + "×" : "—") + "</td></tr>"; });
+    $("pvSheetTable").innerHTML = t + "</tbody></table>";
+  }
+
+  /* ---------- 02 the marks: ratio panel + level small multiples ---------- */
+  function lineChart(opts) {
+    var W = opts.W || 900, H = opts.H || 260, L = 44, R = opts.R || 76, T = 18, B = 34;
+    var n = opts.labels.length, xs = function (i) { return L + (n > 1 ? i / (n - 1) : 0.5) * (W - L - R); };
+    var ymax = opts.ymax, ymin = opts.ymin || 0, ys = function (v) { return T + (1 - (v - ymin) / (ymax - ymin)) * (H - T - B); };
+    var s = "", ticks = opts.ticks;
+    ticks.forEach(function (t) { s += '<line class="grid" x1="' + L + '" y1="' + ys(t) + '" x2="' + (W - R) + '" y2="' + ys(t) + '"/><text class="tick" x="' + (L - 8) + '" y="' + (ys(t) + 3) + '" text-anchor="end">' + esc(opts.tickFmt(t)) + "</text>"; });
+    if (opts.baseline != null) s += '<line x1="' + L + '" y1="' + ys(opts.baseline) + '" x2="' + (W - R) + '" y2="' + ys(opts.baseline) + '" stroke="#FFB454" stroke-opacity=".8" stroke-width="1"/><text class="tick" x="' + (W - R + 8) + '" y="' + (ys(opts.baseline) + 3) + '" fill="#FFB454" style="fill:#FFB454">' + esc(opts.baselineLabel || "") + "</text>";
+    s += '<line class="axis" x1="' + L + '" y1="' + ys(ymin) + '" x2="' + (W - R) + '" y2="' + ys(ymin) + '"/>';
+    opts.labels.forEach(function (lb, i) { s += '<text class="tick" x="' + xs(i) + '" y="' + (H - 12) + '" text-anchor="middle">' + esc(lb) + "</text>"; });
+    if (opts.band) { /* faint fill between the first two series */
+      var a = opts.series[0].v, b = opts.series[1].v, seg = [], cur = [];
+      for (var i = 0; i < n; i++) { if (a[i] != null && b[i] != null) cur.push(i); else if (cur.length) { seg.push(cur); cur = []; } } if (cur.length) seg.push(cur);
+      seg.forEach(function (idx) { var p = idx.map(function (i) { return xs(i) + "," + ys(a[i]); }).concat(idx.slice().reverse().map(function (i) { return xs(i) + "," + ys(b[i]); })); s += '<polygon points="' + p.join(" ") + '" fill="' + opts.series[0].c + '" fill-opacity=".08"/>'; });
+    }
+    var endLabels = [];
+    opts.series.forEach(function (sr) {
+      var d = "", last = null;
+      sr.v.forEach(function (v, i) { if (v == null) { d += " "; return; } d += (d.slice(-1) === " " || d === "" ? "M" : "L") + xs(i) + "," + ys(v); last = i; });
+      s += '<path d="' + d.trim() + '" fill="none" stroke="' + sr.c + '" stroke-opacity="' + (sr.o || 1) + '" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"' + (sr.dash ? ' stroke-dasharray="3 4"' : "") + "/>";
+      sr.v.forEach(function (v, i) { if (v == null) return; s += '<circle class="mk" cx="' + xs(i) + '" cy="' + ys(v) + '" r="3.5" fill="' + sr.c + '" fill-opacity="' + (sr.o || 1) + '" stroke="#111925" stroke-width="2"/>'; });
+      if (last != null && sr.label) endLabels.push({ x: W - R + 10, y: ys(sr.v[last]), c: sr.c, t: sr.label });
+    });
+    endLabels.sort(function (a, b) { return a.y - b.y; });
+    endLabels.forEach(function (l, i) { if (i > 0 && l.y - endLabels[i - 1].y < 13) l.y = endLabels[i - 1].y + 13; s += '<text class="lab" x="' + l.x + '" y="' + (l.y + 3.5) + '" style="fill:' + l.c + '">' + esc(l.t) + "</text>"; });
+    s += '<line class="xh" x1="0" y1="' + T + '" x2="0" y2="' + (H - B) + '" style="display:none"/>';
+    var cw = n > 1 ? (W - L - R) / (n - 1) : W - L - R;
+    opts.labels.forEach(function (lb, i) {
+      var rows = opts.series.map(function (sr) { return { c: sr.c, v: sr.v[i] == null ? "unavailable" : opts.valFmt(sr.v[i]), n: sr.name }; });
+      s += '<rect class="hit" data-x="' + xs(i) + '" data-tip="' + esc(JSON.stringify({ h: opts.heads[i], r: rows })) + '" x="' + (xs(i) - cw / 2) + '" y="' + T + '" width="' + cw + '" height="' + (H - T - B) + '"/>';
+    });
+    return '<svg class="pv" viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="' + esc(opts.aria) + '">' + s + "</svg>";
+  }
+  function renderMarks() {
+    var n = PV_MARKS.length, labels = PV_MARKS.map(function (m, i) { return relLabel(i, n); }), heads = PV_MARKS.map(function (m) { return "Session " + m.d; });
+    var ratio = function (k) { return PV_MARKS.map(function (m) { var p = m[k]; return p[0] != null && p[1] != null && p[1] > 0 ? p[0] / p[1] : null; }); };
+    var series = PV_GRID.map(function (g) { return { name: g.name, c: g.c, v: ratio(g.k), label: g.name.split(" ·")[0] }; });
+    var all = [].concat.apply([], series.map(function (s) { return s.v.filter(function (v) { return v != null; }); }));
+    var ymax = Math.max(2, Math.ceil(Math.max.apply(null, all) * 2) / 2 + 0.5);
+    var tk = []; for (var t = 1; t <= ymax; t += 1) tk.push(t);
+    mount("pvSpreadChart", lineChart({ labels: labels, heads: heads, series: series, ymin: 0.5, ymax: ymax, ticks: tk, tickFmt: function (t) { return t.toFixed(1) + "×"; }, valFmt: function (v) { return v.toFixed(2) + "×"; }, baseline: 1, baselineLabel: "PARITY", aria: "Line chart of evening-peak over overnight-trough power price ratio per session for GB, CAISO and ERCOT" }));
+    $("pvSpreadLegend").innerHTML = PV_GRID.map(function (g) { return '<span><i style="background:' + g.c + '"></i>' + esc(g.name) + "</span>"; }).join("") + '<span><i style="background:#FFB454; height:1px"></i>Parity · no valley</span>';
+    PV_GRID.forEach(function (g, gi) {
+      var peak = PV_MARKS.map(function (m) { return m[g.k][0]; }), off = PV_MARKS.map(function (m) { return m[g.k][1]; });
+      var mx = Math.max.apply(null, peak.concat(off).filter(function (v) { return v != null; }));
+      var step = mx > 100 ? 50 : mx > 40 ? 20 : 10, ymax2 = Math.ceil(mx / step) * step + step * 0.2, tk2 = []; for (var t2 = 0; t2 <= ymax2; t2 += step) tk2.push(t2);
+      mount("pvLvl" + gi, lineChart({ W: 420, H: 230, R: 64, labels: labels.map(function (l, i) { return i === n - 1 ? "LATEST" : (i % 2 === (n - 1) % 2 ? l : ""); }), heads: heads, band: true,
+        series: [{ name: "peak 17–21", c: g.c, v: peak, label: "PEAK" }, { name: "off-peak 00–05", c: g.c, o: .55, dash: true, v: off, label: "OFF-PEAK" }],
+        ymax: ymax2, ticks: tk2, tickFmt: function (t) { return String(t); }, valFmt: function (v) { return fmt(v, 2) + " " + g.unit; },
+        aria: g.name + " peak and off-peak window prices per session in " + g.unit }));
+    });
+    var t3 = '<table><thead><tr><th>Session</th>' + PV_GRID.map(function (g) { return '<th class="num">' + esc(g.name) + " peak</th><th class=\"num\">off-peak</th><th class=\"num\">ratio</th>"; }).join("") + "</tr></thead><tbody>";
+    PV_MARKS.forEach(function (m) { t3 += '<tr><td class="first">' + m.d + "</td>" + PV_GRID.map(function (g) { var p = m[g.k]; return '<td class="num">' + fmt(p[0], 2) + '</td><td class="num">' + fmt(p[1], 2) + '</td><td class="num">' + (p[0] != null && p[1] != null ? (p[0] / p[1]).toFixed(2) + "×" : "—") + "</td>"; }).join("") + "</tr>"; });
+    $("pvSpreadTable").innerHTML = t3 + "</tbody></table>";
+    var er = ratio("er").filter(function (v) { return v != null; }); if (er.length) $("pvS2").textContent = er[er.length - 1].toFixed(2) + "×";
+  }
+
+  /* ---------- 03 the queue: turnaround dot plot on a log axis ---------- */
+  function renderQueue() {
+    var dates = []; PV_QUEUE.forEach(function (q) { if (dates.indexOf(q.d) < 0) dates.push(q.d); }); dates.sort();
+    var n = dates.length, W = 900, H = 300, L = 54, R = 96, T = 22, B = 34, CEN = 86400;
+    var xs = function (i) { return L + (n > 1 ? i / (n - 1) : 0.5) * (W - L - R); };
+    var lo = Math.log10(60), hi = Math.log10(CEN * 1.6), ys = function (s) { return T + (1 - (Math.log10(s) - lo) / (hi - lo)) * (H - T - B); };
+    var s = "";
+    [[60, "1 MIN"], [600, "10 MIN"], [3600, "1 H"], [3600 * 8, "8 H"], [CEN, "24 H"]].forEach(function (t) { s += '<line class="' + (t[0] === CEN ? "axis" : "grid") + '" x1="' + L + '" y1="' + ys(t[0]) + '" x2="' + (W - R) + '" y2="' + ys(t[0]) + '"/><text class="tick" x="' + (L - 8) + '" y="' + (ys(t[0]) + 3) + '" text-anchor="end">' + t[1] + "</text>"; });
+    /* above the line, not beside it: the latest session's censored markers sit on the line's right end */
+    s += '<text class="tick" x="' + (W - R) + '" y="' + (ys(CEN) - 7) + '" text-anchor="end" style="letter-spacing:.18em">DECLARED WINDOW</text>';
+    dates.forEach(function (d, i) { s += '<text class="tick" x="' + xs(i) + '" y="' + (H - 12) + '" text-anchor="middle">' + relLabel(i, n) + "</text>"; });
+    var venues = PV_VENUE_ORDER.filter(function (v) { return PV_QUEUE.some(function (q) { return q.v === v; }); });
+    var lastPt = {};
+    PV_QUEUE.forEach(function (q) {
+      if (q.st === "skipped") return;
+      var vi = venues.indexOf(q.v), off = (vi - (venues.length - 1) / 2) * 9, x = xs(dates.indexOf(q.d)) + off, c = PV_VENUE[q.v] || "#9FB1C1";
+      var cens = q.s == null, y = cens ? ys(CEN) : ys(Math.max(q.s, 60));
+      var tp = esc(JSON.stringify({ h: q.v + " · " + q.m + " · " + q.d, r: [{ c: c, v: cens ? "> session · " + (q.st === "open" ? "open" : "censored") : fmtDur(q.s), n: cens ? "still running at close" : "batch turnaround · 24 h window" }] }));
+      s += '<g class="pt" data-tip="' + tp + '"><circle class="hit" cx="' + x + '" cy="' + y + '" r="13"/>';
+      s += cens ? '<circle class="mk" cx="' + x + '" cy="' + y + '" r="4.5" fill="#111925" stroke="' + c + '" stroke-width="2"/>' : '<circle class="mk" cx="' + x + '" cy="' + y + '" r="5" fill="' + c + '" stroke="#111925" stroke-width="2"/>';
+      s += "</g>";
+      if (!cens) lastPt[q.v] = { x: x, y: y };
+    });
+    var placed = [];
+    venues.forEach(function (v) { var p = lastPt[v]; if (!p) return; var y = p.y; placed.forEach(function (py) { if (Math.abs(py - y) < 12) y = py + 12; }); placed.push(y); s += '<text class="lab" x="' + (W - R + 12) + '" y="' + (y + 3.5) + '" style="fill:' + PV_VENUE[v] + '">' + esc(v.toUpperCase()) + "</text>"; });
+    mount("pvQueueChart", '<svg class="pv" viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="Dot plot of batch turnaround per venue per session on a log time axis; hollow markers at the 24 hour line are censored legs">' + s + "</svg>");
+    $("pvQueueLegend").innerHTML = venues.map(function (v) { return '<span><i class="dot" style="background:' + PV_VENUE[v] + '"></i>' + esc(v) + "</span>"; }).join("") + '<span><i class="ring" style="color:#9FB1C1"></i>Censored · ran past the session</span>';
+    var t = '<table><thead><tr><th>Session</th><th>Venue</th><th>Model</th><th class="num">Turnaround</th><th>Status</th></tr></thead><tbody>';
+    PV_QUEUE.forEach(function (q) { t += '<tr><td class="first">' + q.d + "</td><td>" + esc(q.v) + "</td><td>" + esc(q.m) + '</td><td class="num">' + fmtDur(q.s) + '</td><td><span class="st ' + (q.st === "completed" ? "filled" : q.st === "censored" || q.st === "open" ? "working" : q.st === "skipped" ? "idle" : "reroute") + '">' + esc(q.st.toUpperCase()) + "</span></td></tr>"; });
+    $("pvQueueTable").innerHTML = t + "</tbody></table>";
+    var done = PV_QUEUE.filter(function (q) { return q.s != null; }).map(function (q) { return q.s; }).sort(function (a, b) { return a - b; });
+    if (done.length) $("pvS3").textContent = fmtDur(done[Math.floor(done.length / 2)]);
+  }
+  /* The per-venue summary the private probe publishes back. Percentiles and
+     counts only; drawn as a table, since a handful of buckets is a table. Stays
+     hidden until the document has actually arrived and parsed. */
+  function renderQueueSummary(doc) {
+    var box = $("pvQueueSummary"); if (!box) return false;
+    var b = doc && Array.isArray(doc.buckets) ? doc.buckets.filter(function (x) { return x && x.venue; }) : [];
+    if (!b.length) { box.hidden = true; return false; }
+    var cnt = function (v) { return v == null ? "—" : String(v); };
+    var order = function (v) { var i = PV_VENUE_ORDER.indexOf(v); return i < 0 ? 99 : i; };
+    b.sort(function (x, y) { return order(x.venue) - order(y.venue) || String(x.window).localeCompare(String(y.window)); });
+    var t = '<table><thead><tr><th>Venue</th><th>Window</th><th class="num">n</th><th class="num">p50</th><th class="num">p90</th><th class="num">p99</th><th class="num">max</th><th class="num">open</th><th class="num">expired</th><th class="num">overran</th><th class="num">censored</th></tr></thead><tbody>';
+    b.forEach(function (x) {
+      var c = PV_VENUE[x.venue] || "#9FB1C1";
+      t += '<tr><td class="first"><i class="dot" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:' + c + ';margin-right:8px;vertical-align:1px"></i>' + esc(x.venue) + "</td><td>" + esc(x.window == null ? "—" : x.window) + '</td><td class="num">' + cnt(x.n) + '</td><td class="num">' + fmtDur(x.p50_s) + '</td><td class="num">' + fmtDur(x.p90_s) + '</td><td class="num">' + fmtDur(x.p99_s) + '</td><td class="num">' + fmtDur(x.max_s) + '</td><td class="num">' + cnt(x.open) + '</td><td class="num' + (x.expired > 0 ? " down" : "") + '">' + cnt(x.expired) + '</td><td class="num' + (x.overran > 0 ? " down" : "") + '">' + cnt(x.overran) + '</td><td class="num">' + cnt(x.censored) + "</td></tr>";
+    });
+    $("pvQueueSummaryTable").innerHTML = t + "</tbody></table>";
+    var u = $("pvQueueSummaryUnit");
+    if (u) u.textContent = "percentiles · counts" + (doc.tail_started ? " · tail since " + doc.tail_started : "") + (doc.generated_utc ? " · " + String(doc.generated_utc).slice(0, 16).replace("T", " ") + "Z" : "");
+    box.hidden = false;
+    return true;
+  }
+  function queueStatus(addedLegs, summaryOn) {
+    var el = $("pvQueueStatus"); if (!el) return;
+    var last = PV_QUEUE.length ? PV_QUEUE[PV_QUEUE.length - 1].d : "";
+    var txt = addedLegs
+      ? "Board-data · " + addedLegs + " newer leg" + (addedLegs === 1 ? "" : "s") + " on load · through " + last
+      : "Inline series through " + last + " · the floor, not a growing series";
+    if (summaryOn) txt += " · summary published";
+    el.textContent = txt;
+    el.classList.toggle("on", !!(addedLegs || summaryOn));
+  }
+
+  /* ---------- board · 03 the carbon leg: paired bars per session ---------- */
+  /* Same drawing the page shipped with when it was three hand-placed sessions:
+     two bars per session on one 0→x axis, parity as an amber rule, anything
+     left of it in red. Rows are sessions in date order; a null on either
+     ratio is drawn as no bar and "—" in the tooltip. */
+  function renderCarbon() {
+    var el = $("cbChart"); if (!el) return;
+    var n = SESSIONS.length, W = 560, X0 = 104, X1 = 520, bar = 16, gap = 4, block = 60, top = 48;
+    var all = []; SESSIONS.forEach(function (s) { if (s.naive != null) all.push(s.naive); if (s.chosen != null) all.push(s.chosen); });
+    var xmax = Math.max(2.5, Math.ceil((Math.max.apply(null, all.concat([0])) + 0.2) * 2) / 2);
+    var X = function (v) { return X0 + (v / xmax) * (X1 - X0); };
+    var axisY = top + n * block - 14, H = axisY + 20, s = "";
+    s += '<rect x="' + X0 + '" y="40" width="' + (X(1) - X0) + '" height="' + (axisY - 46) + '" fill="rgba(255,107,107,.05)"/>';
+    var ticks = []; for (var t = 0; t <= xmax + 1e-9; t += 1) ticks.push(t); if (ticks[ticks.length - 1] < xmax) ticks.push(xmax);
+    ticks.forEach(function (t) { if (t > 0 && t !== 1) s += '<line x1="' + X(t) + '" y1="40" x2="' + X(t) + '" y2="' + (axisY - 6) + '" stroke="rgba(255,255,255,.05)"/>'; });
+    s += '<line x1="' + X(1) + '" y1="34" x2="' + X(1) + '" y2="' + axisY + '" stroke="#FFB454" stroke-width="1" class="dashline" opacity=".85"/>';
+    s += '<text x="' + X(1) + '" y="26" class="ax" fill="#FFB454" text-anchor="middle" style="letter-spacing:.2em">PARITY</text>';
+    SESSIONS.forEach(function (ss, i) {
+      var y0 = top + i * block, kind = (ss.kind || "mark").toUpperCase() + (ss.kind === "quote" ? "" : "ED");
+      s += '<text x="6" y="' + (y0 + 14) + '" class="pt-lbl" style="font-size:10.5px">' + esc(shortDate(ss.d)) + "</text>";
+      s += '<text x="6" y="' + (y0 + 28) + '" class="ax">' + esc(kind) + "</text>";
+      [["naive", "NAIVE", "#45EACF", ".17"], ["chosen", "CHOSEN", "#7CE787", ".34"]].forEach(function (k, j) {
+        var v = ss[k[0]], y = y0 + j * (bar + gap), below = v != null && v < 1, c = below ? "#FF6B6B" : k[2], op = below ? ".26" : k[3];
+        var tp = esc(JSON.stringify({ h: "Session " + ss.d + " · " + kind.toLowerCase(), r: [{ c: c, v: v == null ? "unavailable" : v.toFixed(2) + "×", n: k[0] === "naive" ? "naive 17–21 ÷ 00–05" : "chosen · dirtiest 5h ÷ cleanest 5h" }] }));
+        s += '<g data-tip="' + tp + '">';
+        s += '<rect x="' + X0 + '" y="' + y + '" width="' + (X1 - X0) + '" height="' + bar + '" fill="transparent"/>';
+        if (v != null) {
+          s += '<rect x="' + X0 + '" y="' + y + '" width="' + (X(v) - X0 + 2).toFixed(1) + '" height="' + bar + '" fill="' + c + '" opacity="' + op + '"/>';
+          s += '<rect x="' + X(v).toFixed(1) + '" y="' + y + '" width="2" height="' + bar + '" fill="' + c + '"/>';
+          s += '<text x="' + (X(v) + 11).toFixed(1) + '" y="' + (y + 12) + '" class="pt-lbl" fill="' + (below ? "#FF6B6B" : "#EAF2F7") + '">' + v.toFixed(2) + "×</text>";
+        } else {
+          s += '<text x="' + (X0 + 8) + '" y="' + (y + 12) + '" class="ax" style="letter-spacing:.14em">— UNAVAILABLE</text>';
+        }
+        s += '<text x="' + (X0 + 8) + '" y="' + (y + 12) + '" class="ax" style="letter-spacing:.2em">' + (v != null ? k[1] : "") + "</text>";
+        s += "</g>";
+      });
+    });
+    s += '<line x1="' + X0 + '" y1="' + axisY + '" x2="' + X1 + '" y2="' + axisY + '" stroke="rgba(255,255,255,.12)"/>';
+    ticks.forEach(function (t) { s += '<text x="' + X(t) + '" y="' + (axisY + 14) + '" class="ax" text-anchor="middle">' + (t % 1 === 0 ? t : t.toFixed(1)) + "×</text>"; });
+    var marked = SESSIONS.filter(function (x) { return x.kind !== "quote"; }).length, quoted = n - marked;
+    var chosenVals = SESSIONS.map(function (x) { return x.chosen; }).filter(function (v) { return v != null; });
+    var aria = "Grouped bar chart of GB carbon spread for " + n + " sessions, naive 00 to 05 shift against the chosen window; bars left of parity mean the shift would have added carbon.";
+    mount("cbChart", '<svg class="chart" viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="' + esc(aria) + '">' + s + "</svg>");
+    var cn = $("cbN"); if (cn) cn.textContent = "n = " + marked + " MARKED SESSION" + (marked === 1 ? "" : "S") + (quoted ? " + " + quoted + " QUOTED" : "") + ".";
+    var nv = $("cbNever"); if (nv) { var under = chosenVals.filter(function (v) { return v < 1; }).length; nv.textContent = under ? "The chosen window has landed there " + under + (under === 1 ? " time." : " times.") : "The chosen window has never landed there."; }
+  }
+
+  function renderPrices() { renderSheet(); renderMarks(); renderQueue(); }
+  Array.prototype.forEach.call(document.querySelectorAll("#p-prices [data-leg]"), function (b) {
+    b.addEventListener("click", function () { PV_LEG = b.getAttribute("data-leg"); Array.prototype.forEach.call(document.querySelectorAll("#p-prices [data-leg]"), function (o) { o.setAttribute("aria-pressed", o === b ? "true" : "false"); }); renderSheet(); });
+  });
+  Array.prototype.forEach.call(document.querySelectorAll("#p-prices [data-view]"), function (b) {
+    b.addEventListener("click", function () {
+      var f = b.getAttribute("data-for"), v = b.getAttribute("data-view"), cap = f.charAt(0).toUpperCase() + f.slice(1);
+      Array.prototype.forEach.call(document.querySelectorAll('#p-prices [data-for="' + f + '"]'), function (o) { o.setAttribute("aria-pressed", o === b ? "true" : "false"); });
+      $("pv" + cap + "Chart").hidden = v !== "chart"; $("pv" + cap + "Table").hidden = v !== "table";
+    });
+  });
+  renderPrices();
+  renderCarbon();
+  queueStatus(0, false);
+
+  /* One fetch, one shape: a parsed document or null. Every board-data read on
+     this page goes through it, and null is the only failure it reports — a
+     404, a network error, a malformed file and an ad-blocker all look the same
+     to the charts, which keep drawing the inline mirror. */
+  function getJSON(url) {
+    if (typeof fetch !== "function") return Promise.resolve(null);
+    return fetch(url, { cache: "no-cache" }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; });
+  }
+  /* Session dates strictly after `last`, up to today, at most 14 of them. */
+  function daysAfter(last, inclusive) {
+    var today = new Date(), out = [], d = new Date(last + "T00:00:00Z");
+    if (!inclusive) d.setUTCDate(d.getUTCDate() + 1);
+    while (d <= today && out.length < 14) { out.push(d.toISOString().slice(0, 10)); d.setUTCDate(d.getUTCDate() + 1); }
+    return out;
+  }
+
+  /* ask board-data for sessions newer than the inline mirror; silent on failure */
+  (function refreshFromBoardData() {
+    if (typeof fetch !== "function") return;
+    var base = "https://raw.githubusercontent.com/offpeak-ai/offpeak/board-data/nightly/";
+    var pk = function (o, k) { o = o || {}; var a = o[k]; return a == null ? null : a; };
+    var lastMark = PV_MARKS[PV_MARKS.length - 1].d, lastQueue = PV_QUEUE.length ? PV_QUEUE[PV_QUEUE.length - 1].d : lastMark;
+    var lastSess = SESSIONS[SESSIONS.length - 1];
+    /* a quoted last session still wants its own mark, so that window is inclusive */
+    var wantMark = daysAfter(lastMark), wantQueue = daysAfter(lastQueue), wantSess = daysAfter(lastSess.d, lastSess.kind === "quote");
+    var days = {}; wantMark.concat(wantQueue, wantSess).forEach(function (d) { days[d] = true; });
+    var list = Object.keys(days).sort();
+    var perDay = Promise.all(list.map(function (day) {
+      var needMark = wantMark.indexOf(day) >= 0 || wantSess.indexOf(day) >= 0, needQueue = wantQueue.indexOf(day) >= 0;
+      return Promise.all([
+        needMark ? getJSON(base + day + "-mark.json") : Promise.resolve(null),
+        needQueue ? getJSON(base + day + "-queue.json") : Promise.resolve(null)
+      ]).then(function (pair) { return { d: day, mark: pair[0], queue: pair[1] }; });
+    }));
+    Promise.all([perDay, getJSON(PV_QUEUE_SUMMARY_URL)]).then(function (res) {
+      var got = res[0], summary = res[1], marks = 0, legs = 0, sess = 0;
+      got.forEach(function (g) {
+        if (g.mark && wantMark.indexOf(g.d) >= 0) {
+          var gb = g.mark.power_gb_agile, ca = g.mark.power_caiso_sp15, er = g.mark.power_ercot_houston;
+          PV_MARKS.push({ d: g.d, gb: [pk(gb, "peak_window_17_21_bst"), pk(gb, "offpeak_window_00_05_bst")], ca: [pk(ca, "peak_window_17_21_local"), pk(ca, "offpeak_window_00_05_local")], er: [pk(er, "peak_window_17_21_local"), pk(er, "offpeak_window_00_05_local")] });
+          marks++;
+        }
+        if (g.mark && wantSess.indexOf(g.d) >= 0 && g.mark.carbon_gb) {
+          /* carbon_gb: peak_window_17_21_bst, offpeak_window_00_05_bst,
+             cleanest_5h.avg, dirtiest_5h.avg — exactly the fields the mark
+             writes; a null on either side of a ratio is a gap. */
+          var cg = g.mark.carbon_gb, pkv = pk(cg, "peak_window_17_21_bst"), off = pk(cg, "offpeak_window_00_05_bst");
+          var clean = pk(cg.cleanest_5h, "avg"), dirty = pk(cg.dirtiest_5h, "avg");
+          SESSIONS.push({ d: g.d, kind: "mark",
+            naive: pkv != null && off != null && off > 0 ? pkv / off : null,
+            chosen: clean != null && dirty != null && clean > 0 ? dirty / clean : null });
+          sess++;
+        }
+        if (g.queue && g.queue.legs) g.queue.legs.forEach(function (l) { PV_QUEUE.push({ d: g.d, v: l.venue, m: l.model, s: l.elapsed_seconds == null ? null : l.elapsed_seconds, st: l.status || (l.elapsed_seconds == null ? "censored" : "completed") }); legs++; });
+      });
+      if (marks) renderMarks();
+      if (legs) renderQueue();
+      if (sess) renderCarbon();
+      var summaryOn = renderQueueSummary(summary);
+      queueStatus(legs, summaryOn);
+      if (marks || legs) { var lv = $("pvLive"); if (lv) { lv.classList.add("on"); lv.textContent = "Board-data · refreshed on load"; } }
+    }).catch(function () {});
+  })();
+
+  /* =========================== router =========================== */
+  var ROUTES = {
+    "/":           { el: "p-home",      tele: "DESK" },
+    "/calculator": { el: "p-calculator", tele: "SAVINGS", bare: true },
+    "/board":      { el: "p-board",     tele: "BOARD" },
+    "/prices":     { el: "p-prices",    tele: "PRICES" },
+    "/receipts":   { el: "p-receipts",  tele: "RECEIPTS" }
+  };
+  var io = null;
+  function setupReveals(scope) {
+    var rvs = scope.querySelectorAll(".rv");
+    if (io) io.disconnect();
+    if (reduced || !("IntersectionObserver" in window)) {
+      Array.prototype.forEach.call(rvs, function (el) { el.classList.add("in"); });
+      return;
+    }
+    io = new IntersectionObserver(function (es) {
+      es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } });
+    }, { rootMargin: "0px 0px -8% 0px" });
+    Array.prototype.forEach.call(rvs, function (el) { el.classList.remove("in"); io.observe(el); });
+  }
+  function parseHash() {
+    var h = location.hash || "";
+    if (h.charAt(1) !== "/") return null;
+    var q = h.indexOf("?");
+    var path = q >= 0 ? h.slice(1, q) : h.slice(1);
+    var query = q >= 0 ? h.slice(q + 1) : "";
+    return { path: ROUTES[path] ? path : "/", query: query };
+  }
+  var currentPath = null;
+  function route(keepScroll) {
+    var r = parseHash();
+    if (!r) { if (!currentPath) r = { path: "/", query: "" }; else return; }
+    var def = ROUTES[r.path];
+    Array.prototype.forEach.call(document.querySelectorAll(".page"), function (p) { p.classList.remove("active"); });
+    var page = $(def.el); page.classList.add("active");
+    Array.prototype.forEach.call(document.querySelectorAll("#nav a[data-route]"), function (a) {
+      if (a.getAttribute("data-route") === r.path) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current");
+    });
+    var ts = $("tSurface"); if (ts) ts.textContent = def.tele;
+    document.body.classList.toggle("no-tele", !!def.bare);
+    if (currentPath !== r.path && !keepScroll) window.scrollTo(0, 0);
+    currentPath = r.path;
+    setupReveals(page);
+    if (r.query) applyShared(r.query);
+  }
+  window.addEventListener("hashchange", function () { route(false); });
+  Array.prototype.forEach.call(document.querySelectorAll("[data-go]"), function (b) {
+    b.addEventListener("click", function () { location.hash = "#" + b.getAttribute("data-go"); });
+  });
+
+  /* ====================== telemetry + scroll ==================== */
+  var utcEl = $("utc"), scrlEl = $("scrl");
+  function clock() { if (utcEl) { var d = new Date(); utcEl.textContent = pad(d.getUTCHours()) + ":" + pad(d.getUTCMinutes()) + ":" + pad(d.getUTCSeconds()) + "Z"; } }
+  clock(); setInterval(clock, 1000);
+  function onScroll() {
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? Math.round(window.scrollY / h * 100) : 0;
+    if (scrlEl) scrlEl.textContent = pad(Math.min(99, p)) + "%";
+  }
+  window.addEventListener("scroll", onScroll, { passive: true });
+  onScroll();
+
+  /* ===================== price sheet table ====================== */
+  /* A declaration rather than the IIFE this was: adopting a published sheet has
+     to redraw it, and a function expression nobody can name cannot be called
+     twice. */
+  function renderSheetTable() {
+    var tb = $("sheet-rows"); if (!tb) return;
+    var html = "";
+    /* Two decimals wherever two decimals are exact, more where they are not.
+       gpt-oss-20b is $0.075 and batches to $0.0375; rounding those to $0.08 and
+       $0.04 would put a number on the page that is not the published rate. */
+    function rate(v) {
+      var two = v.toFixed(2);
+      return "$" + (parseFloat(two) === v ? two : v.toFixed(4).replace(/0+$/, ""));
+    }
+    Object.keys(PRICES).forEach(function (m) {
+      var p = PRICES[m];
+      var fi = p.fi === undefined ? "—" : rate(p.fi);
+      var fo = p.fo === undefined ? "—" : rate(p.fo);
+      var tag = m === "gpt-5.6-sol" ? '<span class="sub">PROMO ≥ 2026-11-21</span>'
+              : p.v ? '<span class="sub">' + p.v + '</span>' : "";
+      html += '<tr><td class="first">' + m + tag + "</td>"
+        + '<td class="num">' + rate(p.i) + "</td><td class=\"num\">" + rate(p.o) + "</td>"
+        + '<td class="num g">' + rate(p.i * BATCH) + '</td><td class="num g">' + rate(p.o * BATCH) + "</td>"
+        + '<td class="num">' + fi + '</td><td class="num">' + fo + "</td></tr>";
+    });
+    tb.innerHTML = html;
+  }
+  renderSheetTable();
+
+  /* ========================= tab A: quick ======================= */
+  var qs = $("q-spend"), qd = $("q-defer"), qb = $("q-batch"), qc = $("q-clock");
+  function calcQuick() {
+    if (!qs) return;
+    var spend = spendFromSlider(parseFloat(qs.value));
+    var dP = parseFloat(qd.value) / 100, bP = parseFloat(qb.value) / 100, cP = parseFloat(qc.value) / 100;
+    if (bP + cP > 1) { cP = Math.max(0, 1 - bP); qc.value = Math.round(cP * 100); }
+    var defer = spend * dP;
+    var saved = defer * (bP * 0.50 + cP * 0.80);
+    $("q-spend-v").textContent = usd(spend);
+    $("q-defer-v").textContent = Math.round(dP * 100) + "%";
+    $("q-batch-v").textContent = Math.round(bP * 100) + "%";
+    $("q-clock-v").textContent = Math.round(cP * 100) + "%";
+    $("q-out-mo").textContent = usd(saved);
+    $("q-out-pct").textContent = spend ? pct(saved / spend) : "0%";
+    $("q-out-yr").textContent = usd(saved * 12);
+    $("q-out-def").textContent = usd(defer) + " / mo";
+    $("q-out-paid").textContent = usd(spend - saved) + " / mo";
+    $("q-out-eff").textContent = defer ? pct(saved / defer) : "0%";
+  }
+  [qs, qd, qb, qc].forEach(function (el) { if (el) el.addEventListener("input", calcQuick); });
+
+  /* ======================= tab B: the book ====================== */
+  var PARKED = [
+    { n: "Summarize doc chunks", m: "claude-sonnet-5", r: 1000, ti: 5000, to: 300, now: "spot", tgt: "batch" },
+    { n: "Summarize doc chunks", m: "gpt-5.6-terra",   r: 1000, ti: 5000, to: 300, now: "spot", tgt: "batch" },
+    { n: "Classify passages",    m: "claude-haiku-4-5", r: 2000, ti: 500,  to: 20,  now: "spot", tgt: "batch" },
+    { n: "Classify passages",    m: "gpt-5.6-luna",    r: 2000, ti: 500,  to: 20,  now: "spot", tgt: "batch" }
+  ];
+  var rows = PARKED.map(function (r) { return Object.assign({}, r); });
+
+  function modelOptions(sel) {
+    return Object.keys(PRICES).map(function (m) {
+      return '<option value="' + m + '"' + (m === sel ? " selected" : "") + ">" + m + "</option>";
+    }).join("");
+  }
+  function renderRows() {
+    var tb = $("b-rows"); if (!tb) return;
+    tb.innerHTML = rows.map(function (r, i) {
+      var hasFast = PRICES[r.m] && PRICES[r.m].fi !== undefined, cheap = cheapWord(PRICES[r.m]);
+      return '<tr>'
+        + '<td><input type="text" class="w-name" data-i="' + i + '" data-k="n" value="' + String(r.n).replace(/"/g, "&quot;") + '" aria-label="Workload name"></td>'
+        + '<td><select class="w-model" data-i="' + i + '" data-k="m" aria-label="Model">' + modelOptions(r.m) + "</select></td>"
+        + '<td><input type="number" class="w-num" min="0" step="100" data-i="' + i + '" data-k="r" value="' + r.r + '" aria-label="Requests per month"></td>'
+        + '<td><input type="number" class="w-num" min="0" step="100" data-i="' + i + '" data-k="ti" value="' + r.ti + '" aria-label="Input tokens per request"></td>'
+        + '<td><input type="number" class="w-num" min="0" step="10" data-i="' + i + '" data-k="to" value="' + r.to + '" aria-label="Output tokens per request"></td>'
+        + '<td><select class="w-lane" data-i="' + i + '" data-k="now" aria-label="Paying now">'
+          + '<option value="spot"' + (r.now === "spot" ? " selected" : "") + ">Spot</option>"
+          + '<option value="fast"' + (r.now === "fast" ? " selected" : "") + (hasFast ? "" : " disabled") + ">Fast tier</option></select></td>"
+        + '<td><select class="w-lane" data-i="' + i + '" data-k="tgt" aria-label="Has a deadline">'
+          + '<option value="batch"' + (r.tgt === "batch" ? " selected" : "") + ">Yes → " + cheap + "</option>"
+          + '<option value="spot"' + (r.tgt === "spot" ? " selected" : "") + ">No → unchanged</option></select></td>"
+        + '<td><button class="row-x" type="button" data-del="' + i + '" aria-label="Remove workload">✕</button></td>'
+        + "</tr>";
+    }).join("");
+    calcBook();
+  }
+  function rowCost(r, lane) {
+    var p = PRICES[r.m]; if (!p) return 0;
+    var pin = p.i, pout = p.o;
+    if (lane === "fast" && p.fi !== undefined) { pin = p.fi; pout = p.fo; }
+    else if (lane === "batch") { pin = p.i * BATCH; pout = p.o * BATCH; }
+    return (r.r || 0) * ((r.ti || 0) * pin + (r.to || 0) * pout) / 1e6;
+  }
+  function calcBook() {
+    if (!$("b-out-mo")) return;
+    var now = 0, next = 0, tok = 0, req = 0;
+    rows.forEach(function (r) {
+      var cNow = rowCost(r, r.now);
+      var cNew = r.tgt === "batch" ? rowCost(r, "batch") : cNow;
+      now += cNow; next += cNew;
+      tok += (r.r || 0) * ((r.ti || 0) + (r.to || 0));
+      req += (r.r || 0);
+    });
+    var saved = now - next;
+    $("b-out-mo").textContent = usd(saved);
+    $("b-out-pct").textContent = now ? pct(saved / now) : "0%";
+    $("b-out-yr").textContent = usd(saved * 12);
+    $("b-out-now").textContent = usd(now) + " / mo";
+    $("b-out-new").textContent = usd(next) + " / mo";
+    $("b-out-tok").textContent = (tok >= 1e6 ? num(tok / 1e6, 2) + "M" : num(tok)) + " / mo";
+    $("b-out-req").textContent = num(req) + " / mo";
+  }
+  var tbody = $("b-rows");
+  if (tbody) {
+    tbody.addEventListener("input", function (e) {
+      var t = e.target, i = t.getAttribute("data-i"), k = t.getAttribute("data-k");
+      if (i === null || !k) return;
+      rows[+i][k] = (k === "n" || k === "m" || k === "now" || k === "tgt") ? t.value : (parseFloat(t.value) || 0);
+      calcBook();
+    });
+    tbody.addEventListener("change", function (e) {
+      var t = e.target;
+      if (t.getAttribute("data-k") === "m") renderRows();
+    });
+    tbody.addEventListener("click", function (e) {
+      var d = e.target.getAttribute && e.target.getAttribute("data-del");
+      if (d === null || d === undefined) return;
+      rows.splice(+d, 1); renderRows();
+    });
+  }
+  if ($("b-add")) $("b-add").addEventListener("click", function () {
+    rows.push({ n: "New workload", m: "claude-sonnet-5", r: 1000, ti: 2000, to: 400, now: "spot", tgt: "batch" });
+    renderRows();
+  });
+  if ($("b-load")) $("b-load").addEventListener("click", function () {
+    rows = PARKED.map(function (r) { return Object.assign({}, r); }); renderRows(); toast("Parked book loaded");
+  });
+  if ($("b-clear")) $("b-clear").addEventListener("click", function () { rows = []; renderRows(); });
+
+  /* =========================== tabs ============================= */
+  var tabQ = $("tab-quick"), tabB = $("tab-book");
+  function selectTab(which) {
+    var q = which === "quick";
+    tabQ.setAttribute("aria-selected", String(q)); tabB.setAttribute("aria-selected", String(!q));
+    $("pane-quick").hidden = !q; $("pane-book").hidden = q;
+  }
+  if (tabQ) tabQ.addEventListener("click", function () { selectTab("quick"); });
+  if (tabB) tabB.addEventListener("click", function () { selectTab("book"); });
+
+  /* ========================= share link ========================= */
+  function encodeState() {
+    var payload = {
+      t: $("pane-book").hidden ? "q" : "b",
+      q: [qs.value, qd.value, qb.value, qc.value],
+      b: rows.map(function (r) { return [r.n, r.m, r.r, r.ti, r.to, r.now, r.tgt]; })
+    };
+    return btoa(unescape(encodeURIComponent(JSON.stringify(payload)))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  }
+  function applyShared(query) {
+    var m = /(?:^|&)s=([^&]+)/.exec(query); if (!m) return;
+    try {
+      var b64 = m[1].replace(/-/g, "+").replace(/_/g, "/");
+      var p = JSON.parse(decodeURIComponent(escape(atob(b64))));
+      if (p.q) { qs.value = p.q[0]; qd.value = p.q[1]; qb.value = p.q[2]; qc.value = p.q[3]; }
+      selectTab(p.t === "b" ? "book" : "quick");
+      renderRows(); calcQuick();
+    } catch (e) { /* malformed link — fall through to defaults */ }
+  }
+  function share() {
+    var url = location.href.split("#")[0] + "#/calculator?s=" + encodeState();
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(url).then(function () { toast("Estimate link copied"); },
+        function () { location.hash = "#/calculator?s=" + encodeState(); toast("Link is in the address bar"); });
+    } else { location.hash = "#/calculator?s=" + encodeState(); toast("Link is in the address bar"); }
+  }
+  if ($("q-share")) $("q-share").addEventListener("click", share);
+  if ($("b-share")) $("b-share").addEventListener("click", share);
+
+  /* ==================== particle wave field ===================== */
+  var cv = $("field");
+  if (cv) {
+    var ctx = cv.getContext("2d"), W, H, DPR;
+    function sprite(col) {
+      var s = document.createElement("canvas"); s.width = s.height = 32;
+      var c = s.getContext("2d"), g = c.createRadialGradient(16, 16, 0, 16, 16, 16);
+      g.addColorStop(0, "rgba(" + col + ",1)"); g.addColorStop(.3, "rgba(" + col + ",.5)"); g.addColorStop(1, "rgba(" + col + ",0)");
+      c.fillStyle = g; c.fillRect(0, 0, 32, 32); return s;
+    }
+    var SP_TEAL = sprite("69,234,207"), SP_MINT = sprite("234,242,247"), SP_PEACH = sprite("255,180,84");
+    function size() {
+      DPR = Math.min(2, window.devicePixelRatio || 1);
+      var r = cv.parentNode.getBoundingClientRect();
+      W = r.width; H = r.height;
+      cv.width = Math.max(1, W * DPR); cv.height = Math.max(1, H * DPR);
+      ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    }
+    size();
+    window.addEventListener("resize", function () { size(); if (reduced) draw(4000); });
+    function ridge(u, s) { return Math.sin(u) * .6 + Math.sin(u * 2.13 + s) * .28 + Math.sin(u * 4.7 + s * 2.1) * .12; }
+    function hsh(n) { var x = Math.sin(n) * 43758.5453; return x - Math.floor(x); }
+    var LAYERS = [{ o: .44, a: .085, sp: .8, th: 30 }, { o: .58, a: .105, sp: 1.35, th: 40 }, { o: .74, a: .125, sp: 1.9, th: 52 }];
+    function draw(t) {
+      ctx.clearRect(0, 0, W, H);
+      ctx.globalCompositeOperation = "lighter";
+      for (var l = 0; l < LAYERS.length; l++) {
+        var L = LAYERS[l], base = H * L.o, amp = H * L.a, depth = .45 + .55 * (l / (LAYERS.length - 1));
+        for (var x = -6; x <= W + 6; x += 5) {
+          var u = (x + t * L.sp * .028) * .008 + l * 7.3, r = ridge(u, l * 1.7), y = base + r * amp, crest = Math.max(0, r);
+          for (var j = 0; j < 2; j++) {
+            var h1 = hsh(x * 12.9898 + j * 78.233 + l * 37.719), h2 = hsh(x * 39.3468 + j * 11.135 + l * 83.155);
+            var px = x + (h1 - .5) * 10, py = y + (h2 - .5) * (j === 0 ? 9 : L.th);
+            var tw = .5 + .5 * Math.sin(t * .0011 + h1 * 40 + j * 3);
+            var sp = (crest > .5 && h2 > .62) ? SP_PEACH : (h1 > .84 ? SP_MINT : SP_TEAL);
+            var sz = (1.3 + h2 * 3.2) * (1 + l * .18);
+            ctx.globalAlpha = ((j === 0 ? .16 : .07) + .24 * tw) * depth;
+            ctx.drawImage(sp, px - sz, py - sz, sz * 2, sz * 2);
+          }
+        }
+      }
+      for (var i = 0; i < 30; i++) {
+        var sx = hsh(i * 12.7) * W, sy = hsh(i * 31.3) * H * .68;
+        var a = Math.pow(Math.max(0, Math.sin(t * .0006 + i * 2.39)), 6);
+        if (a > .02) { var ss = 2.5 + hsh(i * 5.1) * 3; ctx.globalAlpha = a * .7; ctx.drawImage(SP_MINT, sx - ss, sy - ss, ss * 2, ss * 2); }
+      }
+      ctx.globalAlpha = 1; ctx.globalCompositeOperation = "source-over";
+    }
+    if (reduced) { draw(4000); }
+    else {
+      var running = true;
+      document.addEventListener("visibilitychange", function () { running = !document.hidden; if (running) requestAnimationFrame(loop); });
+      function loop(ts) { if (!running) return; draw(ts || 0); requestAnimationFrame(loop); }
+      requestAnimationFrame(loop);
+    }
+  }
+
+  /* ======================= copy buttons ========================= */
+  Array.prototype.forEach.call(document.querySelectorAll("[data-copy]"), function (b) {
+    b.addEventListener("click", function () {
+      var t = b.getAttribute("data-copy") || b.textContent;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(t).then(function () { toast("Copied to clipboard"); },
+          function () { toast("Copy failed — select the text"); });
+      } else { toast("Select the text to copy"); }
+    });
+  });
+
+  /* ============================ boot ============================ */
+  renderRows();
+  calcQuick();
+  route(true);
+
+  /* ================= the published sheet, if newer ============== */
+  /* Every citation on this page reads its date from one place. */
+  function stampSheet() {
+    Array.prototype.forEach.call(document.querySelectorAll(".sd"), function (el) {
+      el.textContent = SHEET_DATE;
+    });
+    var lv = $("pvLive");
+    if (lv) {
+      lv.textContent = SHEET_SOURCE === "published"
+        ? "Sheet " + SHEET_DATE + " · board-data, fetched on load"
+        : "Sheet " + SHEET_DATE + " · shipped with this deploy";
+      if (SHEET_SOURCE === "published") lv.classList.add("on");
+    }
+  }
+  stampSheet();
+
+  /* Rebuild PRICES from a published sheet document. Returns false and changes
+     nothing unless the document is one this page knows how to read — the guards
+     are the same three prices.load_sheet() applies, for the same reasons:
+
+       * the schema family must match, because a sheet half-understood prices
+         jobs against numbers it guessed at;
+       * batch_discount must be the 50% this page has hardcoded into BATCH,
+         since a sheet that disagrees would leave half the arithmetic on the old
+         rule and half on the new;
+       * the date must be strictly newer, so a rollback on board-data cannot
+         quietly reprice a page that already shipped the better number.
+
+     Rows with a zero or missing leg are dropped rather than drawn. mistral-embed
+     bills input only and the sheet stores $0.00 output, which is the honest rate
+     and an impossible point on a log axis — this page draws a batch → standard →
+     fast spread, and a leg with no price has no spread to show. */
+  function adoptSheet(doc) {
+    if (!doc || String(doc.schema || "").split("/")[0] !== SHEET_SCHEMA) return false;
+    if (Number(doc.batch_discount) !== BATCH) return false;
+    if (!doc.sheet_date || String(doc.sheet_date) <= SHEET_DATE) return false;
+    if (!doc.prices || typeof doc.prices !== "object") return false;
+
+    var fast = doc.fast_prices || {}, promo = doc.promo_notes || {}, next = {}, kept = 0;
+    /* The sheet's lane table, prefix-matched longest-first the way
+       prices.lane_for() does it. Absent or empty means every row is batch. */
+    var lanes = doc.lanes && typeof doc.lanes === "object" ? doc.lanes : {};
+    var lanePrefixes = Object.keys(lanes).sort(function (a, b) { return b.length - a.length; });
+    function laneFor(m) {
+      for (var k = 0; k < lanePrefixes.length; k++) if (m.indexOf(lanePrefixes[k]) === 0) return lanes[lanePrefixes[k]] === "clock" ? "clock" : "batch";
+      return "batch";
+    }
+    Object.keys(doc.prices).forEach(function (m) {
+      var row = doc.prices[m];
+      var i = Number(row && row.input_per_m), o = Number(row && row.output_per_m);
+      if (!isFinite(i) || !isFinite(o) || i <= 0 || o <= 0) return;
+      var out = { i: i, o: o, v: venueTag(m) };
+      if (fast[m]) {
+        out.fi = Number(fast[m].input_per_m);
+        out.fo = Number(fast[m].output_per_m);
+      }
+      if (laneFor(m) === "clock") { out.l = "clock"; out.v += " · CLOCK LANE, NOT BATCH"; }
+      /* The annotation is derived from the sheet's own promo notes rather than
+         carried over from the inline object: an editorial tag that outlived the
+         number it described would be the one thing worse than an old price. */
+      if (promo[m] && promo[m].through) out.v += " · INTRO ≤ " + promo[m].through;
+      next[m] = out;
+      kept++;
+    });
+    if (!kept) return false;
+
+    PRICES = next;
+    SHEET_DATE = String(doc.sheet_date);
+    SHEET_SOURCE = "published";
+    return true;
+  }
+
+  /* Everything PRICES feeds: the sheet table, the /#/prices charts, and the
+     calculator (whose model dropdowns are built from its keys, so a row naming a
+     model the new sheet dropped has to be re-pointed before it is re-costed). */
+  function repriceEverything() {
+    stampSheet();
+    renderSheetTable();
+    renderPrices();
+    var models = Object.keys(PRICES);
+    if (models.length) {
+      rows.forEach(function (r) { if (!PRICES[r.m]) r.m = models[0]; });
+    }
+    renderRows();
+  }
+
+  (function loadPublishedSheet() {
+    if (typeof fetch !== "function") return;
+    /* Silent on every failure path — offline, blocked, 404, malformed, older,
+       or simply slower than the reader. The inline sheet is already on screen
+       and is a real dated snapshot, not a placeholder. */
+    fetch(SHEET_URL, { cache: "no-store" })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (doc) { if (adoptSheet(doc)) repriceEverything(); })
+      .catch(function () {});
+  })();
+})();
+</script>
+
+
+<script>
+// The settled tables are rendered server-side above as a fallback, then
+// replaced from the ledger this project publishes for itself. Same receipts,
+// same arithmetic — the page stops being a place numbers are hand-copied to.
+// If the fetch fails the static rows simply stay: a stale row beats a blank one.
+(function () {
+  var LEDGER = "https://raw.githubusercontent.com/offpeak-ai/offpeak/board-data/nightly/SETTLED.json";
+
+  // Mirrors offpeak.prices.format_usd exactly: 2dp once there are cents, more
+  // significant digits below that, so a sub-cent run does not read as $0.00.
+  function usd(a) {
+    if (a === null || a === undefined) return "—";
+    if (a === 0) return "0.00";
+    var dp = Math.abs(a) >= 0.005 ? 2 : -Math.floor(Math.log10(Math.abs(a))) + 2;
+    return a.toLocaleString("en-US", { minimumFractionDigits: dp, maximumFractionDigits: dp });
+  }
+  function num(n) { return (n || 0).toLocaleString("en-US"); }
+  function esc(t) {
+    return String(t).replace(/[&<>"]/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c];
+    });
+  }
+  function label(id) {
+    var m = /^(\d{4})-(\d{2})-(\d{2})-(.+)$/.exec(id);
+    return m ? m[2] + "-" + m[3] + " " + m[4] : id;
+  }
+  function venues(by) {
+    return Object.keys(by || {}).sort().map(function (v) { return v + " " + by[v]; }).join(" · ") || "—";
+  }
+  function sla(r) {
+    var s = (r.sla_met || 0) + "/" + r.jobs;
+    return r.fell_back ? s + " (" + r.fell_back + " fell back)" : s;
+  }
+
+  function row(r, wide) {
+    var cap = r.captured_usd > 0 ? "up" : "down";
+    var cells =
+      '<td class="first">' + esc(label(r.run_id)) +
+        '<span class="sub">' + esc(String(r.scale).toUpperCase()) + "</span></td>" +
+      "<td>" + esc(venues(r.by_venue)) + '</td>' +
+      '<td class="num">' + r.jobs + "</td>" +
+      (wide ? '<td class="num">' + num(r.input_tokens) + " / " + num(r.output_tokens) + "</td>" : "") +
+      '<td class="num">$' + usd(r.list_usd) + "</td>" +
+      '<td class="num">$' + usd(r.paid_usd) + "</td>" +
+      '<td class="num ' + cap + '">' + r.captured_pct.toFixed(1) + "%</td>" +
+      '<td class="num ' + (r.fell_back ? "down" : "up") + '">' + sla(r) + "</td>";
+    return "<tr>" + cells + "</tr>";
+  }
+
+  fetch(LEDGER, { cache: "no-cache" })
+    .then(function (res) { if (!res.ok) throw new Error(res.status); return res.json(); })
+    .then(function (doc) {
+      if (!doc || !doc.runs || !doc.runs.length) return;
+      var runs = doc.runs.slice().sort(function (a, b) { return a.run_id < b.run_id ? -1 : 1; });
+      document.querySelectorAll("[data-ledger]").forEach(function (tbody) {
+        var wide = tbody.getAttribute("data-ledger") === "receipts";
+        tbody.innerHTML = runs.map(function (r) { return row(r, wide); }).join("");
+      });
+      var vs = (doc.summary && doc.summary.venues_capturing) || [];
+      document.querySelectorAll('[data-ledger-stat="venues"]').forEach(function (el) {
+        if (vs.length) el.textContent = String(vs.length);
+      });
+    })
+    .catch(function () { /* keep the rendered fallback */ });
+})();
+</script>
+</body>
+</html>
