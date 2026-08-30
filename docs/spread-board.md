@@ -78,19 +78,19 @@ before the money is.
 `offpeak` abandons a slow batch on a **fixed** risk buffer — 15% of the window,
 clamped to 1–10 minutes — because nobody had the number. `nightly/QUEUE.md`
 collects the number: a couple of tiny jobs submitted daily at each venue's
-declared window, timed from submit to completion, written by
-[`tools/queue_probe.py`](https://github.com/offpeak-ai/offpeak/blob/main/tools/queue_probe.py).
+declared window, timed from submit to completion. The desk publishes a daily
+summary of its queue observations here — the observations themselves are
+private.
 
 It spends real money, so it is a separate table from the board for the same
-reason `SETTLED.md` is — and it is capped at **one cent per run**, enforced
-inside the tool rather than in a runbook. A leg that would carry the run past
-the cap does not run, and the record says which one and by how much.
+reason `SETTLED.md` is, and it is capped at **one cent per run**, enforced
+inside the desk's tooling rather than in a runbook.
 
-Every row is one submission. There is no percentile and no fitted curve: a
-handful of observations does not have a distribution, and a model over them
-would read as knowledge rather than as the few numbers it came from. A row
-marked *censored* was still open when the run stopped waiting and was
-cancelled — a lower bound, never a completion time.
+The summary is percentiles over completed sessions, not single rows: p50/p90/
+p99 and max per venue, over the trailing 7 days, the trailing 30 days, and all
+time. A row marked *censored* was still open when a run stopped waiting and
+was cancelled — a lower bound, never a completion time — and counts toward the
+attempt total but not toward any percentile.
 
 First observations, 2026-08-23: Anthropic Message Batches landed a 2-job book
 in **85s** and OpenAI Batch in **2m26s** — **0.098%** and **0.169%** of the 24h
