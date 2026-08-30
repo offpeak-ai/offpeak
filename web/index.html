@@ -219,7 +219,10 @@
   table.regtbl td.first { min-width: 168px; }
   .st { font-size: 9.5px; letter-spacing: .14em; font-weight: 600; }
   .st::before { content: "●"; font-size: 8px; margin-right: 6px; vertical-align: 1px; }
-  .st.filled { color: var(--green); } .st.working { color: var(--gold); } .st.reroute { color: var(--red); }
+  .st.filled { color: var(--green); } .st.working { color: var(--gold); } .st.reroute { color: var(--red); } .st.idle { color: var(--faint); }
+  table.covtbl { min-width: 900px; }
+  table.covtbl td.first { min-width: 170px; }
+  table.covtbl td.note { white-space: normal; min-width: 300px; max-width: 440px; color: var(--muted); font-family: var(--font-s); font-size: 13px; line-height: 1.5; }
   .up { color: var(--green); font-weight: 600; } .down { color: var(--red); font-weight: 600; } .flat { color: var(--faint); }
 
   .event { display: flex; gap: 16px; align-items: baseline; font-family: var(--font-m); font-size: 12.5px; color: var(--muted); border-left: 2px solid var(--red); padding: 6px 0 6px 16px; margin-top: 26px; }
@@ -524,7 +527,7 @@ tokens    124 in · 2,427 out
 list      $0.00919
 paid      $0.00460
 captured  <span class="tk-s">$0.00460 (50.0%)</span>
-prices    snapshot <span class="sd">2026-08-28</span> — offpeak.prices
+prices    snapshot <span class="sd">2026-08-30</span> — offpeak.prices
 ───────────────────────────────────────────────</pre>
         </div>
       </div>
@@ -572,7 +575,7 @@ prices    snapshot <span class="sd">2026-08-28</span> — offpeak.prices
         <i class="ck tl"></i><i class="ck tr"></i><i class="ck bl"></i><i class="ck br"></i>
         <div class="duo">
           <div>
-            <p class="case-eyebrow">Exhibit 01 <em>//</em> published sheets · <span class="sd">2026-08-28</span></p>
+            <p class="case-eyebrow">Exhibit 01 <em>//</em> published sheets · <span class="sd">2026-08-30</span></p>
             <p class="desc">The spread is old. <b>Batch tiers at half of list have sat on published sheets for years</b>, and day-ahead power markets have priced the same valley for decades — same model, same tokens, the only difference is when it lands. Venues now price urgency in explicit tiers, fastest to batch <b>4× apart</b>. The premium is a published number, not our estimate.</p>
             <ul class="facts">
               <li class="au"><b>4×</b> fastest ↔ batch tier</li>
@@ -820,7 +823,7 @@ prices    snapshot <span class="sd">2026-08-28</span> — offpeak.prices
             <div class="ro-row"><span class="k">Requests</span><span class="v dim" id="b-out-req">0 / mo</span></div>
           </div>
         </div>
-        <p class="note-line">Prices are the sheet the SDK ships — <b>offpeak.prices</b>, snapshot <span class="sd">2026-08-28</span>, re-verified against the rendered provider pages 2026-08-28, reproduced in <b>02 // The sheet</b> below. Batch is exactly half of standard on every venue; fast tiers are published on the gpt-5.6 family and, as a research preview, on Claude Opus 5 and Opus 4.8. Loaded by default: the real <a href="#/receipts">parked book</a> — 6,000 jobs, 12.68M tokens, $28.05 list.</p>
+        <p class="note-line">Prices are the sheet the SDK ships — <b>offpeak.prices</b>, snapshot <span class="sd">2026-08-30</span>, re-verified against the rendered provider pages 2026-08-30, reproduced in <b>02 // The sheet</b> below. Batch is exactly half of standard on every venue — on DeepSeek the same half is the <b>off-peak clock rate</b>, not a batch queue; fast tiers are published on the gpt-5.6 family and, as a research preview, on Claude Opus 5 and Opus 4.8. Loaded by default: the real <a href="#/receipts">parked book</a> — 6,000 jobs, 12.68M tokens, $28.05 list.</p>
       </div>
     </div>
   </section>
@@ -832,14 +835,14 @@ prices    snapshot <span class="sd">2026-08-28</span> — offpeak.prices
       <h2 class="sec-title">What the prices are</h2>
       <div class="case">
         <i class="ck tl"></i><i class="ck tr"></i><i class="ck bl"></i><i class="ck br"></i>
-        <p class="case-eyebrow">offpeak.prices <em>//</em> snapshot <span class="sd">2026-08-28</span> · USD per 1M tokens</p>
+        <p class="case-eyebrow">offpeak.prices <em>//</em> snapshot <span class="sd">2026-08-30</span> · USD per 1M tokens</p>
         <div class="booktbl">
           <table>
-            <thead><tr><th>Model</th><th class="num">Standard in</th><th class="num">Standard out</th><th class="num">Batch in</th><th class="num">Batch out</th><th class="num">Fast in</th><th class="num">Fast out</th></tr></thead>
+            <thead><tr><th>Model</th><th class="num">Standard in</th><th class="num">Standard out</th><th class="num">Batch / off-peak in</th><th class="num">Batch / off-peak out</th><th class="num">Fast in</th><th class="num">Fast out</th></tr></thead>
             <tbody id="sheet-rows"></tbody>
           </table>
         </div>
-        <p class="note-line"><b>gpt-5.6-sol's standard rate is promotional</b> at least through 2026-11-21; post-promo list is $5 / $30 and both tiers move with it, so the ratio is the durable figure, not the dollars. Batch is exactly 50% of standard. The <b>openai/gpt-oss</b> rows are Groq's, the <b>mistral</b> rows are from <b>mistral.ai/pricing/api</b>, and the <b>gemini</b> rows from <b>ai.google.dev/pricing</b> — all three at the same 50% batch rule. Groq and Mistral publish no per-model fast rate, so this sheet carries none; Google prices a <b>priority</b> tier that this sheet does not carry yet, and <code>tools/sheet_reconcile.py</code> reports the gap rather than the sheet implying a spread it has not verified. Gemini 3.7 and 3.6 Flash are introductory through 2026-12-31 and then double to $1.50 / $7.50 on both legs, which moves the dollars and leaves the batch ratio alone. Fast tiers are published on the gpt-5.6 family and on <b>Claude Opus 5 / Opus 4.8</b> ($10 / $50, research preview, first-party API only, not combinable with batch) — fastest to batch is <b>4×</b> at both venues, computed live by <b>urgency_spread()</b>, never cached. Sonnet 5's $2 / $10 is now Anthropic's standard price; the scheduled 09-01 rise to $3 / $15 will not occur.</p>
+        <p class="note-line"><b>gpt-5.6-sol's standard rate is promotional</b> at least through 2026-11-21; post-promo list is $5 / $30 and both tiers move with it, so the ratio is the durable figure, not the dollars. Batch is exactly 50% of standard. The <b>openai/gpt-oss</b> rows are Groq's, the <b>mistral</b> rows are from <b>mistral.ai/pricing/api</b>, and the <b>gemini</b> rows from <b>ai.google.dev/pricing</b> — all three at the same 50% batch rule. Groq and Mistral publish no per-model fast rate, so this sheet carries none; Google prices a <b>priority</b> tier that this sheet does not carry yet, and <code>tools/sheet_reconcile.py</code> reports the gap rather than the sheet implying a spread it has not verified. Gemini 3.7 and 3.6 Flash are introductory through 2026-12-31 and then double to $1.50 / $7.50 on both legs, which moves the dollars and leaves the batch ratio alone. The <b>deepseek</b> rows (api-docs.deepseek.com) carry the <b>peak</b> rate as standard; DeepSeek has no batch API, and its half price is the <b>off-peak clock</b> — peak is 01:00–04:00 and 06:00–10:00 UTC on weekdays, everything else and all weekend is half — so the discount is decided per request by the wall clock, not by a queue. The <b>qwen</b> rows are Alibaba Model Studio's international region, batch at 50%; qwen3.7-max is "limited-time 50% off" with no published end date, so it carries no expiry and may step up unannounced. Fast tiers are published on the gpt-5.6 family and on <b>Claude Opus 5 / Opus 4.8</b> ($10 / $50, research preview, first-party API only, not combinable with batch) — fastest to batch is <b>4×</b> at both venues, computed live by <b>urgency_spread()</b>, never cached. Sonnet 5's $2 / $10 is now Anthropic's standard price; the scheduled 09-01 rise to $3 / $15 will not occur.</p>
       </div>
     </div>
   </section>
@@ -957,7 +960,7 @@ prices    snapshot <span class="sd">2026-08-28</span> — offpeak.prices
             <div class="event" style="border-left-color:var(--gold)"><span class="t">WHAT WE DO NOT CLAIM</span><span><b>On an API batch tier, Offpeak does not choose the hour or the region — the provider does.</b> So this is a measurement of what a scheduler with that control could capture, not a carbon saving we book on your behalf. That claim waits for the metered self-hosted lane.</span></div>
             <details class="brief" style="margin-top:22px">
               <summary>Definitions &amp; sources</summary>
-              <div class="bx"><b>NAIVE</b> = MEAN gCO2/kWh OVER 17:00–21:00 LOCAL ÷ MEAN OVER 00:00–05:00 — THE RATIO A CRON GETS. <b>CHOSEN</b> = DIRTIEST CONTIGUOUS 5-HOUR MEAN ÷ CLEANEST, INSIDE THE SAME 16:00Z–07:00Z SESSION — THE RATIO A SCHEDULER GETS WHEN IT READS THE CURVE. BOTH COMPUTED BY <b>tools/night_report.py</b> FROM ONE HALF-HOURLY SERIES AND COMMITTED AS PER-SESSION JSON. GB CARBON: NESO CARBON INTENSITY API, KEYLESS. US CARBON: EIA-930, KEY WIRED 08-22. A SESSION'S SPREAD NEEDS THE FOLLOWING MORNING'S 00:00–05:00 LOCAL HOURS, SO THE FEED IS ROUGHLY <b>TWO DAYS</b> BEHIND THE MARK, NOT ONE — EVERY MARK NOW GOES BACK AND BACKFILLS THE SESSIONS THAT WERE TOO EARLY. <b>08-20 HAS FILLED: CISO 0.80×, ERCO 0.80×.</b> 08-21 AND 08-22 STILL RECORD <b>UNAVAILABLE-AND-DOCUMENTED</b>, WITH THE DAY THEY ARE WAITING ON NAMED, RATHER THAN A NUMBER NOBODY MEASURED. <b>n = 3 MARKED SESSIONS.</b> THE SUB-PARITY RESULT IS PUBLISHED THE SAME WAY THE GOOD ONES ARE.</div>
+              <div class="bx"><b>NAIVE</b> = MEAN gCO2/kWh OVER 17:00–21:00 LOCAL ÷ MEAN OVER 00:00–05:00 — THE RATIO A CRON GETS. <b>CHOSEN</b> = DIRTIEST CONTIGUOUS 5-HOUR MEAN ÷ CLEANEST, INSIDE THE SAME 16:00Z–07:00Z SESSION — THE RATIO A SCHEDULER GETS WHEN IT READS THE CURVE. BOTH COMPUTED BY <b>tools/night_report.py</b> FROM ONE HALF-HOURLY SERIES AND COMMITTED AS PER-SESSION JSON. GB CARBON: NESO CARBON INTENSITY API, KEYLESS. US CARBON: EIA-930, KEY WIRED 08-22. A SESSION'S SPREAD NEEDS THE FOLLOWING MORNING'S 00:00–05:00 LOCAL HOURS, SO THE FEED IS ROUGHLY <b>TWO DAYS</b> BEHIND THE MARK, NOT ONE — EVERY MARK NOW GOES BACK AND BACKFILLS THE SESSIONS THAT WERE TOO EARLY. <b>08-20 HAS FILLED: CISO 0.80×, ERCO 0.80×.</b> 08-21 AND 08-22 STILL RECORD <b>UNAVAILABLE-AND-DOCUMENTED</b>, WITH THE DAY THEY ARE WAITING ON NAMED, RATHER THAN A NUMBER NOBODY MEASURED. <b id="cbN">n = 2 MARKED SESSIONS + 1 QUOTED.</b> THE SUB-PARITY RESULT IS PUBLISHED THE SAME WAY THE GOOD ONES ARE.</div>
             </details>
           </div>
           <div class="ev">
@@ -968,52 +971,9 @@ prices    snapshot <span class="sd">2026-08-28</span> — offpeak.prices
               <span><i style="background:rgba(124,231,135,.6)"></i>Chosen window</span>
               <span><i style="background:rgba(255,107,107,.6)"></i>Worse than peak</span>
             </div>
-            <svg class="chart" viewBox="0 0 560 258" role="img" aria-label="Grouped bar chart of GB carbon spread for three sessions. Naive 00 to 05 shift: 1.03, 2.10 and 0.74 times. Chosen window: 1.13, 2.25 and 1.44 times. The 0.74 bar falls left of parity, meaning the shift would have added carbon.">
-              <rect x="104.0" y="40" width="166.4" height="192" fill="rgba(255,107,107,.05)"/>
-              <line x1="187.2" y1="40" x2="187.2" y2="232" stroke="rgba(255,255,255,.05)"/>
-              <line x1="353.6" y1="40" x2="353.6" y2="232" stroke="rgba(255,255,255,.05)"/>
-              <line x1="436.8" y1="40" x2="436.8" y2="232" stroke="rgba(255,255,255,.05)"/>
-              <line x1="520.0" y1="40" x2="520.0" y2="232" stroke="rgba(255,255,255,.05)"/>
-              <line x1="270.4" y1="34" x2="270.4" y2="238" stroke="#FFB454" stroke-width="1" class="dashline" opacity=".85"/>
-              <text x="270.4" y="26" class="ax" fill="#FFB454" text-anchor="middle" style="letter-spacing:.2em">PARITY</text>
-              <text x="6" y="62" class="pt-lbl" style="font-size:10.5px">SESSION −2</text>
-              <text x="6" y="76" class="ax">MARKED</text>
-              <rect x="104.0" y="48" width="171.4" height="18" fill="#45EACF" opacity=".17"/>
-              <rect x="273.4" y="48" width="2" height="18" fill="#45EACF"/>
-              <text x="112" y="60.5" class="ax" style="letter-spacing:.2em">NAIVE</text>
-              <text x="284.4" y="61" class="pt-lbl" fill="#EAF2F7">1.03×</text>
-              <rect x="104.0" y="72" width="188.0" height="18" fill="#7CE787" opacity=".34"/>
-              <rect x="290.0" y="72" width="2" height="18" fill="#7CE787"/>
-              <text x="112" y="84.5" class="ax" style="letter-spacing:.2em">CHOSEN</text>
-              <text x="301.0" y="85" class="pt-lbl" fill="#EAF2F7">1.13×</text>
-              <text x="6" y="130" class="pt-lbl" style="font-size:10.5px">SESSION −1</text>
-              <text x="6" y="144" class="ax">MARKED</text>
-              <rect x="104.0" y="116" width="349.4" height="18" fill="#45EACF" opacity=".17"/>
-              <rect x="451.4" y="116" width="2" height="18" fill="#45EACF"/>
-              <text x="112" y="128.5" class="ax" style="letter-spacing:.2em">NAIVE</text>
-              <text x="462.4" y="129" class="pt-lbl" fill="#EAF2F7">2.10×</text>
-              <rect x="104.0" y="140" width="374.4" height="18" fill="#7CE787" opacity=".34"/>
-              <rect x="476.4" y="140" width="2" height="18" fill="#7CE787"/>
-              <text x="112" y="152.5" class="ax" style="letter-spacing:.2em">CHOSEN</text>
-              <text x="487.4" y="153" class="pt-lbl" fill="#EAF2F7">2.25×</text>
-              <text x="6" y="198" class="pt-lbl" style="font-size:10.5px">LATEST</text>
-              <text x="6" y="212" class="ax">QUOTED</text>
-              <rect x="104.0" y="184" width="123.1" height="18" fill="#FF6B6B" opacity=".26"/>
-              <rect x="225.1" y="184" width="2" height="18" fill="#FF6B6B"/>
-              <text x="112" y="196.5" class="ax" style="letter-spacing:.2em">NAIVE</text>
-              <text x="236.1" y="197" class="pt-lbl" fill="#FF6B6B">0.74×</text>
-              <rect x="104.0" y="208" width="239.6" height="18" fill="#7CE787" opacity=".34"/>
-              <rect x="341.6" y="208" width="2" height="18" fill="#7CE787"/>
-              <text x="112" y="220.5" class="ax" style="letter-spacing:.2em">CHOSEN</text>
-              <text x="352.6" y="221" class="pt-lbl" fill="#EAF2F7">1.44×</text>
-              <line x1="104.0" y1="238" x2="520" y2="238" stroke="rgba(255,255,255,.12)"/>
-              <text x="104.0" y="252" class="ax" text-anchor="middle">0×</text>
-              <text x="270.4" y="252" class="ax" text-anchor="middle">1×</text>
-              <text x="436.8" y="252" class="ax" text-anchor="middle">2×</text>
-              <text x="520" y="252" class="ax" text-anchor="middle">2.5×</text>
-            </svg>
-            <p class="note-line" style="margin-top:16px">Anything left of <b>parity</b> is a session where shifting the work would have <b>added</b> carbon. The chosen window has never landed there.</p>
-            <span class="tag-br">NESO · keyless · marked 06:30Z</span>
+            <div id="cbChart"></div>
+            <p class="note-line" style="margin-top:16px">Anything left of <b>parity</b> is a session where shifting the work would have <b>added</b> carbon. <span id="cbNever">The chosen window has never landed there.</span></p>
+            <span class="tag-br" id="cbTag">NESO · keyless · marked 06:30Z</span>
           </div>
         </div>
       </div>
@@ -1232,7 +1192,7 @@ prices    snapshot <span class="sd">2026-08-28</span> — offpeak.prices
       <h2 class="sec-title">Same model, three prices</h2>
       <div class="case">
         <i class="ck tl"></i><i class="ck tr"></i><i class="ck bl"></i><i class="ck br"></i>
-        <p class="desc">Every row is one model at one venue. The dim end is the <b>batch tier</b>, the bright end is <b>standard</b>, and where a venue sells a <b>fast</b> tier it sits further right. The gap is what waiting is worth — log scale, because the sheet spans three orders of magnitude and the ratio is the durable figure, not the dollars.</p>
+        <p class="desc">Every row is one model at one venue. The dim end is the <b>batch tier</b> — or, on DeepSeek, the <b>off-peak clock rate</b>, half of peak by time of day rather than by queue — the bright end is <b>standard</b>, and where a venue sells a <b>fast</b> tier it sits further right. The gap is what waiting is worth — log scale, because the sheet spans three orders of magnitude and the ratio is the durable figure, not the dollars.</p>
         <div class="pv-panel">
           <span class="tag-tl">Exhibit 01 · price sheet · $/M tokens</span>
           <div class="pv-head">
@@ -1246,10 +1206,11 @@ prices    snapshot <span class="sd">2026-08-28</span> — offpeak.prices
             <span><i class="dot" style="background:rgba(255,180,84,.45)"></i>Batch · half of standard</span>
             <span><i class="dot" style="background:#FFB454"></i>Standard</span>
             <span><i class="ring" style="color:#EAF2F7"></i>Fast · gpt-5.6 family · Opus 5 / 4.8 (preview)</span>
+            <span><i class="dot" style="background:rgba(255,180,84,.45)"></i>Off-peak · DeepSeek's clock lane · half of peak</span>
           </div>
           <div id="pvSheetChart"></div>
           <div id="pvSheetTable" class="pv-tbl" hidden></div>
-          <p class="pv-note">SOURCE: <b>offpeak.prices</b>, PROVIDER PUBLIC SHEETS, SNAPSHOT <span class="sd">2026-08-28</span>, RE-VERIFIED FROM RENDERED PAGES. BATCH = EXACTLY HALF OF STANDARD ON EVERY ROW SHOWN. FAST = 2× STANDARD WHERE SOLD: THE GPT-5.6 FAMILY, AND CLAUDE OPUS 5 / OPUS 4.8 AS A RESEARCH PREVIEW (FIRST-PARTY API ONLY, NOT WITH BATCH) — 4× FAST → BATCH AT BOTH VENUES. SHEET RE-VERIFIED AGAINST THE RENDERED PROVIDER PAGES 2026-08-28. PROMOTIONAL RATES (SOL ≥ 2026-11-21 · GEMINI 3.6/3.7 FLASH ≤ 2026-12-31) CARRY THEIR EXPIRY AND RE-DERIVE, NEVER CACHED. CACHED-INPUT AND LONG-CONTEXT COLUMNS ARE NOT DRAWN.</p>
+          <p class="pv-note">SOURCE: <b>offpeak.prices</b>, PROVIDER PUBLIC SHEETS, SNAPSHOT <span class="sd">2026-08-30</span>, RE-VERIFIED FROM RENDERED PAGES. BATCH = EXACTLY HALF OF STANDARD ON EVERY ROW SHOWN. DEEPSEEK SELLS NO BATCH: ITS STANDARD ROW IS THE PEAK RATE (01:00–04:00 + 06:00–10:00 UTC, MON–FRI) AND THE DIM END IS THE OFF-PEAK RATE, HALF OF PEAK BY THE WALL CLOCK — SAME ARITHMETIC, DIFFERENT LANE. QWEN (ALIBABA MODEL STUDIO, INTERNATIONAL REGION) BATCHES AT 50%; QWEN3.7-MAX IS "LIMITED-TIME 50% OFF" WITH NO PUBLISHED END DATE. FAST = 2× STANDARD WHERE SOLD: THE GPT-5.6 FAMILY, AND CLAUDE OPUS 5 / OPUS 4.8 AS A RESEARCH PREVIEW (FIRST-PARTY API ONLY, NOT WITH BATCH) — 4× FAST → BATCH AT BOTH VENUES. SHEET RE-VERIFIED AGAINST THE RENDERED PROVIDER PAGES 2026-08-30. PROMOTIONAL RATES (SOL ≥ 2026-11-21 · GEMINI 3.6/3.7 FLASH ≤ 2026-12-31) CARRY THEIR EXPIRY AND RE-DERIVE, NEVER CACHED. CACHED-INPUT AND LONG-CONTEXT COLUMNS ARE NOT DRAWN.</p>
         </div>
       </div>
     </div>
@@ -1291,6 +1252,28 @@ prices    snapshot <span class="sd">2026-08-28</span> — offpeak.prices
       <div class="case">
         <i class="ck tl"></i><i class="ck tr"></i><i class="ck bl"></i><i class="ck br"></i>
         <p class="desc">No venue publishes this. Every session the desk submits a two-job canary into each venue's batch tier with a <b>24-hour window</b> and records how long it actually took. Most clear in minutes; one took eight and a half hours. A hollow marker at the top is a <b>censored</b> leg — still running when the session closed, so all we know is "longer than we watched."</p>
+
+        <p class="case-eyebrow" style="margin-top:8px">Coverage <em>//</em> what is measured, and what is not · as of <span class="sd">2026-08-30</span></p>
+        <p class="desc">The chart below draws only venues with a <b>measured queue</b> — four today. DeepSeek's clock lane is measured differently: there is no batch to wait for, so the probe records which <b>regime</b> the clock is in and the <b>synchronous latency</b> of a request made in it. Hourly rows stay in the private probe repo; this page carries the daily series, per-venue percentiles and counts — never hour-of-day.</p>
+        <div class="booktbl" style="margin-bottom:22px">
+          <table class="covtbl">
+            <thead><tr><th>Venue</th><th>Lane</th><th class="num">Discount</th><th>Status</th><th>Since</th><th>Note</th></tr></thead>
+            <tbody>
+              <tr><td class="first">OpenAI<span class="sub">BATCH API</span></td><td>batch</td><td class="num">50% off</td><td><span class="st filled">MEASURED</span></td><td>daily 08-23 · hourly 08-30</td><td class="note">Capturing. Two-job canary, 24 h window; the daily series is public, the hourly rows are private.</td></tr>
+              <tr><td class="first">Anthropic<span class="sub">MESSAGE BATCHES</span></td><td>batch</td><td class="num">50% off</td><td><span class="st filled">MEASURED</span></td><td>daily 08-23 · hourly 08-30</td><td class="note">Capturing. Same canary, same window.</td></tr>
+              <tr><td class="first">Google Gemini<span class="sub">BATCH MODE</span></td><td>batch</td><td class="num">50% off</td><td><span class="st filled">MEASURED</span></td><td>daily 08-26 · hourly 08-30</td><td class="note">Capturing. Same canary, same window.</td></tr>
+              <tr><td class="first">Mistral<span class="sub">BATCH API</span></td><td>batch</td><td class="num">50% off</td><td><span class="st filled">MEASURED</span></td><td>daily 08-26 · hourly 08-30</td><td class="note">Capturing. Same canary; the one eight-and-a-half-hour turnaround on the chart is this venue's.</td></tr>
+              <tr><td class="first">DeepSeek<span class="sub">CLOCK LANE · NO BATCH API</span></td><td>clock</td><td class="num">50% off-peak</td><td><span class="st filled">MEASURED</span></td><td>hourly 08-30</td><td class="note">Not a queue, so not on the chart. Observable is regime plus synchronous latency: first two observations 2.3 s and 2.6 s, off-peak, 2,000 / 300 tokens.</td></tr>
+              <tr><td class="first">Qwen<span class="sub">ALIBABA MODEL STUDIO · INTL</span></td><td>batch</td><td class="num">50% off</td><td><span class="st working">PROBATION</span></td><td>first live run 08-30</td><td class="note">Driver shipped in 0.2.7. Joins the chart once it has settled repeatedly.</td></tr>
+              <tr><td class="first">Groq<span class="sub">BATCH API</span></td><td>batch</td><td class="num">50% off</td><td><span class="st reroute">BLOCKED</span></td><td>—</td><td class="note">Batch tier answers 403 — plan-gated, and plan sales are suspended. Sync fallback only.</td></tr>
+              <tr><td class="first">xAI<span class="sub">FLAGSHIP</span></td><td>—</td><td class="num">−20% legacy only</td><td><span class="st idle">NO LANE</span></td><td>—</td><td class="note">No batch lane on the flagship; the discount is on legacy models only. Watched, not probed.</td></tr>
+              <tr><td class="first">AWS Bedrock<span class="sub">BATCH INFERENCE</span></td><td>batch</td><td class="num">50% off</td><td><span class="st idle">NOT BUILT</span></td><td>—</td><td class="note">Published; driver on partner pull.</td></tr>
+              <tr><td class="first">Azure<span class="sub">BATCH</span></td><td>batch</td><td class="num">—</td><td><span class="st idle">NOT BUILT</span></td><td>—</td><td class="note">On partner pull.</td></tr>
+              <tr><td class="first">Kimi<span class="sub">MOONSHOT</span></td><td>batch</td><td class="num">40% off</td><td><span class="st idle">NOT BUILT</span></td><td>—</td><td class="note">Published at 40%; not built.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
         <div class="pv-panel">
           <span class="tag-tl">Exhibit 03 · batch turnaround · canaries</span>
           <div class="pv-head">
@@ -1300,7 +1283,12 @@ prices    snapshot <span class="sd">2026-08-28</span> — offpeak.prices
           <div class="pv-legend" id="pvQueueLegend"></div>
           <div id="pvQueueChart"></div>
           <div id="pvQueueTable" class="pv-tbl" hidden></div>
-          <p class="pv-note">SOURCE: <b>nightly/&lt;session&gt;-queue.json</b> ON BOARD-DATA, WRITTEN BY <b>tools/queue_probe.py</b>. TWO JOBS PER LEG, ~30 TOKENS IN, SUB-CENT SPEND CAPPED AT $0.01 PER SESSION. SKIPPED LEGS (NO KEY IN THE ENVIRONMENT) ARE NOT DRAWN AND STAY IN THE TABLE. THIS IS THE REALIZED HALF OF THE RECORD — THE SHEET SAYS "WITHIN 24 HOURS"; THIS SAYS WHAT THAT MEANT.</p>
+          <p style="margin:14px 0 0"><span class="pv-live" id="pvQueueStatus">Inline series · the floor</span></p>
+          <div id="pvQueueSummary" hidden>
+            <div class="pv-head" style="margin-top:22px"><h3>Per-venue summary<span class="u" id="pvQueueSummaryUnit">percentiles · counts</span></h3></div>
+            <div class="pv-tbl" id="pvQueueSummaryTable"></div>
+          </div>
+          <p class="pv-note">SOURCE: THE DAILY SERIES ABOVE IS <b>nightly/&lt;session&gt;-queue.json</b> ON BOARD-DATA AS COMMITTED, WRITTEN BY <b>tools/queue_probe.py</b>; THE PROBE NOW RUNS HOURLY FROM A PRIVATE REPO AND PUBLISHES BACK <b>nightly/QUEUE.md</b> AND <b>nightly/queue-summary.json</b> — PER-VENUE PERCENTILES AND COUNTS, NEVER HOUR-OF-DAY, NEVER A PER-ROW HOURLY SERIES. TWO JOBS PER LEG, ~30 TOKENS IN, SUB-CENT SPEND CAPPED AT $0.01 PER SESSION. SKIPPED LEGS (NO KEY IN THE ENVIRONMENT) ARE NOT DRAWN AND STAY IN THE TABLE. THIS IS THE REALIZED HALF OF THE RECORD — THE SHEET SAYS "WITHIN 24 HOURS"; THIS SAYS WHAT THAT MEANT.</p>
         </div>
       </div>
     </div>
@@ -1319,7 +1307,7 @@ prices    snapshot <span class="sd">2026-08-28</span> — offpeak.prices
     </div>
     <b>OFFPEAK · INFERENCE FUTURES</b> — SAME MODEL · SAME TOKENS · MINUS THE URGENCY PREMIUM<br>
     EVERYONE BUYS INTELLIGENCE AT SPOT; OFFPEAK IS THE FUTURES MARKET. QUOTES ARE MARKET OBSERVATION FROM OPEN DATA; SETTLEMENTS ARE TRACK RECORD FROM REAL RUNS — THIS SITE NEVER CONFUSES THE TWO.<br>
-    PRICES: PROVIDER PUBLIC SHEETS, SNAPSHOT <span class="sd">2026-08-28</span>, RE-VERIFIED FROM RENDERED PAGES; PROMOTIONAL RATES CARRY THEIR EXPIRY AND RE-DERIVE, NEVER CACHED. GRID: NESO · EIA-930 · OCTOPUS AGILE · GRIDSTATUS. DEMO BOOK CONTRACTS ARE SIMULATED AND LABELLED; CURVES, SHEETS AND SETTLED RECEIPTS ARE REAL.
+    PRICES: PROVIDER PUBLIC SHEETS, SNAPSHOT <span class="sd">2026-08-30</span>, RE-VERIFIED FROM RENDERED PAGES; PROMOTIONAL RATES CARRY THEIR EXPIRY AND RE-DERIVE, NEVER CACHED. GRID: NESO · EIA-930 · OCTOPUS AGILE · GRIDSTATUS. DEMO BOOK CONTRACTS ARE SIMULATED AND LABELLED; CURVES, SHEETS AND SETTLED RECEIPTS ARE REAL.
   </div>
 </footer>
 
@@ -1371,16 +1359,37 @@ prices    snapshot <span class="sd">2026-08-28</span> — offpeak.prices
     "gemini-3.7-flash":    { i: 0.75,  o: 3.75, v: "GOOGLE · INTRO ≤ 2026-12-31" },
     "gemini-3.6-flash":    { i: 0.75,  o: 3.75, v: "GOOGLE · INTRO ≤ 2026-12-31" },
     "gemini-3.5-flash":    { i: 1.50,  o: 9.00, v: "GOOGLE" },
-    "gemini-3.5-flash-lite": { i: 0.30, o: 2.50, v: "GOOGLE" }
+    "gemini-3.5-flash-lite": { i: 0.30, o: 2.50, v: "GOOGLE" },
+    /* DeepSeek — api-docs.deepseek.com/quick_start/pricing, read 2026-08-30.
+       The standard row is the PEAK rate; the page's own words are "off-peak
+       rates are half of the peak rates", so BATCH reproduces the off-peak
+       column exactly — but the lane is a clock, not a queue: peak is
+       01:00–04:00 and 06:00–10:00 UTC Mon–Fri, everything else and all
+       weekend is off-peak, decided per request. No batch API, no fast tier.
+       `l: "clock"` is what prices.lane_for() says, and every place this page
+       prints the word "batch" for a row reads it. */
+    "deepseek-v4-flash":            { i: 0.44, o: 1.32, v: "DEEPSEEK · CLOCK LANE, NOT BATCH", l: "clock" },
+    "deepseek-v4-pro":              { i: 1.32, o: 3.96, v: "DEEPSEEK · CLOCK LANE, NOT BATCH", l: "clock" },
+    "deepseek-v4-flash-vision-exp": { i: 0.44, o: 1.32, v: "DEEPSEEK · CLOCK LANE, NOT BATCH", l: "clock" },
+    /* Qwen — alibabacloud.com/help/en/model-studio/model-pricing, international
+       region, USD. Batch 50% on both legs, no fast tier. qwen3.7-max is marked
+       "limited-time 50% off" with no end date, so it carries no promo expiry —
+       a note needs a date to be one. */
+    "qwen3.7-max":                  { i: 2.50, o: 7.50, v: "QWEN · ALIBABA MODEL STUDIO, INTL" },
+    "qwen3.8-max":                  { i: 2.00, o: 6.00, v: "QWEN · ALIBABA MODEL STUDIO, INTL" }
   };
   var BATCH = 0.5;
+  /* "batch" for every row but the clock venue's; the word the page prints
+     beside a row's half price. */
+  function laneOf(p) { return p && p.l === "clock" ? "clock" : "batch"; }
+  function cheapWord(p) { return laneOf(p) === "clock" ? "off-peak" : "batch"; }
 
   /* The date of the sheet inlined above — the one this deploy shipped with, and
      the one every "snapshot ____" citation on the page reads from. It is not a
      string typed into six paragraphs any more: `stampSheet()` writes it into
      every `.sd` span, so a stale citation beside a fresh number is no longer a
      thing that can happen by forgetting one. */
-  var SHEET_DATE = "2026-08-28";
+  var SHEET_DATE = "2026-08-30";
   var SHEET_SOURCE = "inline";
 
   /* The same sheet, published as data. `tools/publish_sheet.py` writes it to the
@@ -1400,6 +1409,8 @@ prices    snapshot <span class="sd">2026-08-28</span> — offpeak.prices
     if (m.indexOf("gpt-5.6") === 0) return "OPENAI";
     if (m.indexOf("openai/") === 0) return "GROQ";
     if (m.indexOf("gemini") === 0) return "GOOGLE";
+    if (m.indexOf("deepseek") === 0) return "DEEPSEEK";
+    if (m.indexOf("qwen") === 0) return "QWEN";
     if (m.indexOf("mistral") === 0 || m.indexOf("ministral") === 0
         || m.indexOf("codestral") === 0 || m.indexOf("glm-") === 0
         || m.indexOf("zai-") === 0) return "MISTRAL";
@@ -1449,7 +1460,8 @@ prices    snapshot <span class="sd">2026-08-28</span> — offpeak.prices
     { d: "2026-08-25", gb: [39.07, 23.17], ca: [null, null],   er: [72.69, 28.10] },
     { d: "2026-08-26", gb: [38.41, 22.30], ca: [127.14, 78.09], er: [103.85, 49.42] },
     { d: "2026-08-27", gb: [37.79, 25.78], ca: [124.14, 83.45], er: [83.81, 39.38] },
-    { d: "2026-08-28", gb: [null, null],   ca: [102.26, null],  er: [67.63, 29.15] }
+    { d: "2026-08-28", gb: [null, null],   ca: [102.26, null],  er: [67.63, 29.15] },
+    { d: "2026-08-29", gb: [38.47, null],  ca: [64.44, 46.94],  er: [51.27, 21.28] }
   ];
   var PV_QUEUE = [
     /* session, venue, model, elapsed seconds (null = censored), status */
@@ -1470,7 +1482,31 @@ prices    snapshot <span class="sd">2026-08-28</span> — offpeak.prices
     { d: "2026-08-28", v: "anthropic", m: "claude-haiku-4-5", s: 138.0, st: "completed" },
     { d: "2026-08-28", v: "openai", m: "gpt-5.6-luna", s: 155.0, st: "completed" },
     { d: "2026-08-28", v: "gemini", m: "gemini-3.7-flash", s: 169.0, st: "completed" },
-    { d: "2026-08-28", v: "mistral", m: "mistral-small-latest", s: 1129.7, st: "completed" }
+    { d: "2026-08-28", v: "mistral", m: "mistral-small-latest", s: 1129.7, st: "completed" },
+    { d: "2026-08-29", v: "anthropic", m: "claude-haiku-4-5", s: 77.6, st: "completed" },
+    { d: "2026-08-29", v: "openai", m: "gpt-5.6-luna", s: 1577.3, st: "completed" },
+    { d: "2026-08-29", v: "gemini", m: "gemini-3.7-flash", s: 276.3, st: "completed" },
+    { d: "2026-08-29", v: "mistral", m: "mistral-small-latest", s: null, st: "open" }
+  ];
+  /* The daily queue files end here: the probe has moved to a private repo and
+     runs hourly, and what comes back to board-data is nightly/QUEUE.md plus
+     nightly/queue-summary.json — per-venue percentiles and counts. The inline
+     rows above are the floor of the chart, not a series that keeps growing;
+     the summary table under the chart is what grows. */
+  var PV_QUEUE_SUMMARY_URL = "https://raw.githubusercontent.com/offpeak-ai/offpeak/board-data/nightly/queue-summary.json";
+
+  /* GB carbon, the board's third leg: the naive 17–21 ÷ 00–05 ratio a cron
+     gets, and the dirtiest-5h ÷ cleanest-5h ratio a scheduler gets from the
+     same half-hourly NESO series. `kind` is mark (actuals, 06:30Z) or quote
+     (forecast, 19:00Z). Hand-entered for the three sessions the prose beside
+     the chart discusses; every later session is read from
+     nightly/<session>-mark.json on load — carbon_gb.cleanest_5h.avg and
+     carbon_gb.dirtiest_5h.avg for the chosen window, the two named windows
+     for the naive one. A null on either side is a gap, never a fill. */
+  var SESSIONS = [
+    { d: "2026-08-20", kind: "mark",  naive: 1.03, chosen: 1.13 },
+    { d: "2026-08-21", kind: "mark",  naive: 2.10, chosen: 2.25 },
+    { d: "2026-08-22", kind: "quote", naive: 0.74, chosen: 1.44 }
   ];
   /* Validated categorical order (dark surface, CVD ΔE ≥ 11, normal ≥ 18). Color
      follows the entity: a grid or venue keeps its hue whatever else is drawn. */
@@ -1543,7 +1579,7 @@ prices    snapshot <span class="sd">2026-08-28</span> — offpeak.prices
       var p = PRICES[m], v = venueOf(m, p);
       if (!groups[v]) { groups[v] = []; order.push(v); }
       var std = PV_LEG === "o" ? p.o : p.i, fast = PV_LEG === "o" ? p.fo : p.fi;
-      groups[v].push({ m: m, v: v, std: std, batch: std * BATCH, fast: fast, promo: p.v && p.v.indexOf("INTRO") >= 0 });
+      groups[v].push({ m: m, v: v, std: std, batch: std * BATCH, fast: fast, promo: p.v && p.v.indexOf("INTRO") >= 0, lane: laneOf(p) });
     });
     order.forEach(function (v) { groups[v].sort(function (a, b) { return b.std - a.std; }); });
     return { order: order, groups: groups };
@@ -1559,10 +1595,10 @@ prices    snapshot <span class="sd">2026-08-28</span> — offpeak.prices
     var body = "", ticks = "";
     rows.forEach(function (r) {
       if (r.hdr) { y += gapH; body += '<text class="grp" x="0" y="' + (y - 8) + '">' + esc(r.hdr) + "</text>"; return; }
-      var cy = y + rowH / 2, isSol = r.m === "gpt-5.6-sol";
+      var cy = y + rowH / 2, isSol = r.m === "gpt-5.6-sol", clock = r.lane === "clock", cheap = clock ? "off-peak" : "batch";
       var xb = X(r.batch), xs = X(r.std), xf = r.fast ? X(r.fast) : null;
-      var tipRows = [{ c: "rgba(255,180,84,.45)", v: "$" + fmt(r.batch, 2), n: "batch" }, { c: "#FFB454", v: "$" + fmt(r.std, 2), n: "standard" }];
-      if (r.fast) tipRows.push({ c: "#EAF2F7", v: "$" + fmt(r.fast, 2), n: "fast · " + fmt(r.fast / r.batch, 1) + "× batch" });
+      var tipRows = [{ c: "rgba(255,180,84,.45)", v: "$" + fmt(r.batch, 2), n: cheap + (clock ? " · clock lane" : "") }, { c: "#FFB454", v: "$" + fmt(r.std, 2), n: clock ? "standard · peak" : "standard" }];
+      if (r.fast) tipRows.push({ c: "#EAF2F7", v: "$" + fmt(r.fast, 2), n: "fast · " + fmt(r.fast / r.batch, 1) + "× " + cheap });
       var tipj = esc(JSON.stringify({ h: r.m + " · " + r.v + " · " + (PV_LEG === "o" ? "output" : "input") + " $/M", r: tipRows }));
       body += '<g class="row" data-tip="' + tipj + '">';
       body += '<rect class="rowbg" x="0" y="' + y + '" width="' + W + '" height="' + rowH + '" fill="transparent"/>';
@@ -1571,6 +1607,8 @@ prices    snapshot <span class="sd">2026-08-28</span> — offpeak.prices
       body += '<circle class="mk" cx="' + xb + '" cy="' + cy + '" r="4.5" fill="#FFB454" fill-opacity=".45"/>';
       body += '<circle class="mk" cx="' + xs + '" cy="' + cy + '" r="4.5" fill="#FFB454"/>';
       if (xf) body += '<circle class="mk" cx="' + xf + '" cy="' + cy + '" r="4" fill="#111925" stroke="#EAF2F7" stroke-width="2"/>';
+      /* the clock venue's cheap end is a time of day, not a queue — say so on the row */
+      if (clock) body += '<text class="tick" x="' + (xb - 9) + '" y="' + (cy + 3.5) + '" text-anchor="end" style="fill:var(--muted); letter-spacing:.16em">OFF-PEAK</text>';
       body += '<text class="tick" x="' + (W - R + 14) + '" y="' + (cy + 3.5) + '" style="fill:var(--muted)">$' + fmt(r.std, 2) + "</text>";
       if (isSol) body += '<text class="tick" x="' + ((xb + xf) / 2) + '" y="' + (cy - 8) + '" text-anchor="middle" style="fill:#FFB454; letter-spacing:.18em">' + fmt(r.fast / r.batch, 1) + "× FAST → BATCH</text>";
       body += "</g>";
@@ -1582,8 +1620,8 @@ prices    snapshot <span class="sd">2026-08-28</span> — offpeak.prices
     var head = '<text class="tick" x="' + (W - R + 14) + '" y="' + (top + 14) + '">STANDARD</text><text class="tick" x="' + L + '" y="' + (top + 14) + '">$/M TOKENS · LOG</text>';
     mount("pvSheetChart", '<svg class="pv" viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="Dumbbell chart of batch, standard and fast prices per model on a log axis">' + ticks + head + body + "</svg>");
     $("pvSheetUnit").textContent = (PV_LEG === "o" ? "output" : "input") + " · $/M tokens";
-    var t = '<table><thead><tr><th>Model</th><th>Venue</th><th class="num">Batch</th><th class="num">Standard</th><th class="num">Fast</th><th class="num">Fast → batch</th></tr></thead><tbody>';
-    rows.forEach(function (r) { if (r.hdr) return; t += '<tr><td class="first">' + esc(r.m) + "</td><td>" + esc(r.v) + '</td><td class="num">$' + fmt(r.batch, 2) + '</td><td class="num">$' + fmt(r.std, 2) + '</td><td class="num">' + (r.fast ? "$" + fmt(r.fast, 2) : "—") + '</td><td class="num">' + (r.fast ? fmt(r.fast / r.batch, 1) + "×" : "—") + "</td></tr>"; });
+    var t = '<table><thead><tr><th>Model</th><th>Venue</th><th>Lane</th><th class="num">Batch / off-peak</th><th class="num">Standard</th><th class="num">Fast</th><th class="num">Fast → cheap</th></tr></thead><tbody>';
+    rows.forEach(function (r) { if (r.hdr) return; t += '<tr><td class="first">' + esc(r.m) + "</td><td>" + esc(r.v) + "</td><td>" + (r.lane === "clock" ? "clock · off-peak" : "batch") + '</td><td class="num">$' + fmt(r.batch, 2) + '</td><td class="num">$' + fmt(r.std, 2) + '</td><td class="num">' + (r.fast ? "$" + fmt(r.fast, 2) : "—") + '</td><td class="num">' + (r.fast ? fmt(r.fast / r.batch, 1) + "×" : "—") + "</td></tr>"; });
     $("pvSheetTable").innerHTML = t + "</tbody></table>";
   }
 
@@ -1652,7 +1690,8 @@ prices    snapshot <span class="sd">2026-08-28</span> — offpeak.prices
     var lo = Math.log10(60), hi = Math.log10(CEN * 1.6), ys = function (s) { return T + (1 - (Math.log10(s) - lo) / (hi - lo)) * (H - T - B); };
     var s = "";
     [[60, "1 MIN"], [600, "10 MIN"], [3600, "1 H"], [3600 * 8, "8 H"], [CEN, "24 H"]].forEach(function (t) { s += '<line class="' + (t[0] === CEN ? "axis" : "grid") + '" x1="' + L + '" y1="' + ys(t[0]) + '" x2="' + (W - R) + '" y2="' + ys(t[0]) + '"/><text class="tick" x="' + (L - 8) + '" y="' + (ys(t[0]) + 3) + '" text-anchor="end">' + t[1] + "</text>"; });
-    s += '<text class="tick" x="' + (W - R + 8) + '" y="' + (ys(CEN) + 3) + '">WINDOW</text>';
+    /* above the line, not beside it: the latest session's censored markers sit on the line's right end */
+    s += '<text class="tick" x="' + (W - R) + '" y="' + (ys(CEN) - 7) + '" text-anchor="end" style="letter-spacing:.18em">DECLARED WINDOW</text>';
     dates.forEach(function (d, i) { s += '<text class="tick" x="' + xs(i) + '" y="' + (H - 12) + '" text-anchor="middle">' + relLabel(i, n) + "</text>"; });
     var venues = PV_VENUE_ORDER.filter(function (v) { return PV_QUEUE.some(function (q) { return q.v === v; }); });
     var lastPt = {};
@@ -1660,7 +1699,7 @@ prices    snapshot <span class="sd">2026-08-28</span> — offpeak.prices
       if (q.st === "skipped") return;
       var vi = venues.indexOf(q.v), off = (vi - (venues.length - 1) / 2) * 9, x = xs(dates.indexOf(q.d)) + off, c = PV_VENUE[q.v] || "#9FB1C1";
       var cens = q.s == null, y = cens ? ys(CEN) : ys(Math.max(q.s, 60));
-      var tp = esc(JSON.stringify({ h: q.v + " · " + q.m + " · " + q.d, r: [{ c: c, v: cens ? "> session · censored" : fmtDur(q.s), n: cens ? "still running at close" : "batch turnaround · 24 h window" }] }));
+      var tp = esc(JSON.stringify({ h: q.v + " · " + q.m + " · " + q.d, r: [{ c: c, v: cens ? "> session · " + (q.st === "open" ? "open" : "censored") : fmtDur(q.s), n: cens ? "still running at close" : "batch turnaround · 24 h window" }] }));
       s += '<g class="pt" data-tip="' + tp + '"><circle class="hit" cx="' + x + '" cy="' + y + '" r="13"/>';
       s += cens ? '<circle class="mk" cx="' + x + '" cy="' + y + '" r="4.5" fill="#111925" stroke="' + c + '" stroke-width="2"/>' : '<circle class="mk" cx="' + x + '" cy="' + y + '" r="5" fill="' + c + '" stroke="#111925" stroke-width="2"/>';
       s += "</g>";
@@ -1671,10 +1710,88 @@ prices    snapshot <span class="sd">2026-08-28</span> — offpeak.prices
     mount("pvQueueChart", '<svg class="pv" viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="Dot plot of batch turnaround per venue per session on a log time axis; hollow markers at the 24 hour line are censored legs">' + s + "</svg>");
     $("pvQueueLegend").innerHTML = venues.map(function (v) { return '<span><i class="dot" style="background:' + PV_VENUE[v] + '"></i>' + esc(v) + "</span>"; }).join("") + '<span><i class="ring" style="color:#9FB1C1"></i>Censored · ran past the session</span>';
     var t = '<table><thead><tr><th>Session</th><th>Venue</th><th>Model</th><th class="num">Turnaround</th><th>Status</th></tr></thead><tbody>';
-    PV_QUEUE.forEach(function (q) { t += '<tr><td class="first">' + q.d + "</td><td>" + esc(q.v) + "</td><td>" + esc(q.m) + '</td><td class="num">' + fmtDur(q.s) + '</td><td><span class="st ' + (q.st === "completed" ? "filled" : q.st === "censored" ? "working" : "reroute") + '">' + esc(q.st.toUpperCase()) + "</span></td></tr>"; });
+    PV_QUEUE.forEach(function (q) { t += '<tr><td class="first">' + q.d + "</td><td>" + esc(q.v) + "</td><td>" + esc(q.m) + '</td><td class="num">' + fmtDur(q.s) + '</td><td><span class="st ' + (q.st === "completed" ? "filled" : q.st === "censored" || q.st === "open" ? "working" : q.st === "skipped" ? "idle" : "reroute") + '">' + esc(q.st.toUpperCase()) + "</span></td></tr>"; });
     $("pvQueueTable").innerHTML = t + "</tbody></table>";
     var done = PV_QUEUE.filter(function (q) { return q.s != null; }).map(function (q) { return q.s; }).sort(function (a, b) { return a - b; });
     if (done.length) $("pvS3").textContent = fmtDur(done[Math.floor(done.length / 2)]);
+  }
+  /* The per-venue summary the private probe publishes back. Percentiles and
+     counts only; drawn as a table, since a handful of buckets is a table. Stays
+     hidden until the document has actually arrived and parsed. */
+  function renderQueueSummary(doc) {
+    var box = $("pvQueueSummary"); if (!box) return false;
+    var b = doc && Array.isArray(doc.buckets) ? doc.buckets.filter(function (x) { return x && x.venue; }) : [];
+    if (!b.length) { box.hidden = true; return false; }
+    var cnt = function (v) { return v == null ? "—" : String(v); };
+    var order = function (v) { var i = PV_VENUE_ORDER.indexOf(v); return i < 0 ? 99 : i; };
+    b.sort(function (x, y) { return order(x.venue) - order(y.venue) || String(x.window).localeCompare(String(y.window)); });
+    var t = '<table><thead><tr><th>Venue</th><th>Window</th><th class="num">n</th><th class="num">p50</th><th class="num">p90</th><th class="num">p99</th><th class="num">max</th><th class="num">open</th><th class="num">expired</th><th class="num">overran</th><th class="num">censored</th></tr></thead><tbody>';
+    b.forEach(function (x) {
+      var c = PV_VENUE[x.venue] || "#9FB1C1";
+      t += '<tr><td class="first"><i class="dot" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:' + c + ';margin-right:8px;vertical-align:1px"></i>' + esc(x.venue) + "</td><td>" + esc(x.window == null ? "—" : x.window) + '</td><td class="num">' + cnt(x.n) + '</td><td class="num">' + fmtDur(x.p50_s) + '</td><td class="num">' + fmtDur(x.p90_s) + '</td><td class="num">' + fmtDur(x.p99_s) + '</td><td class="num">' + fmtDur(x.max_s) + '</td><td class="num">' + cnt(x.open) + '</td><td class="num' + (x.expired > 0 ? " down" : "") + '">' + cnt(x.expired) + '</td><td class="num' + (x.overran > 0 ? " down" : "") + '">' + cnt(x.overran) + '</td><td class="num">' + cnt(x.censored) + "</td></tr>";
+    });
+    $("pvQueueSummaryTable").innerHTML = t + "</tbody></table>";
+    var u = $("pvQueueSummaryUnit");
+    if (u) u.textContent = "percentiles · counts" + (doc.tail_started ? " · tail since " + doc.tail_started : "") + (doc.generated_utc ? " · " + String(doc.generated_utc).slice(0, 16).replace("T", " ") + "Z" : "");
+    box.hidden = false;
+    return true;
+  }
+  function queueStatus(addedLegs, summaryOn) {
+    var el = $("pvQueueStatus"); if (!el) return;
+    var last = PV_QUEUE.length ? PV_QUEUE[PV_QUEUE.length - 1].d : "";
+    var txt = addedLegs
+      ? "Board-data · " + addedLegs + " newer leg" + (addedLegs === 1 ? "" : "s") + " on load · through " + last
+      : "Inline series through " + last + " · the floor, not a growing series";
+    if (summaryOn) txt += " · summary published";
+    el.textContent = txt;
+    el.classList.toggle("on", !!(addedLegs || summaryOn));
+  }
+
+  /* ---------- board · 03 the carbon leg: paired bars per session ---------- */
+  /* Same drawing the page shipped with when it was three hand-placed sessions:
+     two bars per session on one 0→x axis, parity as an amber rule, anything
+     left of it in red. Rows are sessions in date order; a null on either
+     ratio is drawn as no bar and "—" in the tooltip. */
+  function renderCarbon() {
+    var el = $("cbChart"); if (!el) return;
+    var n = SESSIONS.length, W = 560, X0 = 104, X1 = 520, bar = 16, gap = 4, block = 60, top = 48;
+    var all = []; SESSIONS.forEach(function (s) { if (s.naive != null) all.push(s.naive); if (s.chosen != null) all.push(s.chosen); });
+    var xmax = Math.max(2.5, Math.ceil((Math.max.apply(null, all.concat([0])) + 0.2) * 2) / 2);
+    var X = function (v) { return X0 + (v / xmax) * (X1 - X0); };
+    var axisY = top + n * block - 14, H = axisY + 20, s = "";
+    s += '<rect x="' + X0 + '" y="40" width="' + (X(1) - X0) + '" height="' + (axisY - 46) + '" fill="rgba(255,107,107,.05)"/>';
+    var ticks = []; for (var t = 0; t <= xmax + 1e-9; t += 1) ticks.push(t); if (ticks[ticks.length - 1] < xmax) ticks.push(xmax);
+    ticks.forEach(function (t) { if (t > 0 && t !== 1) s += '<line x1="' + X(t) + '" y1="40" x2="' + X(t) + '" y2="' + (axisY - 6) + '" stroke="rgba(255,255,255,.05)"/>'; });
+    s += '<line x1="' + X(1) + '" y1="34" x2="' + X(1) + '" y2="' + axisY + '" stroke="#FFB454" stroke-width="1" class="dashline" opacity=".85"/>';
+    s += '<text x="' + X(1) + '" y="26" class="ax" fill="#FFB454" text-anchor="middle" style="letter-spacing:.2em">PARITY</text>';
+    SESSIONS.forEach(function (ss, i) {
+      var y0 = top + i * block, kind = (ss.kind || "mark").toUpperCase() + (ss.kind === "quote" ? "" : "ED");
+      s += '<text x="6" y="' + (y0 + 14) + '" class="pt-lbl" style="font-size:10.5px">' + esc(shortDate(ss.d)) + "</text>";
+      s += '<text x="6" y="' + (y0 + 28) + '" class="ax">' + esc(kind) + "</text>";
+      [["naive", "NAIVE", "#45EACF", ".17"], ["chosen", "CHOSEN", "#7CE787", ".34"]].forEach(function (k, j) {
+        var v = ss[k[0]], y = y0 + j * (bar + gap), below = v != null && v < 1, c = below ? "#FF6B6B" : k[2], op = below ? ".26" : k[3];
+        var tp = esc(JSON.stringify({ h: "Session " + ss.d + " · " + kind.toLowerCase(), r: [{ c: c, v: v == null ? "unavailable" : v.toFixed(2) + "×", n: k[0] === "naive" ? "naive 17–21 ÷ 00–05" : "chosen · dirtiest 5h ÷ cleanest 5h" }] }));
+        s += '<g data-tip="' + tp + '">';
+        s += '<rect x="' + X0 + '" y="' + y + '" width="' + (X1 - X0) + '" height="' + bar + '" fill="transparent"/>';
+        if (v != null) {
+          s += '<rect x="' + X0 + '" y="' + y + '" width="' + (X(v) - X0 + 2).toFixed(1) + '" height="' + bar + '" fill="' + c + '" opacity="' + op + '"/>';
+          s += '<rect x="' + X(v).toFixed(1) + '" y="' + y + '" width="2" height="' + bar + '" fill="' + c + '"/>';
+          s += '<text x="' + (X(v) + 11).toFixed(1) + '" y="' + (y + 12) + '" class="pt-lbl" fill="' + (below ? "#FF6B6B" : "#EAF2F7") + '">' + v.toFixed(2) + "×</text>";
+        } else {
+          s += '<text x="' + (X0 + 8) + '" y="' + (y + 12) + '" class="ax" style="letter-spacing:.14em">— UNAVAILABLE</text>';
+        }
+        s += '<text x="' + (X0 + 8) + '" y="' + (y + 12) + '" class="ax" style="letter-spacing:.2em">' + (v != null ? k[1] : "") + "</text>";
+        s += "</g>";
+      });
+    });
+    s += '<line x1="' + X0 + '" y1="' + axisY + '" x2="' + X1 + '" y2="' + axisY + '" stroke="rgba(255,255,255,.12)"/>';
+    ticks.forEach(function (t) { s += '<text x="' + X(t) + '" y="' + (axisY + 14) + '" class="ax" text-anchor="middle">' + (t % 1 === 0 ? t : t.toFixed(1)) + "×</text>"; });
+    var marked = SESSIONS.filter(function (x) { return x.kind !== "quote"; }).length, quoted = n - marked;
+    var chosenVals = SESSIONS.map(function (x) { return x.chosen; }).filter(function (v) { return v != null; });
+    var aria = "Grouped bar chart of GB carbon spread for " + n + " sessions, naive 00 to 05 shift against the chosen window; bars left of parity mean the shift would have added carbon.";
+    mount("cbChart", '<svg class="chart" viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="' + esc(aria) + '">' + s + "</svg>");
+    var cn = $("cbN"); if (cn) cn.textContent = "n = " + marked + " MARKED SESSION" + (marked === 1 ? "" : "S") + (quoted ? " + " + quoted + " QUOTED" : "") + ".";
+    var nv = $("cbNever"); if (nv) { var under = chosenVals.filter(function (v) { return v < 1; }).length; nv.textContent = under ? "The chosen window has landed there " + under + (under === 1 ? " time." : " times.") : "The chosen window has never landed there."; }
   }
 
   function renderPrices() { renderSheet(); renderMarks(); renderQueue(); }
@@ -1689,33 +1806,70 @@ prices    snapshot <span class="sd">2026-08-28</span> — offpeak.prices
     });
   });
   renderPrices();
+  renderCarbon();
+  queueStatus(0, false);
+
+  /* One fetch, one shape: a parsed document or null. Every board-data read on
+     this page goes through it, and null is the only failure it reports — a
+     404, a network error, a malformed file and an ad-blocker all look the same
+     to the charts, which keep drawing the inline mirror. */
+  function getJSON(url) {
+    if (typeof fetch !== "function") return Promise.resolve(null);
+    return fetch(url, { cache: "no-cache" }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; });
+  }
+  /* Session dates strictly after `last`, up to today, at most 14 of them. */
+  function daysAfter(last, inclusive) {
+    var today = new Date(), out = [], d = new Date(last + "T00:00:00Z");
+    if (!inclusive) d.setUTCDate(d.getUTCDate() + 1);
+    while (d <= today && out.length < 14) { out.push(d.toISOString().slice(0, 10)); d.setUTCDate(d.getUTCDate() + 1); }
+    return out;
+  }
 
   /* ask board-data for sessions newer than the inline mirror; silent on failure */
   (function refreshFromBoardData() {
-    if (!window.fetch) return;
+    if (typeof fetch !== "function") return;
     var base = "https://raw.githubusercontent.com/offpeak-ai/offpeak/board-data/nightly/";
-    var last = PV_MARKS[PV_MARKS.length - 1].d, today = new Date(), want = [];
-    var d = new Date(last + "T00:00:00Z"); d.setUTCDate(d.getUTCDate() + 1);
-    while (d <= today && want.length < 14) { want.push(d.toISOString().slice(0, 10)); d.setUTCDate(d.getUTCDate() + 1); }
-    if (!want.length) return;
     var pk = function (o, k) { o = o || {}; var a = o[k]; return a == null ? null : a; };
-    Promise.all(want.map(function (day) {
+    var lastMark = PV_MARKS[PV_MARKS.length - 1].d, lastQueue = PV_QUEUE.length ? PV_QUEUE[PV_QUEUE.length - 1].d : lastMark;
+    var lastSess = SESSIONS[SESSIONS.length - 1];
+    /* a quoted last session still wants its own mark, so that window is inclusive */
+    var wantMark = daysAfter(lastMark), wantQueue = daysAfter(lastQueue), wantSess = daysAfter(lastSess.d, lastSess.kind === "quote");
+    var days = {}; wantMark.concat(wantQueue, wantSess).forEach(function (d) { days[d] = true; });
+    var list = Object.keys(days).sort();
+    var perDay = Promise.all(list.map(function (day) {
+      var needMark = wantMark.indexOf(day) >= 0 || wantSess.indexOf(day) >= 0, needQueue = wantQueue.indexOf(day) >= 0;
       return Promise.all([
-        fetch(base + day + "-mark.json").then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }),
-        fetch(base + day + "-queue.json").then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; })
+        needMark ? getJSON(base + day + "-mark.json") : Promise.resolve(null),
+        needQueue ? getJSON(base + day + "-queue.json") : Promise.resolve(null)
       ]).then(function (pair) { return { d: day, mark: pair[0], queue: pair[1] }; });
-    })).then(function (got) {
-      var added = 0;
+    }));
+    Promise.all([perDay, getJSON(PV_QUEUE_SUMMARY_URL)]).then(function (res) {
+      var got = res[0], summary = res[1], marks = 0, legs = 0, sess = 0;
       got.forEach(function (g) {
-        if (g.mark) {
+        if (g.mark && wantMark.indexOf(g.d) >= 0) {
           var gb = g.mark.power_gb_agile, ca = g.mark.power_caiso_sp15, er = g.mark.power_ercot_houston;
           PV_MARKS.push({ d: g.d, gb: [pk(gb, "peak_window_17_21_bst"), pk(gb, "offpeak_window_00_05_bst")], ca: [pk(ca, "peak_window_17_21_local"), pk(ca, "offpeak_window_00_05_local")], er: [pk(er, "peak_window_17_21_local"), pk(er, "offpeak_window_00_05_local")] });
-          added++;
+          marks++;
         }
-        if (g.queue && g.queue.legs) g.queue.legs.forEach(function (l) { PV_QUEUE.push({ d: g.d, v: l.venue, m: l.model, s: l.elapsed_seconds == null ? null : l.elapsed_seconds, st: l.status || (l.elapsed_seconds == null ? "censored" : "completed") }); added++;
-        });
+        if (g.mark && wantSess.indexOf(g.d) >= 0 && g.mark.carbon_gb) {
+          /* carbon_gb: peak_window_17_21_bst, offpeak_window_00_05_bst,
+             cleanest_5h.avg, dirtiest_5h.avg — exactly the fields the mark
+             writes; a null on either side of a ratio is a gap. */
+          var cg = g.mark.carbon_gb, pkv = pk(cg, "peak_window_17_21_bst"), off = pk(cg, "offpeak_window_00_05_bst");
+          var clean = pk(cg.cleanest_5h, "avg"), dirty = pk(cg.dirtiest_5h, "avg");
+          SESSIONS.push({ d: g.d, kind: "mark",
+            naive: pkv != null && off != null && off > 0 ? pkv / off : null,
+            chosen: clean != null && dirty != null && clean > 0 ? dirty / clean : null });
+          sess++;
+        }
+        if (g.queue && g.queue.legs) g.queue.legs.forEach(function (l) { PV_QUEUE.push({ d: g.d, v: l.venue, m: l.model, s: l.elapsed_seconds == null ? null : l.elapsed_seconds, st: l.status || (l.elapsed_seconds == null ? "censored" : "completed") }); legs++; });
       });
-      if (added) { renderMarks(); renderQueue(); var lv = $("pvLive"); if (lv) { lv.classList.add("on"); lv.textContent = "Board-data · refreshed on load"; } }
+      if (marks) renderMarks();
+      if (legs) renderQueue();
+      if (sess) renderCarbon();
+      var summaryOn = renderQueueSummary(summary);
+      queueStatus(legs, summaryOn);
+      if (marks || legs) { var lv = $("pvLive"); if (lv) { lv.classList.add("on"); lv.textContent = "Board-data · refreshed on load"; } }
     }).catch(function () {});
   })();
 
@@ -1850,7 +2004,7 @@ prices    snapshot <span class="sd">2026-08-28</span> — offpeak.prices
   function renderRows() {
     var tb = $("b-rows"); if (!tb) return;
     tb.innerHTML = rows.map(function (r, i) {
-      var hasFast = PRICES[r.m] && PRICES[r.m].fi !== undefined;
+      var hasFast = PRICES[r.m] && PRICES[r.m].fi !== undefined, cheap = cheapWord(PRICES[r.m]);
       return '<tr>'
         + '<td><input type="text" class="w-name" data-i="' + i + '" data-k="n" value="' + String(r.n).replace(/"/g, "&quot;") + '" aria-label="Workload name"></td>'
         + '<td><select class="w-model" data-i="' + i + '" data-k="m" aria-label="Model">' + modelOptions(r.m) + "</select></td>"
@@ -1861,7 +2015,7 @@ prices    snapshot <span class="sd">2026-08-28</span> — offpeak.prices
           + '<option value="spot"' + (r.now === "spot" ? " selected" : "") + ">Spot</option>"
           + '<option value="fast"' + (r.now === "fast" ? " selected" : "") + (hasFast ? "" : " disabled") + ">Fast tier</option></select></td>"
         + '<td><select class="w-lane" data-i="' + i + '" data-k="tgt" aria-label="Has a deadline">'
-          + '<option value="batch"' + (r.tgt === "batch" ? " selected" : "") + ">Yes → batch</option>"
+          + '<option value="batch"' + (r.tgt === "batch" ? " selected" : "") + ">Yes → " + cheap + "</option>"
           + '<option value="spot"' + (r.tgt === "spot" ? " selected" : "") + ">No → unchanged</option></select></td>"
         + '<td><button class="row-x" type="button" data-del="' + i + '" aria-label="Remove workload">✕</button></td>'
         + "</tr>";
@@ -2072,6 +2226,14 @@ prices    snapshot <span class="sd">2026-08-28</span> — offpeak.prices
     if (!doc.prices || typeof doc.prices !== "object") return false;
 
     var fast = doc.fast_prices || {}, promo = doc.promo_notes || {}, next = {}, kept = 0;
+    /* The sheet's lane table, prefix-matched longest-first the way
+       prices.lane_for() does it. Absent or empty means every row is batch. */
+    var lanes = doc.lanes && typeof doc.lanes === "object" ? doc.lanes : {};
+    var lanePrefixes = Object.keys(lanes).sort(function (a, b) { return b.length - a.length; });
+    function laneFor(m) {
+      for (var k = 0; k < lanePrefixes.length; k++) if (m.indexOf(lanePrefixes[k]) === 0) return lanes[lanePrefixes[k]] === "clock" ? "clock" : "batch";
+      return "batch";
+    }
     Object.keys(doc.prices).forEach(function (m) {
       var row = doc.prices[m];
       var i = Number(row && row.input_per_m), o = Number(row && row.output_per_m);
@@ -2081,6 +2243,7 @@ prices    snapshot <span class="sd">2026-08-28</span> — offpeak.prices
         out.fi = Number(fast[m].input_per_m);
         out.fo = Number(fast[m].output_per_m);
       }
+      if (laneFor(m) === "clock") { out.l = "clock"; out.v += " · CLOCK LANE, NOT BATCH"; }
       /* The annotation is derived from the sheet's own promo notes rather than
          carried over from the inline object: an editorial tag that outlived the
          number it described would be the one thing worse than an old price. */
