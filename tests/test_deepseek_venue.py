@@ -438,7 +438,7 @@ class TestSettlement:
     def test_a_batch_venue_receipt_is_unchanged(self):
         # No paid_fraction on the raw usage: the tier rule prices the job
         # exactly as before this field existed.
-        from tests.test_run import FakeVenue
+        from test_run import FakeVenue
 
         results = offpeak.run(
             [job("claude-haiku-4-5", "x")], "8h", venues=[FakeVenue()], poll_interval=0
