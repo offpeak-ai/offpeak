@@ -276,6 +276,7 @@ class GeminiBatch(Venue):
             completed_at_utc=iso_utc(
                 getattr(job, "end_time", None) or getattr(job, "update_time", None)
             ),
+            created_at_utc=iso_utc(getattr(job, "create_time", None)),
         )
 
     def collect(self, handle: str) -> dict[str, Result]:

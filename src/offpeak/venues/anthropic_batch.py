@@ -87,6 +87,7 @@ class AnthropicBatch(Venue):
             failed=(getattr(counts, "errored", 0) or 0) + (getattr(counts, "expired", 0) or 0),
             raw_status=str(processing) if processing else None,
             completed_at_utc=iso_utc(getattr(batch, "ended_at", None)),
+            created_at_utc=iso_utc(getattr(batch, "created_at", None)),
             total=sum(
                 getattr(counts, k, 0) or 0
                 for k in ("processing", "succeeded", "errored", "canceled", "expired")

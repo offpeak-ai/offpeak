@@ -182,6 +182,7 @@ class MistralBatch(Venue):
             total=getattr(job, "total_requests", 0) or 0,
             raw_status=str(raw) if raw else None,
             completed_at_utc=iso_utc(getattr(job, "completed_at", None)),
+            created_at_utc=iso_utc(getattr(job, "created_at", None)),
         )
 
     def collect(self, handle: str) -> dict[str, Result]:
