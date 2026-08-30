@@ -89,6 +89,13 @@ class TestPromoNotes:
 
 
 class TestSheetHygiene:
+    def test_sonnet_5_carries_no_promo_note_because_its_rate_is_now_standard(self):
+        # It shipped as introductory through 2026-08-31 with a $3/$15 step-up
+        # scheduled for 09-01. That increase was cancelled, so quoting a decay
+        # here would be quoting one that will not happen.
+        assert get_promo_note("claude-sonnet-5") is None
+        assert get_price("claude-sonnet-5") == (2.00, 10.00)
+
     def test_the_sheet_is_dated(self):
         assert prices.PRICE_SHEET_DATE.startswith("2026-")
 
@@ -108,6 +115,15 @@ OPENAI_FAST = {
     "gpt-5.6-terra": (4.00, 24.00),
     "gpt-5.6-luna": (0.40, 2.40),
 }
+
+# Anthropic's fast mode (research preview): Opus 5 and Opus 4.8 only, at the
+# same 2x-standard the other venue charges.
+ANTHROPIC_FAST = {
+    "claude-opus-5": (10.00, 50.00),
+    "claude-opus-4-8": (10.00, 50.00),
+}
+
+ALL_FAST = {**OPENAI_FAST, **ANTHROPIC_FAST}
 
 
 class TestFastTier:
@@ -131,6 +147,28 @@ class TestFastTier:
         # published spread should never be flattered by the arithmetic.
         monkeypatch.setitem(prices._FAST_PRICES, "gpt-5.6-luna", (0.40, 1.20))
         assert prices.urgency_spread("gpt-5.6-luna") == pytest.approx(2.0)
+
+    @pytest.mark.parametrize("model,published", sorted(ANTHROPIC_FAST.items()))
+    def test_anthropic_publishes_fast_rows_for_opus_5_and_4_8(self, model, published):
+        # The row the watch could never have caught: fast mode was announced
+        # before the watch took its first baseline, so no hash diff covers it.
+        assert prices.get_fast_price(model) == published
+        assert published == pytest.approx(tuple(r * 2 for r in get_price(model)))
+        assert prices.urgency_spread(model) == pytest.approx(4.0)
+
+    @pytest.mark.parametrize("model", ["claude-opus-4-7", "claude-opus-4-6"])
+    def test_the_opus_models_without_fast_mode_are_absent_rather_than_guessed(self, model):
+        # 4.7 errors on speed: "fast"; 4.6 accepts it and bills standard. Neither
+        # has a published fast rate, and None is the honest answer for both.
+        assert prices.get_fast_price(model) is None
+        assert prices.urgency_spread(model) is None
+
+    def test_fast_mode_does_not_leak_onto_the_rest_of_the_anthropic_sheet(self):
+        for model in ("claude-fable-5", "claude-sonnet-5", "claude-haiku-4-5"):
+            assert prices.get_fast_price(model) is None, model
+
+    def test_a_date_pinned_opus_5_inherits_the_fast_row(self):
+        assert prices.get_fast_price("claude-opus-5-20260801") == (10.00, 50.00)
 
     def test_a_venue_with_no_fast_tier_has_no_spread(self):
         assert prices.get_fast_price("claude-haiku-4-5") is None

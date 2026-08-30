@@ -177,7 +177,7 @@ list      $2,469.00
 paid      $1,234.50
 captured  $1,234.50 (50.0%)
 left      $29.63 on the table (120 job(s) missed the batch tier)
-prices    snapshot 2026-08-23 — override via offpeak.prices
+prices    snapshot 2026-08-28 — override via offpeak.prices
 ───────────────────────────────────────────────
 ```
 

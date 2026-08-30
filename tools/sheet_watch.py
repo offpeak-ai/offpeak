@@ -685,7 +685,15 @@ def main(argv: list[str] | None = None) -> int:
     changes, snapshots, pages = detect_changes(sources, args.outdir)
 
     note = "classification disabled (--no-classify)"
-    if not args.no_classify:
+    if args.no_classify:
+        # Without this the row prints `unclassified` next to the hash detail and
+        # says nothing about why — which is exactly how four 2026-08-27 rows came
+        # to look like a classifier failure when the classifier was never asked
+        # to run. `unclassified` must always carry its reason.
+        for change in changes:
+            if change.status == "changed":
+                change.reason = note
+    else:
         deadline = args.deadline or next_utc(*DEFAULT_DEADLINE_UTC)
         note = classify(changes, deadline=deadline, cap_usd=args.cap, model=args.model)
 
