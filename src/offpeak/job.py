@@ -69,6 +69,14 @@ class Receipt:
     input_tokens: int = 0
     output_tokens: int = 0
     fell_back: bool = False
+    #: What the venue says this job paid, as a fraction of list — set only by a
+    #: venue whose price is decided per request rather than per tier. A batch
+    #: venue leaves it ``None`` and the tier rule prices the job: batch if it
+    #: landed, list if it fell back. A clock-priced venue (DeepSeek) stamps
+    #: 0.5 or 1.0 on each request as it is made, and that stamp outranks the
+    #: rule — a fallback that happened to run off-peak paid half, and a hold
+    #: that drained into a peak block paid list, whatever the path was called.
+    paid_fraction: float | None = None
 
     @property
     def sla_met(self) -> bool:
@@ -82,6 +90,9 @@ class Receipt:
     @property
     def paid_usd(self) -> float | None:
         """What the job cost on the venue it actually ran on."""
+        if self.paid_fraction is not None:
+            listed = self.list_usd
+            return None if listed is None else listed * self.paid_fraction
         if self.fell_back:
             return self.list_usd
         return batch_cost_usd(self.model, self.input_tokens, self.output_tokens)
@@ -102,6 +113,8 @@ class Receipt:
         where = f"{self.venue} {self.model}"
         if self.fell_back:
             where += " (sync fallback)"
+        if self.paid_fraction is not None:
+            where += f" (paid {self.paid_fraction:g}x list)"
         return (
             f"{where}: {self.input_tokens:,} in · {self.output_tokens:,} out · "
             f"list ${format_usd(self.list_usd)} · paid ${format_usd(self.paid_usd)} · "

@@ -122,6 +122,9 @@ was, never half-applied.
       "source": "developers.openai.com/api/docs/pricing",
       "note": "GPT-5.6 Sol's promotional pricing is available at least through November 21, 2026."
     }
+  },
+  "lanes": {
+    "deepseek-": "clock"
   }
 }
 ```
@@ -129,6 +132,15 @@ was, never half-applied.
 `prices.export_sheet()` produces exactly this from whatever sheet is in force,
 which is how the published files are generated — the format is not a second
 description of the sheet that can drift from it.
+
+`lanes` (added 2026-08-30, still schema `/1`) says how a venue sells its
+discount: `"batch"` — the default, and absent for every model that has no row —
+or `"clock"`, for a venue with no batch API whose half price is decided by the
+wall clock at the moment a request is made. DeepSeek is the one clock lane today;
+`prices.lane_for("deepseek-v4-flash")` answers `"clock"`. The key is additive: a
+reader that predates it ignores it, and a sheet that omits it retracts nothing,
+so `load_sheet(..., replace=True)` on an older file leaves the bundled lanes in
+place. See [DeepSeek](venues-deepseek.md).
 
 ## The settled ledger, as data
 

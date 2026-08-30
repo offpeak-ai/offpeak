@@ -40,10 +40,12 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
 import offpeak  # noqa: E402
 from offpeak.venues.anthropic_batch import AnthropicBatch  # noqa: E402
+from offpeak.venues.deepseek_clock import DeepSeekClock  # noqa: E402
 from offpeak.venues.gemini_batch import GeminiBatch  # noqa: E402
 from offpeak.venues.groq_batch import GroqBatch  # noqa: E402
 from offpeak.venues.mistral_batch import MistralBatch  # noqa: E402
 from offpeak.venues.openai_batch import OpenAIBatch  # noqa: E402
+from offpeak.venues.qwen_batch import QwenBatch  # noqa: E402
 
 DEFAULT_CAP_USD = 0.05  # on total list exposure, not per run
 DEFAULT_DEADLINE = "06:00"
@@ -130,6 +132,14 @@ class RecordingGemini(Recording, GeminiBatch):
     pass
 
 
+class RecordingDeepSeek(Recording, DeepSeekClock):
+    pass
+
+
+class RecordingQwen(Recording, QwenBatch):
+    pass
+
+
 # Groq is opt-in here for the same reason it is opt-in in the library: it wants
 # its own key and its own extra, and no run should start spending at a venue
 # nobody named.
@@ -139,6 +149,8 @@ VENUES = {
     "groq": (RecordingGroq, GroqBatch),
     "mistral": (RecordingMistral, MistralBatch),
     "gemini": (RecordingGemini, GeminiBatch),
+    "deepseek": (RecordingDeepSeek, DeepSeekClock),
+    "qwen": (RecordingQwen, QwenBatch),
 }
 
 
@@ -294,6 +306,7 @@ def main(argv=None) -> int:
                 "list_usd": rec.list_usd,
                 "paid_usd": rec.paid_usd,
                 "fell_back": rec.fell_back,
+                "paid_fraction": rec.paid_fraction,
                 "sla_met": rec.sla_met,
             }
         )
