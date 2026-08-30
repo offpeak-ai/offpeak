@@ -22,7 +22,16 @@ __all__ = ["run", "receipt", "Settlement", "default_venues"]
 
 
 def default_venues() -> list[Venue]:
-    """Provider batch tiers, tried in order. SDKs import lazily on first use."""
+    """Provider batch tiers, tried in order. SDKs import lazily on first use.
+
+    Anthropic and OpenAI only. Every other venue in the tree — Groq, Mistral,
+    Gemini, DeepSeek, Qwen — is opt-in: it wants its own key and its own
+    extra, and a model name should not start costing money at a venue nobody
+    asked for. Pass them explicitly::
+
+        from offpeak.venues import DeepSeekClock, QwenBatch
+        offpeak.run(jobs, "06:00", venues=[DeepSeekClock(), QwenBatch()])
+    """
     from .venues.anthropic_batch import AnthropicBatch
     from .venues.openai_batch import OpenAIBatch
 
@@ -35,6 +44,19 @@ def _usage_tokens(raw: object) -> tuple[int, int]:
     input_tokens = raw.get("input_tokens", raw.get("prompt_tokens", 0)) or 0
     output_tokens = raw.get("output_tokens", raw.get("completion_tokens", 0)) or 0
     return int(input_tokens), int(output_tokens)
+
+
+def _paid_fraction(raw: object) -> float | None:
+    """The venue's own statement of what a job paid, as a fraction of list,
+    when the venue makes one. Only a clock-priced venue does; see
+    :attr:`Receipt.paid_fraction`. Anything that is not a usable number is
+    ``None``, and the tier rule prices the job."""
+    if not isinstance(raw, dict):
+        return None
+    value = raw.get("paid_fraction")
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return None
+    return float(value)
 
 
 def _pick_venue(model: str, venues: list[Venue]) -> Venue:
@@ -196,6 +218,7 @@ def run(
             input_tokens=input_tokens,
             output_tokens=output_tokens,
             fell_back=j.id in fell_back,
+            paid_fraction=_paid_fraction(result.raw),
         )
         results.append(result)
     return results
@@ -307,6 +330,11 @@ def receipt(results: list[Result]) -> Settlement:
             settlement.list_usd += r.list_usd
             settlement.paid_usd += r.paid_usd
             if r.fell_back:
-                # The spread this job would have captured had the batch held.
-                settlement.left_on_table_usd += r.list_usd * (1 - BATCH_DISCOUNT)
+                # The spread this job would have captured had the batch held,
+                # less whatever it captured anyway — a clock-priced fallback
+                # that ran off-peak paid half and left nothing on the table.
+                spread = r.spread_usd or 0.0
+                settlement.left_on_table_usd += max(
+                    0.0, r.list_usd * (1 - BATCH_DISCOUNT) - spread
+                )
     return settlement

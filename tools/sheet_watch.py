@@ -107,10 +107,14 @@ class Source:
     cited: bool
 
 
-# The five cited sources are the ones named in comments in src/offpeak/prices.py.
-# The four uncited ones are venues the sheet does not price yet: watching them
-# before they are on the sheet is how the sheet gets added to honestly, with a
-# history of what the page said rather than one reading on one day.
+# The six cited sources are the ones named in comments in src/offpeak/prices.py.
+# The uncited ones are pages the sheet does not cite: some are venues it does
+# not price yet, and watching them before they are on the sheet is how the
+# sheet gets added to honestly, with a history of what the page said rather
+# than one reading on one day. qwen:pricing stays uncited even though the
+# sheet now carries Qwen rows — those cite model-studio/model-pricing, a
+# different page from the models catalogue watched here, and flipping the
+# flag would claim a citation prices.py does not make.
 SOURCES: tuple[Source, ...] = (
     Source("anthropic:pricing", "https://platform.claude.com/docs/en/about-claude/pricing", True),
     Source("openai:pricing", "https://developers.openai.com/api/docs/pricing", True),
@@ -119,7 +123,7 @@ SOURCES: tuple[Source, ...] = (
     Source("google:pricing", "https://ai.google.dev/pricing", True),
     Source("groq:plans", "https://console.groq.com/docs/service-tiers", False),
     Source("xai:pricing", "https://docs.x.ai/docs/models", False),
-    Source("deepseek:pricing", "https://api-docs.deepseek.com/quick_start/pricing", False),
+    Source("deepseek:pricing", "https://api-docs.deepseek.com/quick_start/pricing", True),
     Source("qwen:pricing", "https://www.alibabacloud.com/help/en/model-studio/models", False),
 )
 
@@ -685,7 +689,15 @@ def main(argv: list[str] | None = None) -> int:
     changes, snapshots, pages = detect_changes(sources, args.outdir)
 
     note = "classification disabled (--no-classify)"
-    if not args.no_classify:
+    if args.no_classify:
+        # Without this the row prints `unclassified` next to the hash detail and
+        # says nothing about why — which is exactly how four 2026-08-27 rows came
+        # to look like a classifier failure when the classifier was never asked
+        # to run. `unclassified` must always carry its reason.
+        for change in changes:
+            if change.status == "changed":
+                change.reason = note
+    else:
         deadline = args.deadline or next_utc(*DEFAULT_DEADLINE_UTC)
         note = classify(changes, deadline=deadline, cap_usd=args.cap, model=args.model)
 

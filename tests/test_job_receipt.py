@@ -89,3 +89,26 @@ def test_a_registered_price_does_not_leak_into_other_tests():
     # "mystery", and without cleanup every later test sees it.
     assert get_price("mystery") is None
     assert get_price("mystery-model") is None
+
+
+def test_a_venue_stated_paid_fraction_outranks_the_tier_rule():
+    # A clock-priced venue says what each request paid. Half of list on a
+    # fallback that ran off-peak; list on a hold that drained into peak.
+    r = _receipt(fell_back=True)
+    r.paid_fraction = 0.5
+    assert r.paid_usd == pytest.approx(r.list_usd * 0.5)
+    assert r.spread_usd == pytest.approx(r.list_usd * 0.5)
+    assert "paid 0.5x list" in str(r)
+
+    r = _receipt(fell_back=False)
+    r.paid_fraction = 1.0
+    assert r.paid_usd == r.list_usd
+    assert r.spread_usd == 0.0
+
+
+def test_a_paid_fraction_on_an_unpriced_model_is_still_unpriced():
+    r = _receipt()
+    r.model = "no-such-model"
+    r.paid_fraction = 0.5
+    assert r.paid_usd is None
+    assert r.spread_usd is None

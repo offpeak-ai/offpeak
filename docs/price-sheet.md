@@ -7,7 +7,7 @@ before.
 That is deliberate, and it is the reason a receipt is worth anything:
 
 ```
-prices    snapshot 2026-08-23 — override via offpeak.prices
+prices    snapshot 2026-08-28 — override via offpeak.prices
 ```
 
 A receipt that names its sheet can be re-derived later by anyone. A library that
@@ -55,8 +55,8 @@ SHEET = "https://raw.githubusercontent.com/offpeak-ai/offpeak/board-data/sheet/l
 
 load = prices.load_sheet(SHEET)
 print(load)
-# loaded price sheet 2026-08-23 from https://…/latest.json: 27 model(s) —
-# 0 new, 0 changed, 27 unchanged; 3 fast row(s), 3 promo note(s)
+# loaded price sheet 2026-08-28 from https://…/latest.json: 30 model(s) —
+# 0 new, 0 changed, 30 unchanged; 5 fast row(s), 3 promo note(s)
 
 print(prices.sheet_date())   # what is pricing jobs right now
 print(prices.PRICE_SHEET_DATE)  # what this release bundled — never moves
@@ -105,14 +105,15 @@ was, never half-applied.
 ```json
 {
   "schema": "offpeak.price-sheet/1",
-  "sheet_date": "2026-08-23",
-  "generated_utc": "2026-08-26T05:12:00+00:00",
+  "sheet_date": "2026-08-28",
+  "generated_utc": "2026-08-28T05:12:00+00:00",
   "batch_discount": 0.5,
   "prices": {
     "claude-haiku-4-5": {"input_per_m": 1.0, "output_per_m": 5.0}
   },
   "fast_prices": {
-    "gpt-5.6-sol": {"input_per_m": 8.0, "output_per_m": 40.0}
+    "gpt-5.6-sol": {"input_per_m": 8.0, "output_per_m": 40.0},
+    "claude-opus-5": {"input_per_m": 10.0, "output_per_m": 50.0}
   },
   "promo_notes": {
     "gpt-5.6-sol": {
@@ -121,6 +122,9 @@ was, never half-applied.
       "source": "developers.openai.com/api/docs/pricing",
       "note": "GPT-5.6 Sol's promotional pricing is available at least through November 21, 2026."
     }
+  },
+  "lanes": {
+    "deepseek-": "clock"
   }
 }
 ```
@@ -128,6 +132,15 @@ was, never half-applied.
 `prices.export_sheet()` produces exactly this from whatever sheet is in force,
 which is how the published files are generated — the format is not a second
 description of the sheet that can drift from it.
+
+`lanes` (added 2026-08-30, still schema `/1`) says how a venue sells its
+discount: `"batch"` — the default, and absent for every model that has no row —
+or `"clock"`, for a venue with no batch API whose half price is decided by the
+wall clock at the moment a request is made. DeepSeek is the one clock lane today;
+`prices.lane_for("deepseek-v4-flash")` answers `"clock"`. The key is additive: a
+reader that predates it ignores it, and a sheet that omits it retracts nothing,
+so `load_sheet(..., replace=True)` on an older file leaves the bundled lanes in
+place. See [DeepSeek](venues-deepseek.md).
 
 ## The settled ledger, as data
 
