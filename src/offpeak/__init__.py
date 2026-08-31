@@ -11,6 +11,8 @@ off, today.
     print(offpeak.receipt(results))
 """
 
+from importlib import metadata as _metadata
+
 from . import prices
 from .client import Settlement, default_venues, receipt, run
 from .deadline import parse_deadline, seconds_until
@@ -19,7 +21,14 @@ from .prices import format_usd
 from .quote import Quote, VenueQuote, quote
 from .venues.base import BatchState, Venue
 
-__version__ = "0.2.6.dev0"
+# The version lives in pyproject.toml and nowhere else. This used to be a
+# second copy of the string, and it did what second copies do: 0.2.7 shipped
+# reporting itself as 0.2.6.dev0. Read the installed metadata instead; the
+# fallback only fires for a source tree that was never pip-installed.
+try:
+    __version__ = _metadata.version("offpeak")
+except _metadata.PackageNotFoundError:  # pragma: no cover - uninstalled tree
+    __version__ = "0.0.0.dev0"
 
 __all__ = [
     "job",
