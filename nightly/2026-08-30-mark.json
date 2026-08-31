@@ -58,7 +58,7 @@
     "unit": "$/MWh"
   },
   "unavailable": {
-    "carbon_caiso_sp15": "CISO: EIA-930 has published no hours for 2026-08-30 yet (the feed runs about a day behind)",
-    "carbon_ercot_houston": "ERCO: EIA-930 has published no hours for 2026-08-30 yet (the feed runs about a day behind)"
+    "carbon_caiso_sp15": "CISO: EIA-930 has 2026-08-30 but not yet the 00:00-05:00 local hours of 2026-08-31, which is the trough this session's spread is measured against",
+    "carbon_ercot_houston": "ERCO: EIA-930 has 2026-08-30 but not yet the 00:00-05:00 local hours of 2026-08-31, which is the trough this session's spread is measured against"
   }
 }
