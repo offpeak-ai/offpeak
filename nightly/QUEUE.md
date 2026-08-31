@@ -27,21 +27,21 @@ Written by `tools/queue_summary.py`, never by hand.
 
 | range | n | p50 | p90 | p99 | max |
 |---|---|---|---|---|---|
-| 7d | 7 | 2m18s | 3m39s | 4m44s | 4m51s |
-| 30d | 7 | 2m18s | 3m39s | 4m44s | 4m51s |
-| all-time | 7 | 2m18s | 3m39s | 4m44s | 4m51s |
+| 7d | 8 | 2m10s | 3m26s | 4m43s | 4m51s |
+| 30d | 8 | 2m10s | 3m26s | 4m43s | 4m51s |
+| all-time | 8 | 2m10s | 3m26s | 4m43s | 4m51s |
 
-Completed: 7/7. Expired: 0. Overran window: 0. Failed: 0.
+Completed: 8/8. Expired: 0. Overran window: 0. Failed: 0.
 
 ## gemini (24h)
 
 | range | n | p50 | p90 | p99 | max |
 |---|---|---|---|---|---|
-| 7d | 5 | 3m20s | 4m54s | 5m05s | 5m06s |
-| 30d | 5 | 3m20s | 4m54s | 5m05s | 5m06s |
-| all-time | 5 | 3m20s | 4m54s | 5m05s | 5m06s |
+| 7d | 6 | 3m05s | 4m51s | 5m05s | 5m06s |
+| 30d | 6 | 3m05s | 4m51s | 5m05s | 5m06s |
+| all-time | 6 | 3m05s | 4m51s | 5m05s | 5m06s |
 
-Completed: 5/5. Expired: 0. Overran window: 0. Failed: 0.
+Completed: 6/6. Expired: 0. Overran window: 0. Failed: 0.
 
 ## mistral (24h)
 
@@ -51,24 +51,24 @@ Completed: 5/5. Expired: 0. Overran window: 0. Failed: 0.
 | 30d | 4 | 4h24m10s | 15h50m52s | 18h41m06s | 19h00m01s |
 | all-time | 4 | 4h24m10s | 15h50m52s | 18h41m06s | 19h00m01s |
 
-Completed: 4/5. Expired: 0. Overran window: 0. Failed: 0.
+Completed: 4/6. Expired: 0. Overran window: 0. Failed: 0.
 
 ## openai (24h)
 
 | range | n | p50 | p90 | p99 | max |
 |---|---|---|---|---|---|
-| 7d | 5 | 2m34s | 16m48s | 25m20s | 26m17s |
-| 30d | 5 | 2m34s | 16m48s | 25m20s | 26m17s |
-| all-time | 5 | 2m34s | 16m48s | 25m20s | 26m17s |
+| 7d | 6 | 2m34s | 14m26s | 25m06s | 26m17s |
+| 30d | 6 | 2m34s | 14m26s | 25m06s | 26m17s |
+| all-time | 6 | 2m34s | 14m26s | 25m06s | 26m17s |
 
-Completed: 5/7. Expired: 0. Overran window: 0. Failed: 0.
+Completed: 6/8. Expired: 0. Overran window: 0. Failed: 0.
 
 ## Days of continuous accrual
 
 | venue | days |
 |---|---|
-| anthropic | 7 |
-| gemini | 5 |
-| mistral | 5 |
-| openai | 7 |
+| anthropic | 8 |
+| gemini | 6 |
+| mistral | 6 |
+| openai | 8 |
 
