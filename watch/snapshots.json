@@ -2,7 +2,7 @@
   "anthropic:pricing": {
     "chars": 28438,
     "cited": true,
-    "fetched_at": "2026-08-30T03:14:00+00:00",
+    "fetched_at": "2026-08-31T03:14:15+00:00",
     "lines": 703,
     "price_figures": 142,
     "sha256": "d775f55319a69de7f3dfae2850ed8bc339cc02b62cc8ceb140c2b2f2a933f4bb",
@@ -11,7 +11,7 @@
   "deepseek:pricing": {
     "chars": 2747,
     "cited": true,
-    "fetched_at": "2026-08-30T03:14:00+00:00",
+    "fetched_at": "2026-08-31T03:14:15+00:00",
     "lines": 135,
     "price_figures": 18,
     "sha256": "7063e4ceb0bfddd5de1ecb1e075efd87adcd5e8a229c00837062594e3ec4a3c2",
@@ -20,7 +20,7 @@
   "google:pricing": {
     "chars": 54078,
     "cited": true,
-    "fetched_at": "2026-08-30T03:14:00+00:00",
+    "fetched_at": "2026-08-31T03:14:15+00:00",
     "lines": 2041,
     "price_figures": 485,
     "sha256": "38aacfed0a79aff779dd88f27104fe5f47ad92c47954d5b970506ccb5718d9aa",
@@ -29,7 +29,7 @@
   "groq:plans": {
     "chars": 4426,
     "cited": false,
-    "fetched_at": "2026-08-30T03:14:00+00:00",
+    "fetched_at": "2026-08-31T03:14:15+00:00",
     "lines": 150,
     "price_figures": 0,
     "sha256": "583daba0ebd470b5335b6342eefaa4b97475a21da14258a9d573d980ac1c9c3b",
@@ -38,7 +38,7 @@
   "groq:pricing": {
     "chars": 885,
     "cited": true,
-    "fetched_at": "2026-08-30T03:14:00+00:00",
+    "fetched_at": "2026-08-31T03:14:15+00:00",
     "lines": 27,
     "price_figures": 1,
     "sha256": "b1741fc79b1346e33677be351a61c670018a0d4bb0ef6d9f34202cea0bf35b60",
@@ -47,25 +47,25 @@
   "mistral:pricing": {
     "chars": 10265,
     "cited": true,
-    "fetched_at": "2026-08-30T03:14:00+00:00",
+    "fetched_at": "2026-08-31T03:14:15+00:00",
     "lines": 513,
     "price_figures": 50,
     "sha256": "c916c6693705907428f7592a736ebccc2340ae8c672dcd55ab30b5ff6fc97074",
     "url": "https://mistral.ai/pricing/api"
   },
   "openai:pricing": {
-    "chars": 18282,
+    "chars": 18242,
     "cited": true,
-    "fetched_at": "2026-08-30T03:14:00+00:00",
+    "fetched_at": "2026-08-31T03:14:15+00:00",
     "lines": 1113,
     "price_figures": 188,
-    "sha256": "8515a8ca1cfcf6f5705122b3f8fe969822b200b414ca09c749feb033528c11bd",
+    "sha256": "88f46cae3dfb7455a9176bc4d37c980b724f5a026f54b59caf285d111aaa10ba",
     "url": "https://developers.openai.com/api/docs/pricing"
   },
   "qwen:pricing": {
     "chars": 1985,
     "cited": false,
-    "fetched_at": "2026-08-30T03:14:00+00:00",
+    "fetched_at": "2026-08-31T03:14:15+00:00",
     "lines": 79,
     "price_figures": 0,
     "sha256": "2433e55658a9c30a838145501ecbebae7d76e7a6fba543bc3b7932c190e0f7fe",
@@ -74,7 +74,7 @@
   "xai:pricing": {
     "chars": 5303,
     "cited": false,
-    "fetched_at": "2026-08-30T03:14:00+00:00",
+    "fetched_at": "2026-08-31T03:14:15+00:00",
     "lines": 262,
     "price_figures": 8,
     "sha256": "79b38033c67619ff2c9c7cd82ef011dc38deb5a86fc32e121517287ffab7a96c",

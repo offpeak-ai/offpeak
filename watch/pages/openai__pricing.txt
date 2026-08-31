@@ -46,7 +46,7 @@ Search docs
 Suggested
 responses createreasoning_effortrealtimeprompt caching
 Overview Models Agents Tools Voice & Audio Production API reference
-OverviewModelsAgentsToolsVoice & AudioProductionAPI referenceDocs sectionModels
+OverviewModelsAgentsToolsVoice & AudioProductionAPI referenceDocsModels
 Home
 Get started
 Quickstart
@@ -240,9 +240,9 @@ Spend limits
 Admin APIs
 Error codes
 Docs Use cases
-DocsUse casesDocs sectionDocs
+DocsUse casesDocsDocs
 Plugins Workspace Agents Commerce Ads
-PluginsWorkspace AgentsCommerceAdsDocs sectionSelect...
+PluginsWorkspace AgentsCommerceAdsDocsSelect...
 Home
 Quickstart
 Core concepts
@@ -322,7 +322,7 @@ Insights
 Files
 Conversion Setup
 Overview Features Configuration Developers Security Administration Use Cases Resources
-OverviewFeaturesConfigurationDevelopersSecurityAdministrationUse CasesResourcesDocs sectionOverview
+OverviewFeaturesConfigurationDevelopersSecurityAdministrationUse CasesResourcesDocsOverview
 Home
 Get started
 Quickstart
@@ -534,7 +534,7 @@ Blog
 Company blog
 Developer blog
 Showcase Blog Cookbook Learn Community
-ShowcaseBlogCookbookLearnCommunityDocs sectionSelect...
+ShowcaseBlogCookbookLearnCommunityDocsSelect...
 All posts
 Recent
 Meet Rosalind Workbench: Empowering every scientist to be their own research team

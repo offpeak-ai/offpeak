@@ -62,3 +62,4 @@ and no row about it should be read as rate coverage.
 | 2026-08-29 | `google:pricing` | changed | +1 / −1 | unclassified | — | — | c5e78760d87f -> 38aacfed0a79 |
 | 2026-08-29 | `qwen:pricing` | changed | +14 / −702 | unclassified | — | — | e28982155951 -> 2433e55658a9 |
 | 2026-08-30 | `openai:pricing` | changed | +6 / −1 | copy change | gpt-5.6-luna | $0.0000469 | Navigation and documentation links were added; no pricing figures or chargeable rates changed. |
+| 2026-08-31 | `openai:pricing` | changed | +5 / −5 | copy change | gpt-5.6-luna | $0.0000559 | Navigation labels changed, with no pricing numbers or money-charged rates added, removed, or modified. |

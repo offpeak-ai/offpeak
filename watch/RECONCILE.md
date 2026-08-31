@@ -17,7 +17,7 @@ into a receipt.
 what moved, per the classifier that already ran. It answers a different question
 than the rows below it and is here so a reader has both at once.
 
-Reconciled 2026-08-30 against `offpeak.prices` sheet **2026-08-30**.
+Reconciled 2026-08-31 against `offpeak.prices` sheet **2026-08-30**.
 
 | source | status | mismatches | missing | unverifiable | models on page | classification |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -25,7 +25,7 @@ Reconciled 2026-08-30 against `offpeak.prices` sheet **2026-08-30**.
 | `google` | **drift** | 10 | 0 | 0 | 31 | unclassified (2026-08-29) |
 | `groq` | skipped | 0 | 0 | 1 | 0 | — |
 | `mistral` | ok | 0 | 1 | 37 | 17 | unclassified (2026-08-27) |
-| `openai` | ok | 0 | 0 | 0 | 5 | copy change (2026-08-30) |
+| `openai` | ok | 0 | 0 | 0 | 5 | copy change (2026-08-31) |
 
 ## `anthropic`
 
@@ -100,7 +100,7 @@ Informational. The sheet omits models on purpose; see the comments in `prices.py
 
 ## `openai`
 
-Sheet watch's latest classification: **copy change (2026-08-30)**.
+Sheet watch's latest classification: **copy change (2026-08-31)**.
 
 ### On the page, not on the sheet (2)
 
