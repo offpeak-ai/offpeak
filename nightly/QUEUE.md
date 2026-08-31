@@ -1,34 +1,74 @@
-# Offpeak queue latency — observed, not modelled
+# Offpeak queue latency — summary
 
-How long a batch tier actually takes to land, measured by submitting a couple of tiny jobs and watching the clock. This table spends real money at real venues and is therefore **not** the Spread Board: that one marks open grid data and spends nothing. Same separation, and the same reason, as `SETTLED.md`.
+How long a batch tier actually takes to land, measured by submitting a couple
+of tiny jobs and watching the clock. This spends real money at real venues and
+is therefore **not** the Spread Board: that one marks open grid data and
+spends nothing. Same separation, and the same reason, as `SETTLED.md`.
 
-`offpeak` currently abandons a slow batch on a fixed risk buffer — 15% of the window, clamped to 1–10 minutes — because nobody had the number. These are the observations that would replace it.
+Every number below is a percentile over completed sessions — not a single
+row. A session still running when a probe stopped watching is *open*: it
+stays on the desk's worklist and is resolved from its stored handle once a
+later run checks again, so it is excluded from these numbers until it has an
+outcome. A session marked *expired* or *overran_window* is the venue missing
+its own declared window — the failure mode this table exists to catch. A
+session marked *censored* predates resolution: it was cancelled after a fixed
+wait with no completion in sight, so its true turnaround is only known to be
+at least that wait — it contributes to the attempt count below but not to any
+percentile, since it has no elapsed time to report.
 
-**Every row is one submission.** There is no percentile here and no fitted curve: a handful of observations does not have a distribution, and a model over them would read as knowledge rather than as the few numbers it came from. A row marked *open* is a batch still running when the probe stopped watching — it stays on the venue's queue and the row is rewritten with the real outcome once a later run resolves it from the stored handle. A row marked *expired* or *overran_window* is the venue missing its own declared window — the failure mode this table exists to catch. Early rows marked *censored* predate resolution: those batches were cancelled at 30 minutes and are lower bounds, never completion times.
+The rows this is built from are private, kept in the desk's own repository.
+Private tail since 2026-08-28; days before that were imported from the
+public series this table replaces.
 
-Written by `tools/queue_probe.py`, never by hand.
+Written by `tools/queue_summary.py`, never by hand.
 
-| session | venue | model | declared | jobs | elapsed | % of window | status | paid |
-|---|---|---|---|---|---|---|---|---|
-| 2026-08-23 | anthropic | claude-haiku-4-5 | 24h | 2 | — | — | skipped — no ANTHROPIC_API_KEY in the environment | — |
-| 2026-08-23 | openai | gpt-5.6-luna | 24h | 2 | — | — | skipped — no OPENAI_API_KEY in the environment | — |
-| 2026-08-24 | anthropic | claude-haiku-4-5 | 24h | 2 | 2m02s | 0.142% | completed | $0.0000360 |
-| 2026-08-24 | openai | gpt-5.6-luna | 24h | 2 | 1m34s | 0.110% | completed | $0.00000780 |
-| 2026-08-25 | anthropic | claude-haiku-4-5 | 24h | 2 | 4m51s | 0.337% | completed | $0.0000360 |
-| 2026-08-25 | openai | gpt-5.6-luna | 24h | 2 | — | — | censored | — |
-| 2026-08-26 | anthropic | claude-haiku-4-5 | 24h | 2 | 2m35s | 0.179% | completed | $0.0000360 |
-| 2026-08-26 | openai | gpt-5.6-luna | 24h | 2 | — | — | censored | — |
-| 2026-08-26 | gemini | gemini-3.7-flash | 24h | 2 | 5m06s | 0.355% | completed | $0.000613 |
-| 2026-08-26 | mistral | mistral-small-latest | 24h | 2 | — | — | censored | — |
-| 2026-08-27 | anthropic | claude-haiku-4-5 | 24h | 2 | 2m50s | 0.197% | completed | $0.0000360 |
-| 2026-08-27 | openai | gpt-5.6-luna | 24h | 2 | 1m32s | 0.107% | completed | $0.00000780 |
-| 2026-08-27 | gemini | gemini-3.7-flash | 24h | 2 | 3m20s | 0.232% | completed | $0.000527 |
-| 2026-08-27 | mistral | mistral-small-latest | 24h | 2 | 509m30s | 35.382% | completed | $0.00000480 |
-| 2026-08-28 | anthropic | claude-haiku-4-5 | 24h | 2 | 2m18s | 0.160% | completed | $0.0000360 |
-| 2026-08-28 | openai | gpt-5.6-luna | 24h | 2 | 2m35s | 0.179% | completed | $0.00000780 |
-| 2026-08-28 | gemini | gemini-3.7-flash | 24h | 2 | 2m49s | 0.196% | completed | $0.000542 |
-| 2026-08-28 | mistral | mistral-small-latest | 24h | 2 | 18m49s | 1.307% | completed | $0.00000480 |
-| 2026-08-29 | anthropic | claude-haiku-4-5 | 24h | 2 | 78s | 0.090% | completed | $0.0000360 |
-| 2026-08-29 | openai | gpt-5.6-luna | 24h | 2 | 26m17s | 1.826% | completed | $0.00000780 |
-| 2026-08-29 | gemini | gemini-3.7-flash | 24h | 2 | 4m36s | 0.320% | completed | $0.000474 |
-| 2026-08-29 | mistral | mistral-small-latest | 24h | 2 | — | — | open | — |
+
+## anthropic (24h)
+
+| range | n | p50 | p90 | p99 | max |
+|---|---|---|---|---|---|
+| 7d | 7 | 2m18s | 3m39s | 4m44s | 4m51s |
+| 30d | 7 | 2m18s | 3m39s | 4m44s | 4m51s |
+| all-time | 7 | 2m18s | 3m39s | 4m44s | 4m51s |
+
+Completed: 7/7. Expired: 0. Overran window: 0. Failed: 0.
+
+## gemini (24h)
+
+| range | n | p50 | p90 | p99 | max |
+|---|---|---|---|---|---|
+| 7d | 5 | 3m20s | 4m54s | 5m05s | 5m06s |
+| 30d | 5 | 3m20s | 4m54s | 5m05s | 5m06s |
+| all-time | 5 | 3m20s | 4m54s | 5m05s | 5m06s |
+
+Completed: 5/5. Expired: 0. Overran window: 0. Failed: 0.
+
+## mistral (24h)
+
+| range | n | p50 | p90 | p99 | max |
+|---|---|---|---|---|---|
+| 7d | 4 | 4h24m10s | 15h50m52s | 18h41m06s | 19h00m01s |
+| 30d | 4 | 4h24m10s | 15h50m52s | 18h41m06s | 19h00m01s |
+| all-time | 4 | 4h24m10s | 15h50m52s | 18h41m06s | 19h00m01s |
+
+Completed: 4/5. Expired: 0. Overran window: 0. Failed: 0.
+
+## openai (24h)
+
+| range | n | p50 | p90 | p99 | max |
+|---|---|---|---|---|---|
+| 7d | 5 | 2m34s | 16m48s | 25m20s | 26m17s |
+| 30d | 5 | 2m34s | 16m48s | 25m20s | 26m17s |
+| all-time | 5 | 2m34s | 16m48s | 25m20s | 26m17s |
+
+Completed: 5/7. Expired: 0. Overran window: 0. Failed: 0.
+
+## Days of continuous accrual
+
+| venue | days |
+|---|---|
+| anthropic | 7 |
+| gemini | 5 |
+| mistral | 5 |
+| openai | 7 |
+
