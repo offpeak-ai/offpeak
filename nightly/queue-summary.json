@@ -1,5 +1,5 @@
 {
-  "generated_utc": "2026-09-01T14:53:16Z",
+  "generated_utc": "2026-09-01T19:18:03Z",
   "tail_started": "2026-08-28",
   "buckets": [
     {
@@ -31,12 +31,12 @@
     {
       "venue": "mistral",
       "window": "24h",
-      "n": 5,
-      "p50_s": 30570.0,
-      "p90_s": 71181.4,
-      "p99_s": 72849.6,
+      "n": 6,
+      "p50_s": 41993.5,
+      "p90_s": 70718.0,
+      "p99_s": 72803.3,
       "max_s": 73035.0,
-      "open": 1,
+      "open": 0,
       "expired": 0,
       "overran": 0,
       "censored": 1
