@@ -1,10 +1,10 @@
 {
   "night_of": "2026-08-31",
   "mode": "mark",
-  "generated_utc": "2026-08-31T22:44+00:00",
+  "generated_utc": "2026-09-01T06:51+00:00",
   "span_utc": {
     "from": "2026-08-31T16:00Z",
-    "to": "2026-08-31T22:44Z"
+    "to": "2026-09-01T06:51Z"
   },
   "tokens": {
     "batch_discount": 0.5,
@@ -21,27 +21,27 @@
     "carbon_us": "api.eia.gov EIA-930 hourly generation mix (key required)"
   },
   "carbon_gb": {
-    "n_halfhours": 14,
+    "n_halfhours": 30,
     "peak_window_17_21_bst": 121.75,
-    "offpeak_window_00_05_bst": null,
-    "window_spread": null,
+    "offpeak_window_00_05_bst": 65.3,
+    "window_spread": 1.86,
     "cleanest_5h": {
-      "avg": 115.6,
-      "from": "2026-08-31T17:30Z"
+      "avg": 64.8,
+      "from": "2026-08-31T23:30Z"
     },
     "dirtiest_5h": {
       "avg": 122.7,
       "from": "2026-08-31T16:30Z"
     },
-    "chosen_window_spread": 1.06
+    "chosen_window_spread": 1.89
   },
   "power_gb_agile": {
-    "n_halfhours": 14,
+    "n_halfhours": 30,
     "peak_window_17_21_bst": 36.87,
-    "offpeak_window_00_05_bst": null,
-    "window_spread": null,
+    "offpeak_window_00_05_bst": 24.69,
+    "window_spread": 1.49,
     "max_p_kwh": 42.84,
-    "min_p_kwh": 25.1055
+    "min_p_kwh": 22.953
   },
   "power_caiso_sp15": {
     "n_hours": 48,
