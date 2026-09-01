@@ -17,11 +17,11 @@ into a receipt.
 what moved, per the classifier that already ran. It answers a different question
 than the rows below it and is here so a reader has both at once.
 
-Reconciled 2026-08-31 against `offpeak.prices` sheet **2026-08-30**.
+Reconciled 2026-09-01 against `offpeak.prices` sheet **2026-08-30**.
 
 | source | status | mismatches | missing | unverifiable | models on page | classification |
 | --- | --- | --- | --- | --- | --- | --- |
-| `anthropic` | ok | 0 | 0 | 16 | 15 | unclassified (2026-08-29) |
+| `anthropic` | **drift** | 20 | 0 | 40 | 15 | noise (2026-09-01) |
 | `google` | **drift** | 10 | 0 | 0 | 31 | unclassified (2026-08-29) |
 | `groq` | skipped | 0 | 0 | 1 | 0 | — |
 | `mistral` | ok | 0 | 1 | 37 | 17 | unclassified (2026-08-27) |
@@ -29,13 +29,38 @@ Reconciled 2026-08-31 against `offpeak.prices` sheet **2026-08-30**.
 
 ## `anthropic`
 
-Sheet watch's latest classification: **unclassified (2026-08-29)**.
+Sheet watch's latest classification: **noise (2026-09-01)**.
 
-### Unverifiable (16)
+### Mismatches
+
+| model | field | page | sheet | note |
+| --- | --- | --- | --- | --- |
+| `claude-fable-5` | input | $5.00 | $10.00 |  |
+| `claude-fable-5` | output | $25.00 | $50.00 |  |
+| `claude-haiku-4-5` | input | $0.50 | $1.00 |  |
+| `claude-haiku-4-5` | output | $2.50 | $5.00 |  |
+| `claude-opus-4-5` | input | $2.50 | $5.00 |  |
+| `claude-opus-4-5` | output | $12.50 | $25.00 |  |
+| `claude-opus-4-6` | input | $2.50 | $5.00 |  |
+| `claude-opus-4-6` | output | $12.50 | $25.00 |  |
+| `claude-opus-4-7` | input | $2.50 | $5.00 |  |
+| `claude-opus-4-7` | output | $12.50 | $25.00 |  |
+| `claude-opus-4-8` | input | $2.50 | $5.00 |  |
+| `claude-opus-4-8` | output | $12.50 | $25.00 |  |
+| `claude-opus-5` | input | $2.50 | $5.00 |  |
+| `claude-opus-5` | output | $12.50 | $25.00 |  |
+| `claude-sonnet-4-5` | input | $1.50 | $3.00 |  |
+| `claude-sonnet-4-5` | output | $7.50 | $15.00 |  |
+| `claude-sonnet-4-6` | input | $1.50 | $3.00 |  |
+| `claude-sonnet-4-6` | output | $7.50 | $15.00 |  |
+| `claude-sonnet-5` | input | $1.00 | $2.00 |  |
+| `claude-sonnet-5` | output | $5.00 | $10.00 |  |
+
+### Unverifiable (40)
 
 Not compared, and not counted as agreement.
 
-- no figure for this field in the page text — 16 field(s)
+- no figure for this field in the page text — 40 field(s)
 
 ### On the page, not on the sheet (5)
 
