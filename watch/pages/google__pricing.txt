@@ -2004,6 +2004,12 @@ including input, output, and intermediate input / reasoning tokens generated
 during agentic loops. (See pricing details).
 Environment compute (CPU, memory, sandbox execution) is not billed during the preview period.
 Notes
+Agentic video understanding: When using agentic video understanding,
+token usage is variable based on the content loaded by the model rather than
+full video length. This typically results in up to 88% fewer input tokens for
+long-form video, though token counts depend on query complexity and dynamic
+sampling depth (which may exceed 1 FPS for detailed visual segments). See
+Agentic video understanding.
 Document token billing: Tokens for the DOCUMENT modality (for example, PDFs) are billed at the image token rate. In API responses, these tokens appear under the DOCUMENT modality within promptTokensDetails.
 Google AI Studio usage is free of charge in all available regions. See Billing FAQs for details.
 Prices may differ from the prices listed here and the prices offered on
@@ -2013,7 +2019,7 @@ optimize costs, only requests that contain at least one grounding support URL
 from the web in their response are charged for Grounding with Google Search.
 Costs for Gemini always apply. Rate limits are subject to change.
 Except as otherwise noted, the content of this page is licensed under the Creative Commons Attribution 4.0 License, and code samples are licensed under the Apache 2.0 License. For details, see the Google Developers Site Policies. Java is a registered trademark of Oracle and/or its affiliates.
-Last updated 2026-08-28 UTC.
+Last updated 2026-09-01 UTC.
 Terms
 Privacy
 Manage cookies

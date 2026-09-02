@@ -17,19 +17,19 @@ into a receipt.
 what moved, per the classifier that already ran. It answers a different question
 than the rows below it and is here so a reader has both at once.
 
-Reconciled 2026-09-01 against `offpeak.prices` sheet **2026-08-30**.
+Reconciled 2026-09-02 against `offpeak.prices` sheet **2026-08-30**.
 
 | source | status | mismatches | missing | unverifiable | models on page | classification |
 | --- | --- | --- | --- | --- | --- | --- |
-| `anthropic` | **drift** | 20 | 0 | 40 | 15 | noise (2026-09-01) |
-| `google` | **drift** | 10 | 0 | 0 | 31 | unclassified (2026-08-29) |
+| `anthropic` | **drift** | 20 | 0 | 40 | 17 | price change (2026-09-02) |
+| `google` | **drift** | 10 | 0 | 0 | 31 | copy change (2026-09-02) |
 | `groq` | skipped | 0 | 0 | 1 | 0 | — |
 | `mistral` | ok | 0 | 1 | 37 | 17 | unclassified (2026-08-27) |
-| `openai` | ok | 0 | 0 | 0 | 5 | copy change (2026-08-31) |
+| `openai` | ok | 0 | 0 | 0 | 5 | copy change (2026-09-02) |
 
 ## `anthropic`
 
-Sheet watch's latest classification: **noise (2026-09-01)**.
+Sheet watch's latest classification: **price change (2026-09-02)**.
 
 ### Mismatches
 
@@ -62,15 +62,15 @@ Not compared, and not counted as agreement.
 
 - no figure for this field in the page text — 40 field(s)
 
-### On the page, not on the sheet (5)
+### On the page, not on the sheet (7)
 
 Informational. The sheet omits models on purpose; see the comments in `prices.py` before adding one.
 
-`claude-haiku-3-5`, `claude-mythos-5`, `claude-opus-4`, `claude-opus-4-1`, `claude-sonnet-4`
+`claude-fable-5-1`, `claude-haiku-3-5`, `claude-mythos-5`, `claude-mythos-5-1`, `claude-opus-4`, `claude-opus-4-1`, `claude-sonnet-4`
 
 ## `google`
 
-Sheet watch's latest classification: **unclassified (2026-08-29)**.
+Sheet watch's latest classification: **copy change (2026-09-02)**.
 
 ### Mismatches
 
@@ -125,7 +125,7 @@ Informational. The sheet omits models on purpose; see the comments in `prices.py
 
 ## `openai`
 
-Sheet watch's latest classification: **copy change (2026-08-31)**.
+Sheet watch's latest classification: **copy change (2026-09-02)**.
 
 ### On the page, not on the sheet (2)
 

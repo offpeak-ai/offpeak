@@ -28,7 +28,7 @@ and no row about it should be read as rate coverage.
 
 | source | why | rates visible | url |
 | --- | --- | --- | --- |
-| `anthropic:pricing` | cited by prices.py | 142 | <https://platform.claude.com/docs/en/about-claude/pricing> |
+| `anthropic:pricing` | cited by prices.py | 157 | <https://platform.claude.com/docs/en/about-claude/pricing> |
 | `openai:pricing` | cited by prices.py | 188 | <https://developers.openai.com/api/docs/pricing> |
 | `groq:pricing` | cited by prices.py | 1 | <https://groq.com/pricing> |
 | `mistral:pricing` | cited by prices.py | 50 | <https://mistral.ai/pricing/api> |
@@ -64,3 +64,7 @@ and no row about it should be read as rate coverage.
 | 2026-08-30 | `openai:pricing` | changed | +6 / −1 | copy change | gpt-5.6-luna | $0.0000469 | Navigation and documentation links were added; no pricing figures or chargeable rates changed. |
 | 2026-08-31 | `openai:pricing` | changed | +5 / −5 | copy change | gpt-5.6-luna | $0.0000559 | Navigation labels changed, with no pricing numbers or money-charged rates added, removed, or modified. |
 | 2026-09-01 | `anthropic:pricing` | changed | +37 / −74 | noise | gpt-5.6-luna | $0.000255 | Only a formatting marker moved around headings; no pricing figures or substantive wording changed. |
+| 2026-09-02 | `anthropic:pricing` | changed | +85 / −82 | price change | gpt-5.6-luna | $0.000144 | New models and cache pricing were added, including a reduced cache-hit rate for Fable 5.1 and Mythos 5.1. |
+| 2026-09-02 | `openai:pricing` | changed | +2 / −0 | copy change | gpt-5.6-luna | $0.0000368 | Navigation items were added, but no pricing amounts or chargeable rates changed. |
+| 2026-09-02 | `google:pricing` | changed | +7 / −1 | copy change | gpt-5.6-luna | $0.0000756 | Added explanatory notes about agentic video token usage; no pricing rates changed. |
+| 2026-09-02 | `qwen:pricing` | changed | +1 / −1 | noise | gpt-5.6-luna | $0.0000399 | Only the page's “Last Updated” date changed; no pricing or substantive content changed. |
