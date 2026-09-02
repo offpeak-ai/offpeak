@@ -1,10 +1,10 @@
 {
   "night_of": "2026-09-01",
   "mode": "mark",
-  "generated_utc": "2026-09-02T06:51+00:00",
+  "generated_utc": "2026-09-02T09:31+00:00",
   "span_utc": {
     "from": "2026-09-01T16:00Z",
-    "to": "2026-09-02T06:51Z"
+    "to": "2026-09-02T07:00Z"
   },
   "tokens": {
     "batch_discount": 0.5,
@@ -21,7 +21,7 @@
     "carbon_us": "api.eia.gov EIA-930 hourly generation mix (key required)"
   },
   "carbon_gb": {
-    "n_halfhours": 30,
+    "n_halfhours": 31,
     "peak_window_17_21_bst": 149.88,
     "offpeak_window_00_05_bst": 164.4,
     "window_spread": 0.91,
@@ -31,7 +31,7 @@
     },
     "dirtiest_5h": {
       "avg": 173.8,
-      "from": "2026-09-02T01:30Z"
+      "from": "2026-09-02T02:00Z"
     },
     "chosen_window_spread": 1.19
   },
