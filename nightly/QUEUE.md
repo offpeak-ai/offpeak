@@ -27,21 +27,21 @@ Written by `tools/queue_summary.py`, never by hand.
 
 | range | n | p50 | p90 | p99 | max |
 |---|---|---|---|---|---|
-| 7d | 8 | 2m26s | 3m47s | 4m45s | 4m51s |
-| 30d | 9 | 2m18s | 3m37s | 4m44s | 4m51s |
-| all-time | 9 | 2m18s | 3m37s | 4m44s | 4m51s |
+| 7d | 8 | 2m02s | 2m59s | 3m17s | 3m19s |
+| 30d | 10 | 2m10s | 3m28s | 4m43s | 4m51s |
+| all-time | 10 | 2m10s | 3m28s | 4m43s | 4m51s |
 
-Completed: 9/9. Expired: 0. Overran window: 0. Failed: 0.
+Completed: 10/10. Expired: 0. Overran window: 0. Failed: 0.
 
 ## gemini (24h)
 
 | range | n | p50 | p90 | p99 | max |
 |---|---|---|---|---|---|
-| 7d | 7 | 3m20s | 5m30s | 6m02s | 6m06s |
-| 30d | 7 | 3m20s | 5m30s | 6m02s | 6m06s |
-| all-time | 7 | 3m20s | 5m30s | 6m02s | 6m06s |
+| 7d | 8 | 3m12s | 5m24s | 6m02s | 6m06s |
+| 30d | 8 | 3m12s | 5m24s | 6m02s | 6m06s |
+| all-time | 8 | 3m12s | 5m24s | 6m02s | 6m06s |
 
-Completed: 7/7. Expired: 0. Overran window: 0. Failed: 0.
+Completed: 8/8. Expired: 0. Overran window: 0. Failed: 0.
 
 ## mistral (24h)
 
@@ -51,24 +51,24 @@ Completed: 7/7. Expired: 0. Overran window: 0. Failed: 0.
 | 30d | 6 | 11h39m54s | 19h38m38s | 20h13m23s | 20h17m15s |
 | all-time | 6 | 11h39m54s | 19h38m38s | 20h13m23s | 20h17m15s |
 
-Completed: 6/7. Expired: 0. Overran window: 0. Failed: 0.
+Completed: 6/8. Expired: 0. Overran window: 0. Failed: 0.
 
 ## openai (24h)
 
 | range | n | p50 | p90 | p99 | max |
 |---|---|---|---|---|---|
-| 7d | 6 | 2m34s | 14m26s | 25m06s | 26m17s |
-| 30d | 7 | 2m34s | 12m04s | 24m52s | 26m17s |
-| all-time | 7 | 2m34s | 12m04s | 24m52s | 26m17s |
+| 7d | 7 | 2m34s | 13m06s | 24m58s | 26m17s |
+| 30d | 8 | 2m34s | 10m54s | 24m45s | 26m17s |
+| all-time | 8 | 2m34s | 10m54s | 24m45s | 26m17s |
 
-Completed: 7/9. Expired: 0. Overran window: 0. Failed: 0.
+Completed: 8/10. Expired: 0. Overran window: 0. Failed: 0.
 
 ## Days of continuous accrual
 
 | venue | days |
 |---|---|
-| anthropic | 9 |
-| gemini | 7 |
-| mistral | 7 |
-| openai | 9 |
+| anthropic | 10 |
+| gemini | 8 |
+| mistral | 8 |
+| openai | 10 |
 
