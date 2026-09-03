@@ -32,7 +32,7 @@ and no row about it should be read as rate coverage.
 | `openai:pricing` | cited by prices.py | 188 | <https://developers.openai.com/api/docs/pricing> |
 | `groq:pricing` | cited by prices.py | 1 | <https://groq.com/pricing> |
 | `mistral:pricing` | cited by prices.py | 50 | <https://mistral.ai/pricing/api> |
-| `google:pricing` | cited by prices.py | 485 | <https://ai.google.dev/pricing> |
+| `google:pricing` | cited by prices.py | 521 | <https://ai.google.dev/pricing> |
 | `groq:plans` | watched, not yet priced | **0 — rendered client-side** | <https://console.groq.com/docs/service-tiers> |
 | `xai:pricing` | watched, not yet priced | 8 | <https://docs.x.ai/docs/models> |
 | `deepseek:pricing` | cited by prices.py | 18 | <https://api-docs.deepseek.com/quick_start/pricing> |
@@ -68,3 +68,5 @@ and no row about it should be read as rate coverage.
 | 2026-09-02 | `openai:pricing` | changed | +2 / −0 | copy change | gpt-5.6-luna | $0.0000368 | Navigation items were added, but no pricing amounts or chargeable rates changed. |
 | 2026-09-02 | `google:pricing` | changed | +7 / −1 | copy change | gpt-5.6-luna | $0.0000756 | Added explanatory notes about agentic video token usage; no pricing rates changed. |
 | 2026-09-02 | `qwen:pricing` | changed | +1 / −1 | noise | gpt-5.6-luna | $0.0000399 | Only the page's “Last Updated” date changed; no pricing or substantive content changed. |
+| 2026-09-03 | `google:pricing` | changed | +106 / −12 | unclassified | — | — | deadline 2026-09-03T07:28:54+00:00 is not before the 2026-09-03T06:30:00+00:00 board mark |
+| 2026-09-03 | `xai:pricing` | changed | +4 / −2 | unclassified | — | — | deadline 2026-09-03T07:28:54+00:00 is not before the 2026-09-03T06:30:00+00:00 board mark |

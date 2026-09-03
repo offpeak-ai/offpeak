@@ -17,12 +17,12 @@ into a receipt.
 what moved, per the classifier that already ran. It answers a different question
 than the rows below it and is here so a reader has both at once.
 
-Reconciled 2026-09-02 against `offpeak.prices` sheet **2026-08-30**.
+Reconciled 2026-09-03 against `offpeak.prices` sheet **2026-08-30**.
 
 | source | status | mismatches | missing | unverifiable | models on page | classification |
 | --- | --- | --- | --- | --- | --- | --- |
 | `anthropic` | **drift** | 20 | 0 | 40 | 17 | price change (2026-09-02) |
-| `google` | **drift** | 10 | 0 | 0 | 31 | copy change (2026-09-02) |
+| `google` | **drift** | 10 | 0 | 0 | 32 | unclassified (2026-09-03) |
 | `groq` | skipped | 0 | 0 | 1 | 0 | — |
 | `mistral` | ok | 0 | 1 | 37 | 17 | unclassified (2026-08-27) |
 | `openai` | ok | 0 | 0 | 0 | 5 | copy change (2026-09-02) |
@@ -70,7 +70,7 @@ Informational. The sheet omits models on purpose; see the comments in `prices.py
 
 ## `google`
 
-Sheet watch's latest classification: **copy change (2026-09-02)**.
+Sheet watch's latest classification: **unclassified (2026-09-03)**.
 
 ### Mismatches
 
@@ -87,11 +87,11 @@ Sheet watch's latest classification: **copy change (2026-09-02)**.
 | `gemini-3.7-flash` | fast_input | $1.35 | — | the page publishes this tier; the sheet carries no row for it |
 | `gemini-3.7-flash` | fast_output | $6.75 | — | the page publishes this tier; the sheet carries no row for it |
 
-### On the page, not on the sheet (25)
+### On the page, not on the sheet (26)
 
 Informational. The sheet omits models on purpose; see the comments in `prices.py` before adding one.
 
-`gemini-2.5-computer-use-preview-10-2025`, `gemini-2.5-flash`, `gemini-2.5-flash-image`, `gemini-2.5-flash-lite`, `gemini-2.5-flash-native-audio-preview-12-2025`, `gemini-2.5-flash-preview-tts`, `gemini-2.5-pro`, `gemini-2.5-pro-preview-tts`, `gemini-3-flash-preview`, `gemini-3-pro-image`, `gemini-3.1-flash-image`, `gemini-3.1-flash-lite`, `gemini-3.1-flash-lite-image`, `gemini-3.1-flash-live-preview`, `gemini-3.1-flash-tts-preview`, `gemini-3.1-pro-preview-customtools`, `gemini-3.5-live-translate-preview`, `gemini-3.5-transcribe`, `gemini-3.5-transcribe-live`, `gemini-embedding-001`, `gemini-omni-1.1-flash`, `gemini-omni-flash-preview`, `gemini-robotics-er-1.6-preview`, `gemini-robotics-er-2-preview`, `gemini-robotics-er-2-streaming-preview`
+`gemini-2.5-computer-use-preview-10-2025`, `gemini-2.5-flash`, `gemini-2.5-flash-image`, `gemini-2.5-flash-lite`, `gemini-2.5-flash-native-audio-preview-12-2025`, `gemini-2.5-flash-preview-tts`, `gemini-2.5-pro`, `gemini-2.5-pro-preview-tts`, `gemini-3-flash-preview`, `gemini-3-pro-image`, `gemini-3.1-flash-image`, `gemini-3.1-flash-lite`, `gemini-3.1-flash-lite-image`, `gemini-3.1-flash-live-preview`, `gemini-3.1-flash-tts-preview`, `gemini-3.1-pro-preview-customtools`, `gemini-3.5-live-translate-preview`, `gemini-3.5-transcribe`, `gemini-3.5-transcribe-live`, `gemini-3.8-flash`, `gemini-embedding-001`, `gemini-omni-1.1-flash`, `gemini-omni-flash-preview`, `gemini-robotics-er-1.6-preview`, `gemini-robotics-er-2-preview`, `gemini-robotics-er-2-streaming-preview`
 
 ## `groq`
 

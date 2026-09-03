@@ -90,8 +90,9 @@ Async Requests
 WebSocket Mode
 New
 Migration Guides
-Model Retirement on May 15
+Imagine Image Quality Retirement on Nov 2
 New
+Model Retirement on May 15
 Migrating to Responses API
 Community
 Community Integrations
@@ -187,8 +188,9 @@ Async Requests
 WebSocket Mode
 New
 Migration Guides
-Model Retirement on May 15
+Imagine Image Quality Retirement on Nov 2
 New
+Model Retirement on May 15
 Migrating to Responses API
 Community
 Community Integrations
