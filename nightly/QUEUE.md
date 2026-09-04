@@ -28,47 +28,47 @@ Written by `tools/queue_summary.py`, never by hand.
 | range | n | p50 | p90 | p99 | max |
 |---|---|---|---|---|---|
 | 7d | 8 | 2m02s | 3m52s | 5m00s | 5m08s |
-| 30d | 11 | 2m18s | 4m51s | 5m06s | 5m08s |
-| all-time | 11 | 2m18s | 4m51s | 5m06s | 5m08s |
+| 30d | 12 | 2m18s | 4m42s | 5m06s | 5m08s |
+| all-time | 12 | 2m18s | 4m42s | 5m06s | 5m08s |
 
-Completed: 11/11. Expired: 0. Overran window: 0. Failed: 0.
+Completed: 12/12. Expired: 0. Overran window: 0. Failed: 0.
 
 ## gemini (24h)
 
 | range | n | p50 | p90 | p99 | max |
 |---|---|---|---|---|---|
-| 7d | 8 | 3m12s | 5m03s | 5m59s | 6m06s |
-| 30d | 9 | 3m20s | 5m18s | 6m01s | 6m06s |
-| all-time | 9 | 3m20s | 5m18s | 6m01s | 6m06s |
+| 7d | 8 | 2m57s | 5m03s | 5m59s | 6m06s |
+| 30d | 10 | 3m12s | 5m12s | 6m00s | 6m06s |
+| all-time | 10 | 3m12s | 5m12s | 6m00s | 6m06s |
 
-Completed: 9/9. Expired: 0. Overran window: 0. Failed: 0.
+Completed: 10/10. Expired: 0. Overran window: 0. Failed: 0.
 
 ## mistral (24h)
 
 | range | n | p50 | p90 | p99 | max |
 |---|---|---|---|---|---|
-| 7d | 8 | 9h37m06s | 19h23m11s | 20h11m51s | 20h17m15s |
-| 30d | 8 | 9h37m06s | 19h23m11s | 20h11m51s | 20h17m15s |
-| all-time | 8 | 9h37m06s | 19h23m11s | 20h11m51s | 20h17m15s |
+| 7d | 8 | 5h31m45s | 19h23m11s | 20h11m51s | 20h17m15s |
+| 30d | 9 | 8h29m30s | 19h15m28s | 20h11m04s | 20h17m15s |
+| all-time | 9 | 8h29m30s | 19h15m28s | 20h11m04s | 20h17m15s |
 
-Completed: 8/9. Expired: 0. Overran window: 0. Failed: 0.
+Completed: 9/10. Expired: 0. Overran window: 0. Failed: 0.
 
 ## openai (24h)
 
 | range | n | p50 | p90 | p99 | max |
 |---|---|---|---|---|---|
 | 7d | 8 | 2m34s | 10m54s | 24m45s | 26m17s |
-| 30d | 9 | 2m34s | 8m43s | 24m32s | 26m17s |
-| all-time | 9 | 2m34s | 8m43s | 24m32s | 26m17s |
+| 30d | 10 | 2m34s | 6m31s | 24m19s | 26m17s |
+| all-time | 10 | 2m34s | 6m31s | 24m19s | 26m17s |
 
-Completed: 9/11. Expired: 0. Overran window: 0. Failed: 0.
+Completed: 10/12. Expired: 0. Overran window: 0. Failed: 0.
 
 ## Days of continuous accrual
 
 | venue | days |
 |---|---|
-| anthropic | 11 |
-| gemini | 9 |
-| mistral | 9 |
-| openai | 11 |
+| anthropic | 12 |
+| gemini | 10 |
+| mistral | 10 |
+| openai | 12 |
 
