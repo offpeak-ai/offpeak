@@ -29,10 +29,10 @@ and no row about it should be read as rate coverage.
 | source | why | rates visible | url |
 | --- | --- | --- | --- |
 | `anthropic:pricing` | cited by prices.py | 157 | <https://platform.claude.com/docs/en/about-claude/pricing> |
-| `openai:pricing` | cited by prices.py | 188 | <https://developers.openai.com/api/docs/pricing> |
+| `openai:pricing` | cited by prices.py | 220 | <https://developers.openai.com/api/docs/pricing> |
 | `groq:pricing` | cited by prices.py | 1 | <https://groq.com/pricing> |
 | `mistral:pricing` | cited by prices.py | 50 | <https://mistral.ai/pricing/api> |
-| `google:pricing` | cited by prices.py | 521 | <https://ai.google.dev/pricing> |
+| `google:pricing` | cited by prices.py | 523 | <https://ai.google.dev/pricing> |
 | `groq:plans` | watched, not yet priced | **0 — rendered client-side** | <https://console.groq.com/docs/service-tiers> |
 | `xai:pricing` | watched, not yet priced | 8 | <https://docs.x.ai/docs/models> |
 | `deepseek:pricing` | cited by prices.py | 18 | <https://api-docs.deepseek.com/quick_start/pricing> |
@@ -70,3 +70,6 @@ and no row about it should be read as rate coverage.
 | 2026-09-02 | `qwen:pricing` | changed | +1 / −1 | noise | gpt-5.6-luna | $0.0000399 | Only the page's “Last Updated” date changed; no pricing or substantive content changed. |
 | 2026-09-03 | `google:pricing` | changed | +106 / −12 | unclassified | — | — | deadline 2026-09-03T07:28:54+00:00 is not before the 2026-09-03T06:30:00+00:00 board mark |
 | 2026-09-03 | `xai:pricing` | changed | +4 / −2 | unclassified | — | — | deadline 2026-09-03T07:28:54+00:00 is not before the 2026-09-03T06:30:00+00:00 board mark |
+| 2026-09-04 | `openai:pricing` | changed | +44 / −2 | price change | gpt-5.6-luna | $0.000104 | New GPT-6 Astra pricing tiers and regional processing surcharge details were added. |
+| 2026-09-04 | `mistral:pricing` | changed | +10 / −12 | copy change | gpt-5.6-luna | $0.0000556 | Navigation labels and menu items changed, but no pricing values or billing rates were modified. |
+| 2026-09-04 | `google:pricing` | changed | +18 / −3 | price change | gpt-5.6-luna | $0.0000929 | New Lyria 3.5 models add paid rates of $0.04 per song and $0.08 per song. |

@@ -17,15 +17,15 @@ into a receipt.
 what moved, per the classifier that already ran. It answers a different question
 than the rows below it and is here so a reader has both at once.
 
-Reconciled 2026-09-03 against `offpeak.prices` sheet **2026-08-30**.
+Reconciled 2026-09-04 against `offpeak.prices` sheet **2026-08-30**.
 
 | source | status | mismatches | missing | unverifiable | models on page | classification |
 | --- | --- | --- | --- | --- | --- | --- |
 | `anthropic` | **drift** | 20 | 0 | 40 | 17 | price change (2026-09-02) |
-| `google` | **drift** | 10 | 0 | 0 | 32 | unclassified (2026-09-03) |
+| `google` | **drift** | 10 | 0 | 0 | 32 | price change (2026-09-04) |
 | `groq` | skipped | 0 | 0 | 1 | 0 | — |
-| `mistral` | ok | 0 | 1 | 37 | 17 | unclassified (2026-08-27) |
-| `openai` | ok | 0 | 0 | 0 | 5 | copy change (2026-09-02) |
+| `mistral` | ok | 0 | 1 | 37 | 17 | copy change (2026-09-04) |
+| `openai` | ok | 0 | 0 | 0 | 6 | price change (2026-09-04) |
 
 ## `anthropic`
 
@@ -70,7 +70,7 @@ Informational. The sheet omits models on purpose; see the comments in `prices.py
 
 ## `google`
 
-Sheet watch's latest classification: **unclassified (2026-09-03)**.
+Sheet watch's latest classification: **price change (2026-09-04)**.
 
 ### Mismatches
 
@@ -103,7 +103,7 @@ Not compared, and not counted as agreement.
 
 ## `mistral`
 
-Sheet watch's latest classification: **unclassified (2026-08-27)**.
+Sheet watch's latest classification: **copy change (2026-09-04)**.
 
 ### Missing from the page
 
@@ -125,10 +125,10 @@ Informational. The sheet omits models on purpose; see the comments in `prices.py
 
 ## `openai`
 
-Sheet watch's latest classification: **copy change (2026-09-02)**.
+Sheet watch's latest classification: **price change (2026-09-04)**.
 
-### On the page, not on the sheet (2)
+### On the page, not on the sheet (3)
 
 Informational. The sheet omits models on purpose; see the comments in `prices.py` before adding one.
 
-`chat-latest`, `gpt-5.3-codex`
+`chat-latest`, `gpt-5.3-codex`, `gpt-6-astra`
