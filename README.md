@@ -128,6 +128,22 @@ results = offpeak.run(
 )
 ```
 
+## When the process can't wait
+
+`run()` blocks for as long as the batch takes — right for a Temporal activity or an Airflow task, wrong for a laptop that sleeps, a CI step with a timeout, or a serverless function. For those, keep the run's state as a value:
+
+```python
+ticket = offpeak.submit(jobs, deadline="06:00")   # returns immediately
+ticket.save("tonight.json")                        # disk, a DB row, S3 — anywhere
+
+# later, in another process (a 06:00 cron, a second CI job)
+ticket = offpeak.Ticket.load("tonight.json")
+results = offpeak.collect(ticket)                  # same deadline, same fallback
+print(offpeak.receipt(results))
+```
+
+`collect(ticket, wait=False)` is one non-blocking sweep: results if the run can settle now, `None` if the batch is still open. `status(ticket)` peeks. `run()` is exactly `collect(submit(...))`.
+
 ## Receipts and prices
 
 Receipts are computed against a bundled snapshot of public list prices (batch = 50% off list, as published). Providers change prices — verify and override at runtime:

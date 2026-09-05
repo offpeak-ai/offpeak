@@ -7,6 +7,12 @@ Everything below is exported from the package root: `offpeak.run`,
 
 ::: offpeak.run
 
+::: offpeak.submit
+
+::: offpeak.collect
+
+::: offpeak.status
+
 ::: offpeak.quote
 
 ::: offpeak.receipt
@@ -16,6 +22,8 @@ Everything below is exported from the package root: `offpeak.run`,
 ## Types
 
 ::: offpeak.Job
+
+::: offpeak.Ticket
 
 ::: offpeak.Result
 

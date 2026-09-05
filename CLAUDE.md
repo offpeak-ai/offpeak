@@ -25,7 +25,7 @@ Written only by workflows, as `github-actions[bot]`. Never commit to it by hand.
 
 ## Public API
 
-`job()` / `run()` / `quote()` / `receipt()`. There is no public `submit()`.
+`job()` / `run()` / `quote()` / `receipt()`, plus `submit()` / `collect()` / `status()` and the `Ticket` (added 0.3.0 — `run()` is `collect(submit(...))`; the ticket carries handles, never keys).
 
 ## Copy
 

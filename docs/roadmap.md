@@ -7,6 +7,10 @@ checkable — if something here is not true yet, it says so.
 
 - **`run(jobs, deadline=...)`** across the OpenAI and Anthropic batch tiers,
   with a sync fallback that protects the deadline.
+- **`submit()` / `collect()` and the `Ticket`** — the same run split across
+  processes: submit from a laptop or a CI step, save the ticket, collect from
+  a cron the next morning. Nothing is orphaned at the provider when the
+  caller dies.
 - **`quote(jobs, deadline=...)`** — pre-trade pricing with no API calls.
 - **Receipts and settlements** — list, paid, captured spread, and what a
   fallback left on the table, as arithmetic against published price sheets.
