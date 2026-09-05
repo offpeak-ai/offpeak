@@ -543,11 +543,11 @@ Showcase Blog Cookbook Learn Community
 ShowcaseBlogCookbookLearnCommunityDocsSelect...
 All posts
 Recent
+Architectural visualization with Astra
+Building games with Astra
 Meet Rosalind Workbench: Empowering every scientist to be their own research team
 Automating repetitive work at OpenAI with Codex
 Meet the winners of OpenAI Build Week
-Scaling cyber defenders with Daybreak
-Codex as a platform: build on the open agent harness
 Topics
 General
 API
@@ -635,7 +635,6 @@ Moderation
 Copy Page
 Pricing
 Copy Page
-GPT‑6 Astra is rolling out today for enterprises in our Trusted Access Program⁠, with access through API and our Plus, Pro, Business and Enterprise plans coming in the coming days.
 Flagship models
 Our latest models
 Prices per 1M tokens.

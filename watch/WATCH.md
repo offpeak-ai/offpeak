@@ -32,7 +32,7 @@ and no row about it should be read as rate coverage.
 | `openai:pricing` | cited by prices.py | 220 | <https://developers.openai.com/api/docs/pricing> |
 | `groq:pricing` | cited by prices.py | 1 | <https://groq.com/pricing> |
 | `mistral:pricing` | cited by prices.py | 50 | <https://mistral.ai/pricing/api> |
-| `google:pricing` | cited by prices.py | 523 | <https://ai.google.dev/pricing> |
+| `google:pricing` | cited by prices.py | 522 | <https://ai.google.dev/pricing> |
 | `groq:plans` | watched, not yet priced | **0 — rendered client-side** | <https://console.groq.com/docs/service-tiers> |
 | `xai:pricing` | watched, not yet priced | 8 | <https://docs.x.ai/docs/models> |
 | `deepseek:pricing` | cited by prices.py | 18 | <https://api-docs.deepseek.com/quick_start/pricing> |
@@ -73,3 +73,7 @@ and no row about it should be read as rate coverage.
 | 2026-09-04 | `openai:pricing` | changed | +44 / −2 | price change | gpt-5.6-luna | $0.000104 | New GPT-6 Astra pricing tiers and regional processing surcharge details were added. |
 | 2026-09-04 | `mistral:pricing` | changed | +10 / −12 | copy change | gpt-5.6-luna | $0.0000556 | Navigation labels and menu items changed, but no pricing values or billing rates were modified. |
 | 2026-09-04 | `google:pricing` | changed | +18 / −3 | price change | gpt-5.6-luna | $0.0000929 | New Lyria 3.5 models add paid rates of $0.04 per song and $0.08 per song. |
+| 2026-09-05 | `openai:pricing` | changed | +2 / −3 | copy change | gpt-5.6-luna | $0.0000701 | Navigation items and a rollout sentence changed, but no pricing amount or rate was added, removed, or altered. |
+| 2026-09-05 | `mistral:pricing` | changed | +0 / −1 | copy change | gpt-5.6-luna | $0.0000355 | The “Select language” text was removed, changing page copy without altering any pricing. |
+| 2026-09-05 | `google:pricing` | changed | +4 / −8 | price change | gpt-5.6-luna | $0.0000971 | The $0.04-per-song price for Lyria 3.5 Clip Preview was removed. |
+| 2026-09-05 | `qwen:pricing` | changed | +1 / −1 | noise | gpt-5.6-luna | $0.0000393 | Only the page's last-updated date changed; no pricing or substantive content changed. |
