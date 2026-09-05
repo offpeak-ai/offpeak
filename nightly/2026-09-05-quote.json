@@ -1,0 +1,64 @@
+{
+  "night_of": "2026-09-05",
+  "mode": "quote",
+  "generated_utc": "2026-09-05T19:17+00:00",
+  "span_utc": {
+    "from": "2026-09-05T16:00Z",
+    "to": "2026-09-06T07:00Z"
+  },
+  "tokens": {
+    "batch_discount": 0.5,
+    "spread": 2.0,
+    "note": "published batch tiers, OpenAI + Anthropic (50% off list)",
+    "urgency_spread": 4.0,
+    "urgency_note": "same model, fast tier over batch tier on gpt-5.6-sol ($8/$40 vs $2/$10 per 1M)",
+    "source": "developers.openai.com/api/docs/pricing",
+    "caveat": "gpt-5.6-sol's standard rate is promotional at least through 2026-11-21; post-promo list is $5/$30 and both tiers move with it, so the ratio is the durable figure, not the dollars"
+  },
+  "sources": {
+    "carbon": "api.carbonintensity.org.uk (NESO, keyless)",
+    "power": "api.octopus.energy Agile day-ahead (keyless, region C)",
+    "carbon_us": "api.eia.gov EIA-930 hourly generation mix (key required)"
+  },
+  "carbon_gb": {
+    "n_halfhours": 31,
+    "peak_window_17_21_bst": 163.88,
+    "offpeak_window_00_05_bst": 128.9,
+    "window_spread": 1.27,
+    "cleanest_5h": {
+      "avg": 89.3,
+      "from": "2026-09-06T02:00Z"
+    },
+    "dirtiest_5h": {
+      "avg": 180.7,
+      "from": "2026-09-05T17:30Z"
+    },
+    "chosen_window_spread": 2.02
+  },
+  "power_gb_agile": {
+    "n_halfhours": 30,
+    "peak_window_17_21_bst": 37.81,
+    "offpeak_window_00_05_bst": 24.53,
+    "window_spread": 1.54,
+    "max_p_kwh": 43.323,
+    "min_p_kwh": 12.201
+  },
+  "power_caiso_sp15": {
+    "n_hours": 24,
+    "peak_window_17_21_local": 49.76,
+    "offpeak_window_00_05_local": null,
+    "window_spread": null,
+    "unit": "$/MWh"
+  },
+  "power_ercot_houston": {
+    "n_hours": 48,
+    "peak_window_17_21_local": 54.05,
+    "offpeak_window_00_05_local": 32.29,
+    "window_spread": 1.67,
+    "unit": "$/MWh"
+  },
+  "unavailable": {
+    "carbon_caiso_sp15": "CISO: EIA-930 has published no hours for 2026-09-05 yet (the feed runs about a day behind)",
+    "carbon_ercot_houston": "ERCO: EIA-930 has published no hours for 2026-09-05 yet (the feed runs about a day behind)"
+  }
+}
