@@ -47,11 +47,11 @@ Completed: 11/11. Expired: 0. Overran window: 0. Failed: 0.
 
 | range | n | p50 | p90 | p99 | max |
 |---|---|---|---|---|---|
-| 7d | 7 | 10h44m41s | 19h30m55s | 20h12m37s | 20h17m15s |
-| 30d | 9 | 8h29m30s | 19h15m28s | 20h11m04s | 20h17m15s |
-| all-time | 9 | 8h29m30s | 19h15m28s | 20h11m04s | 20h17m15s |
+| 7d | 8 | 9h12m22s | 19h23m11s | 20h11m51s | 20h17m15s |
+| 30d | 10 | 8h04m46s | 19h07m44s | 20h10m18s | 20h17m15s |
+| all-time | 10 | 8h04m46s | 19h07m44s | 20h10m18s | 20h17m15s |
 
-Completed: 9/11. Expired: 0. Overran window: 0. Failed: 0.
+Completed: 10/11. Expired: 0. Overran window: 0. Failed: 0.
 
 ## openai (24h)
 
