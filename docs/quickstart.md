@@ -140,6 +140,35 @@ prices    snapshot 2026-08-21 — override via offpeak.prices
 tier. Per-job receipts render the same way — `print(results[0].receipt)` — with
 sub-cent precision, so a small run reports what it cost rather than `$0.00`.
 
+## 4. Submit now, collect later
+
+`run()` holds the process open until the batch lands. If the process cannot
+stay alive that long — a laptop, a CI job, a serverless function — split the
+call in two and keep the ticket between them:
+
+```python
+import offpeak
+
+ticket = offpeak.submit(jobs, deadline="06:00")
+ticket.save("tonight.json")
+```
+
+```python
+# tomorrow, anywhere
+ticket = offpeak.Ticket.load("tonight.json")
+results = offpeak.collect(ticket)          # blocks only for what is left
+print(offpeak.receipt(results))
+```
+
+The ticket carries the jobs, the resolved deadline, the risk buffer and one
+provider batch handle per venue — never a key or a client. Pass the same
+`venues=` to `collect()` that you gave `submit()` (or rely on the defaults);
+venues are matched by name. `collect(ticket, wait=False)` does a single sweep
+and returns `None` while the batch is open; `status(ticket)` looks without
+touching. A venue whose batches live only in the submitting process (the
+DeepSeek clock lane) cannot be resumed elsewhere: its jobs take the sync
+fallback with a message saying so.
+
 ## Prices
 
 The bundled sheet is a dated snapshot. Providers move prices; override at

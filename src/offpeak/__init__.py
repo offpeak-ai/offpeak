@@ -9,6 +9,11 @@ off, today.
     jobs = [offpeak.job("claude-haiku-4-5", f"Summarize:\\n\\n{d}") for d in docs]
     results = offpeak.run(jobs, deadline="06:00")
     print(offpeak.receipt(results))
+
+When the process cannot wait — a laptop, a CI step — keep a ticket instead:
+
+    ticket = offpeak.submit(jobs, deadline="06:00"); ticket.save("run.json")
+    results = offpeak.collect(offpeak.Ticket.load("run.json"))   # later
 """
 
 from importlib import metadata as _metadata
@@ -19,6 +24,7 @@ from .deadline import parse_deadline, seconds_until
 from .job import Job, Receipt, Result, Status, job
 from .prices import format_usd
 from .quote import Quote, VenueQuote, quote
+from .ticket import Ticket, collect, status, submit
 from .venues.base import BatchState, Venue
 
 # The version lives in pyproject.toml and nowhere else. This used to be a
@@ -33,6 +39,10 @@ except _metadata.PackageNotFoundError:  # pragma: no cover - uninstalled tree
 __all__ = [
     "job",
     "run",
+    "submit",
+    "collect",
+    "status",
+    "Ticket",
     "quote",
     "receipt",
     "Job",

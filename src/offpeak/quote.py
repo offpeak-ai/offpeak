@@ -27,10 +27,11 @@ from dataclasses import dataclass, field
 from datetime import datetime
 
 from . import prices as _prices
-from .client import _pick_venue, default_venues
+from .client import default_venues
 from .deadline import parse_deadline, seconds_until
 from .job import Job
 from .prices import BATCH_DISCOUNT, format_usd, get_price
+from .ticket import _pick_venue
 from .venues.base import Venue
 
 __all__ = ["quote", "Quote", "VenueQuote", "estimate_tokens", "CHARS_PER_TOKEN"]
