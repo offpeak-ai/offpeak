@@ -33,7 +33,7 @@ prices    snapshot 2026-08-21 — override via offpeak.prices
 ───────────────────────────────────────────────
 ```
 
-**[Documentation](https://offpeak-ai.github.io/offpeak/)** · [Quickstart](https://offpeak-ai.github.io/offpeak/quickstart/) · [Spec](https://offpeak-ai.github.io/offpeak/spec/) · [Roadmap](https://offpeak-ai.github.io/offpeak/roadmap/)
+**[off-peak.ai](https://off-peak.ai/)** · **[Documentation](https://offpeak-ai.github.io/offpeak/)** · [Quickstart](https://offpeak-ai.github.io/offpeak/quickstart/) · [Spec](https://offpeak-ai.github.io/offpeak/spec/) · [Roadmap](https://offpeak-ai.github.io/offpeak/roadmap/)
 
 ## What it does
 
