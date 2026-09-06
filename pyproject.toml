@@ -54,7 +54,8 @@ docs = ["mkdocs>=1.6,<2", "mkdocs-material>=9.5,<10", "mkdocstrings[python]>=0.2
         "mkdocs-redirects>=1.2"]
 
 [project.urls]
-Homepage = "https://github.com/offpeak-ai/offpeak"
+Homepage = "https://off-peak.ai"
+Documentation = "https://offpeak-ai.github.io/offpeak/"
 Repository = "https://github.com/offpeak-ai/offpeak"
 Issues = "https://github.com/offpeak-ai/offpeak/issues"
 Changelog = "https://github.com/offpeak-ai/offpeak/releases"

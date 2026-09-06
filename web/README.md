@@ -29,9 +29,12 @@ Pages, S3, Netlify. Hash routing means no server rewrites are needed.
 
 ## Custom domain
 
-Once `offpeak.ai` is bought: add it in Vercel → Project → Domains, point the apex
-A record / CNAME as instructed. The docs site (`offpeak-ai.github.io/offpeak`) stays
-where it is and is linked from the nav and the footer.
+The site lives at **https://off-peak.ai** (bought through Vercel Domains 2026-09-06,
+so DNS is Vercel's; `www.off-peak.ai` 308-redirects to the apex). `offpeak-ai.vercel.app`
+still serves the same deployment as a fallback. If `offpeak.ai` is ever acquired, add it
+to the same project and make it the primary; `off-peak.ai` then becomes the redirect.
+The docs site (`offpeak-ai.github.io/offpeak`) stays where it is and is linked from the
+nav and the footer.
 
 ## Where the numbers come from
 
