@@ -35,7 +35,7 @@ and no row about it should be read as rate coverage.
 | `google:pricing` | cited by prices.py | 522 | <https://ai.google.dev/pricing> |
 | `groq:plans` | watched, not yet priced | **0 — rendered client-side** | <https://console.groq.com/docs/service-tiers> |
 | `xai:pricing` | watched, not yet priced | 8 | <https://docs.x.ai/docs/models> |
-| `deepseek:pricing` | cited by prices.py | 18 | <https://api-docs.deepseek.com/quick_start/pricing> |
+| `deepseek:pricing` | cited by prices.py | **0 — rendered client-side** | <https://api-docs.deepseek.com/quick_start/pricing> |
 | `qwen:pricing` | watched, not yet priced | **0 — rendered client-side** | <https://www.alibabacloud.com/help/en/model-studio/models> |
 
 ## Drift
@@ -77,3 +77,4 @@ and no row about it should be read as rate coverage.
 | 2026-09-05 | `mistral:pricing` | changed | +0 / −1 | copy change | gpt-5.6-luna | $0.0000355 | The “Select language” text was removed, changing page copy without altering any pricing. |
 | 2026-09-05 | `google:pricing` | changed | +4 / −8 | price change | gpt-5.6-luna | $0.0000971 | The $0.04-per-song price for Lyria 3.5 Clip Preview was removed. |
 | 2026-09-05 | `qwen:pricing` | changed | +1 / −1 | noise | gpt-5.6-luna | $0.0000393 | Only the page's last-updated date changed; no pricing or substantive content changed. |
+| 2026-09-06 | `deepseek:pricing` | changed | +73 / −91 | price change | gpt-5.6-luna | $0.000561 | The pricing table and all charge rates disappeared from the page. |
