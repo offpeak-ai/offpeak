@@ -1,10 +1,10 @@
 {
   "night_of": "2026-09-07",
   "mode": "mark",
-  "generated_utc": "2026-09-08T06:52+00:00",
+  "generated_utc": "2026-09-08T09:32+00:00",
   "span_utc": {
     "from": "2026-09-07T16:00Z",
-    "to": "2026-09-08T06:52Z"
+    "to": "2026-09-08T07:00Z"
   },
   "tokens": {
     "batch_discount": 0.5,
@@ -21,7 +21,7 @@
     "carbon_us": "api.eia.gov EIA-930 hourly generation mix (key required)"
   },
   "carbon_gb": {
-    "n_halfhours": 30,
+    "n_halfhours": 31,
     "peak_window_17_21_bst": 135.88,
     "offpeak_window_00_05_bst": 88.4,
     "window_spread": 1.54,
@@ -50,9 +50,15 @@
     "window_spread": 1.12,
     "unit": "$/MWh"
   },
+  "power_ercot_houston": {
+    "n_hours": 48,
+    "peak_window_17_21_local": 71.97,
+    "offpeak_window_00_05_local": 30.59,
+    "window_spread": 2.35,
+    "unit": "$/MWh"
+  },
   "unavailable": {
     "carbon_caiso_sp15": "CISO: EIA-930 has published no hours for 2026-09-07 yet (the feed runs about a day behind)",
-    "ercot_houston": "ercot_houston: no day-ahead rows (2026-09-07: ConnectionError: ('Connection aborted.', ConnectionResetError(104, 'Connection reset by peer')); 2026-09-08: ConnectionError: ('Connection aborted.', ConnectionResetError(104, 'Connection reset by peer')))",
     "carbon_ercot_houston": "ERCO: EIA-930 has published no hours for 2026-09-07 yet (the feed runs about a day behind)"
   }
 }
