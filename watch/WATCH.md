@@ -78,3 +78,4 @@ and no row about it should be read as rate coverage.
 | 2026-09-05 | `google:pricing` | changed | +4 / −8 | price change | gpt-5.6-luna | $0.0000971 | The $0.04-per-song price for Lyria 3.5 Clip Preview was removed. |
 | 2026-09-05 | `qwen:pricing` | changed | +1 / −1 | noise | gpt-5.6-luna | $0.0000393 | Only the page's last-updated date changed; no pricing or substantive content changed. |
 | 2026-09-06 | `deepseek:pricing` | changed | +73 / −91 | price change | gpt-5.6-luna | $0.000561 | The pricing table and all charge rates disappeared from the page. |
+| 2026-09-08 | `xai:pricing` | changed | +52 / −76 | copy change | gpt-5.6-luna | $0.000112 | Navigation labels and section ordering changed, with no pricing amounts or rate-related numbers shown. |
