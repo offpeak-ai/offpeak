@@ -165,7 +165,25 @@ jobs:
             exit 0
           fi
           git commit -m "watch: $(date -u +%Y-%m-%d)"
-          git push
+          # board-data has writers in two repositories: the desk's queue summary
+          # lands on this branch too, and a concurrency group only queues jobs
+          # inside one repository. So a push can lose the race by seconds —
+          # 2026-09-07 and 09-08 the 19:07Z quote lost to the 19:06Z queue
+          # summary and was rejected. Every writer keeps to its own files
+          # (board → nightly/<date>-*.json + BOARD.md, queue → QUEUE.md +
+          # queue-summary.json, watch → watch/), so replaying our commit onto
+          # whatever landed is conflict-free by construction.
+          for attempt in 1 2 3 4 5; do
+            if git push; then
+              exit 0
+            fi
+            echo "push rejected (attempt $attempt) — replaying onto the new tip"
+            git fetch origin board-data
+            git rebase origin/board-data || { git rebase --abort; exit 1; }
+            sleep $((attempt * 5))
+          done
+          echo "::error::could not push to board-data after 5 attempts"
+          exit 1
 
       - name: File the drift, one issue per source
         # One issue per source, reopened and edited rather than duplicated: a
