@@ -9,7 +9,7 @@
 <meta name="description" content="Deadline-priced inference. pip install offpeak, give unattended work a deadline, and it fills in batch tiers at half price — SLA-guarded, on your own keys, with a receipt you can check against the public sheet.">
 <meta property="og:type" content="website">
 <meta property="og:title" content="Offpeak — same models, half the price, by your deadline">
-<meta property="og:description" content="30–60% of AI spend has no human waiting. One argument — deadline= — and that work runs at batch prices, SLA-guarded, on your own keys.">
+<meta property="og:description" content="Evals, embeddings, backfills, unattended agents — nobody is waiting on them. One argument — deadline= — and they run in batch and flex lanes at up to half price, SLA-guarded, on your own keys.">
 <meta property="og:url" content="https://off-peak.ai/">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="canonical" href="https://off-peak.ai/">
@@ -456,11 +456,11 @@
       <p class="welcome boot-el" style="animation-delay:.15s">The desk is open</p>
       <h1 class="name boot-el" style="animation-delay:.3s">Same models.<br>Half the price.<br>By your deadline.</h1>
       <p class="role boot-el" style="animation-delay:.42s">Offpeak — deadline-priced inference</p>
-      <p class="tag boot-el" style="animation-delay:.5s">30–60% of your AI spend has <b>no human waiting</b> — evals, embeddings, backfills, unattended agents. Give that work a deadline and it fills in batch tiers and off-peak windows at up to <b>half price — SLA-guarded, on your own keys.</b></p>
+      <p class="tag boot-el" style="animation-delay:.5s">Evals, embeddings, backfills, unattended agents — <b>nobody is waiting on them.</b> Give them a deadline and they run in batch and flex lanes at up to <b>half price. SLA-guarded, on your own keys.</b></p>
       <div class="hstrip boot-el" style="animation-delay:.58s">
         <div><div class="n money">50% off</div><span class="c">Batch tier<br>six venues, published</span></div>
         <div><div class="n">4×</div><span class="c">Fastest → batch<br>same model, computed live</span></div>
-        <div><div class="n">50.0%</div><span class="c">Captured on every run<br>that kept its batch</span></div>
+        <div><div class="n g" data-ledger-stat="sla">100%</div><span class="c">SLAs met · <span data-ledger-stat="sla-runs">8</span> venue runs<br><span data-ledger-stat="sla-jobs">136</span> jobs · failures published</span></div>
       </div>
       <div class="cta boot-el" style="animation-delay:.65s">
         <a class="btn btn-gold" href="#quickstart">Quickstart</a>
@@ -2351,6 +2351,20 @@ prices    snapshot <span class="sd">2026-08-30</span> — offpeak.prices
       document.querySelectorAll('[data-ledger-stat="venues"]').forEach(function (el) {
         if (vs.length) el.textContent = String(vs.length);
       });
+      // Hero SLA tile: venue runs only (the 08-22 mechanics proofs were the
+      // driver shakedown and stay on the ledger, not in this number).
+      var vr = runs.filter(function (r) { return !/^mechanics/.test(String(r.scale)); });
+      var jobs = vr.reduce(function (a, r) { return a + (r.jobs || 0); }, 0);
+      var met = vr.reduce(function (a, r) { return a + (r.sla_met || 0); }, 0);
+      if (jobs) {
+        var pct = (met / jobs) * 100;
+        document.querySelectorAll('[data-ledger-stat="sla"]').forEach(function (el) {
+          el.textContent = (pct === 100 ? "100" : pct.toFixed(1)) + "%";
+          el.classList.toggle("g", pct === 100);
+        });
+        document.querySelectorAll('[data-ledger-stat="sla-runs"]').forEach(function (el) { el.textContent = String(vr.length); });
+        document.querySelectorAll('[data-ledger-stat="sla-jobs"]').forEach(function (el) { el.textContent = num(jobs); });
+      }
     })
     .catch(function () { /* keep the rendered fallback */ });
 })();
