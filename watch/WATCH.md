@@ -29,10 +29,10 @@ and no row about it should be read as rate coverage.
 | source | why | rates visible | url |
 | --- | --- | --- | --- |
 | `anthropic:pricing` | cited by prices.py | 157 | <https://platform.claude.com/docs/en/about-claude/pricing> |
-| `openai:pricing` | cited by prices.py | 220 | <https://developers.openai.com/api/docs/pricing> |
+| `openai:pricing` | cited by prices.py | 225 | <https://developers.openai.com/api/docs/pricing> |
 | `groq:pricing` | cited by prices.py | 1 | <https://groq.com/pricing> |
 | `mistral:pricing` | cited by prices.py | 50 | <https://mistral.ai/pricing/api> |
-| `google:pricing` | cited by prices.py | 522 | <https://ai.google.dev/pricing> |
+| `google:pricing` | cited by prices.py | 532 | <https://ai.google.dev/pricing> |
 | `groq:plans` | watched, not yet priced | **0 — rendered client-side** | <https://console.groq.com/docs/service-tiers> |
 | `xai:pricing` | watched, not yet priced | 8 | <https://docs.x.ai/docs/models> |
 | `deepseek:pricing` | cited by prices.py | **0 — rendered client-side** | <https://api-docs.deepseek.com/quick_start/pricing> |
@@ -79,3 +79,6 @@ and no row about it should be read as rate coverage.
 | 2026-09-05 | `qwen:pricing` | changed | +1 / −1 | noise | gpt-5.6-luna | $0.0000393 | Only the page's last-updated date changed; no pricing or substantive content changed. |
 | 2026-09-06 | `deepseek:pricing` | changed | +73 / −91 | price change | gpt-5.6-luna | $0.000561 | The pricing table and all charge rates disappeared from the page. |
 | 2026-09-08 | `xai:pricing` | changed | +52 / −76 | copy change | gpt-5.6-luna | $0.000112 | Navigation labels and section ordering changed, with no pricing amounts or rate-related numbers shown. |
+| 2026-09-09 | `openai:pricing` | changed | +15 / −1 | price change | gpt-5.6-luna | $0.0000638 | New image models were added with explicit input, cached-input, and output prices. |
+| 2026-09-09 | `mistral:pricing` | changed | +5 / −3 | copy change | gpt-5.6-luna | $0.0000499 | News copy and language navigation formatting changed; no pricing numbers or rates were modified. |
+| 2026-09-09 | `google:pricing` | changed | +29 / −19 | price change | gpt-5.6-luna | $0.000109 | Multiple input, output, caching, and storage prices now include lower promotional rates through 2026 with later increases. |
