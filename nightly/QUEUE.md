@@ -27,48 +27,48 @@ Written by `tools/queue_summary.py`, never by hand.
 
 | range | n | p50 | p90 | p99 | max |
 |---|---|---|---|---|---|
-| 7d | 8 | 1m56s | 3m52s | 5m00s | 5m08s |
-| 30d | 16 | 2m10s | 4m05s | 5m05s | 5m08s |
-| all-time | 16 | 2m10s | 4m05s | 5m05s | 5m08s |
+| 7d | 8 | 1m56s | 3m37s | 4m59s | 5m08s |
+| 30d | 17 | 2m18s | 3m56s | 5m05s | 5m08s |
+| all-time | 17 | 2m18s | 3m56s | 5m05s | 5m08s |
 
-Completed: 16/16. Expired: 0. Overran window: 0. Failed: 0.
+Completed: 17/17. Expired: 0. Overran window: 0. Failed: 0.
 
 ## gemini (24h)
 
 | range | n | p50 | p90 | p99 | max |
 |---|---|---|---|---|---|
-| 7d | 8 | 3m08s | 4m09s | 5m54s | 6m06s |
-| 30d | 14 | 3m08s | 4m57s | 5m58s | 6m06s |
-| all-time | 14 | 3m08s | 4m57s | 5m58s | 6m06s |
+| 7d | 8 | 3m08s | 4m49s | 7m56s | 8m17s |
+| 30d | 15 | 3m12s | 5m42s | 7m59s | 8m17s |
+| all-time | 15 | 3m12s | 5m42s | 7m59s | 8m17s |
 
-Completed: 14/14. Expired: 0. Overran window: 0. Failed: 0.
+Completed: 15/15. Expired: 0. Overran window: 0. Failed: 0.
 
 ## mistral (24h)
 
 | range | n | p50 | p90 | p99 | max |
 |---|---|---|---|---|---|
-| 7d | 8 | 13m12s | 11h58m22s | 14h33m05s | 14h50m17s |
-| 30d | 13 | 18m50s | 18h10m04s | 20h07m59s | 20h17m15s |
-| all-time | 13 | 18m50s | 18h10m04s | 20h07m59s | 20h17m15s |
+| 7d | 8 | 4m54s | 8h35m26s | 10h31m45s | 10h44m41s |
+| 30d | 14 | 18m14s | 17h45m06s | 20h07m13s | 20h17m15s |
+| all-time | 14 | 18m14s | 17h45m06s | 20h07m13s | 20h17m15s |
 
-Completed: 13/14. Expired: 0. Overran window: 0. Failed: 0.
+Completed: 14/15. Expired: 0. Overran window: 0. Failed: 0.
 
 ## openai (24h)
 
 | range | n | p50 | p90 | p99 | max |
 |---|---|---|---|---|---|
-| 7d | 8 | 2m40s | 12m07s | 16m55s | 17m28s |
-| 30d | 14 | 2m34s | 15m10s | 25m08s | 26m17s |
-| all-time | 14 | 2m34s | 15m10s | 25m08s | 26m17s |
+| 7d | 8 | 3m33s | 32m58s | 1h05m33s | 1h09m10s |
+| 30d | 15 | 2m34s | 22m45s | 1h03m10s | 1h09m10s |
+| all-time | 15 | 2m34s | 22m45s | 1h03m10s | 1h09m10s |
 
-Completed: 14/16. Expired: 0. Overran window: 0. Failed: 0.
+Completed: 15/17. Expired: 0. Overran window: 0. Failed: 0.
 
 ## Days of continuous accrual
 
 | venue | days |
 |---|---|
-| anthropic | 16 |
-| gemini | 14 |
-| mistral | 14 |
-| openai | 16 |
+| anthropic | 17 |
+| gemini | 15 |
+| mistral | 15 |
+| openai | 17 |
 
