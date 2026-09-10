@@ -1,5 +1,5 @@
 {
-  "generated_utc": "2026-09-10T10:51:53Z",
+  "generated_utc": "2026-09-10T14:50:43Z",
   "tail_started": "2026-08-28",
   "buckets": [
     {
@@ -44,12 +44,12 @@
     {
       "venue": "openai",
       "window": "24h",
-      "n": 15,
-      "p50_s": 154.4,
-      "p90_s": 1365.4,
-      "p99_s": 3789.8,
-      "max_s": 4150.0,
-      "open": 1,
+      "n": 16,
+      "p50_s": 154.7,
+      "p90_s": 2863.7,
+      "p99_s": 22542.3,
+      "max_s": 25788.0,
+      "open": 0,
       "expired": 0,
       "overran": 0,
       "censored": 2

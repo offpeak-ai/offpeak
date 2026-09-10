@@ -57,11 +57,11 @@ Completed: 15/16. Expired: 0. Overran window: 0. Failed: 0.
 
 | range | n | p50 | p90 | p99 | max |
 |---|---|---|---|---|---|
-| 7d | 7 | 2m47s | 38m09s | 1h06m04s | 1h09m10s |
-| 30d | 15 | 2m34s | 22m45s | 1h03m10s | 1h09m10s |
-| all-time | 15 | 2m34s | 22m45s | 1h03m10s | 1h09m10s |
+| 7d | 8 | 6m18s | 2h57m21s | 6h44m33s | 7h09m48s |
+| 30d | 16 | 2m35s | 47m44s | 6h15m42s | 7h09m48s |
+| all-time | 16 | 2m35s | 47m44s | 6h15m42s | 7h09m48s |
 
-Completed: 15/18. Expired: 0. Overran window: 0. Failed: 0.
+Completed: 16/18. Expired: 0. Overran window: 0. Failed: 0.
 
 ## Days of continuous accrual
 
