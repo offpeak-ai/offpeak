@@ -157,6 +157,57 @@ class TestGate:
         assert "refusing to re-submit" in capsys.readouterr().out
 
 
+class TestCorrectedGate:
+    """The quote prices input at chars/4. On real prose that reads low, so the
+    cap can guard a number well under the bill that arrives — run 1 cleared its
+    $12 cap by six cents on the uncorrected figure."""
+
+    def _jobs(self, tmp_path, n=40):
+        cache = tmp_path / "books"
+        _seed_cache(cache)
+        return sr.build_book(sr.parse_args(["--jobs", str(n)]), cache)
+
+    def test_a_measured_ratio_below_the_assumed_one_prices_higher(self, tmp_path):
+        jobs = self._jobs(tmp_path)
+        q = __import__("offpeak").quote(jobs, "12h")
+        corrected = sr.corrected_list_usd(jobs, q, 2.87)
+        assert corrected > q.list_usd
+
+    def test_the_assumed_ratio_reproduces_the_quote(self, tmp_path):
+        # Correcting by the ratio the quote already uses must be a no-op.
+        jobs = self._jobs(tmp_path)
+        q = __import__("offpeak").quote(jobs, "12h")
+        corrected = sr.corrected_list_usd(jobs, q, float(sr.CHARS_PER_TOKEN))
+        assert corrected == pytest.approx(q.list_usd, rel=1e-6)
+
+    def test_only_the_input_leg_moves(self, tmp_path):
+        # Output is already priced at the ceiling and does not depend on how the
+        # input tokenises, so halving the ratio must not double the total.
+        jobs = self._jobs(tmp_path)
+        q = __import__("offpeak").quote(jobs, "12h")
+        assert sr.corrected_list_usd(jobs, q, 2.0) < 2 * q.list_usd
+
+    def test_the_gate_aborts_on_the_corrected_figure_not_the_quote(
+        self, tmp_path, capsys
+    ):
+        # A cap that the quote clears but the corrected exposure does not must
+        # abort. This is the run-1 near miss, made into a test.
+        out = tmp_path / "run"
+        _seed_cache(out / "books")
+        jobs = sr.build_book(sr.parse_args(["--jobs", "40"]), out / "books")
+        q = __import__("offpeak").quote(jobs, "12h")
+        between = (q.list_usd + sr.corrected_list_usd(jobs, q, 2.87)) / 2
+        rc = sr.main([
+            "--out", str(out), "--jobs", "40", "--min-list", "0.001",
+            "--cap", str(between), "--measured-chars-per-token", "2.87",
+        ])
+        text = capsys.readouterr().out
+        assert rc == 2
+        assert "over the hard cap" in text
+        assert "The gate uses the corrected figure." in text
+        assert not (out / "handles.jsonl").exists()
+
+
 class TestShowcaseDefaults:
     """The production numbers, pinned where a reader can see them."""
 

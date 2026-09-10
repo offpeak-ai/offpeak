@@ -35,6 +35,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import re
 import sys
 import time
@@ -207,17 +208,46 @@ def parse_args(argv=None):
                     help=f"hard cap on list exposure, USD (default {DEFAULT_CAP_USD})")
     ap.add_argument("--min-list", type=float, default=DEFAULT_MIN_LIST_USD,
                     help="refuse to submit below this quoted list, USD")
+    ap.add_argument("--cache-dir", help="novel cache (default: <out>/books)")
+    ap.add_argument(
+        "--measured-chars-per-token", type=float, metavar="RATIO",
+        help=f"chars per token actually observed on this corpus, used to correct "
+             f"the gate. The quote prices input at chars/{CHARS_PER_TOKEN}; on "
+             f"19th-century prose that read 39% low, so the cap guarded a number "
+             f"well below the bill that arrived. Given a measured ratio the cap is "
+             f"checked against the corrected exposure instead. Sizing is "
+             f"unaffected, so the book stays reproducible.",
+    )
     ap.add_argument("--poll-interval", type=float, default=60.0)
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--cancel", action="store_true")
     return ap.parse_args(argv)
 
 
+def corrected_list_usd(jobs, q, measured: float) -> float:
+    """Worst-case list re-priced with a measured chars-per-token ratio.
+
+    ``quote()`` estimates input at ``chars / CHARS_PER_TOKEN``. Scaling that
+    estimate by ``CHARS_PER_TOKEN / measured`` gives the input tokens the venue
+    will actually meter; output is already priced at the ceiling and does not
+    move.
+    """
+    from offpeak.prices import list_cost_usd
+
+    scale = CHARS_PER_TOKEN / measured
+    total = 0.0
+    for j in jobs:
+        chars = sum(len(m.get("content", "")) for m in j.messages)
+        in_tok = max(1, math.ceil(chars / CHARS_PER_TOKEN) * scale)
+        total += list_cost_usd(j.model, round(in_tok), j.params.get("max_tokens", 0))
+    return total
+
+
 def main(argv=None) -> int:
     a = parse_args(argv)
     out = Path(a.out).expanduser().resolve()
     handles = out / "handles.jsonl"
-    cache = out / "books"
+    cache = Path(a.cache_dir).expanduser().resolve() if a.cache_dir else out / "books"
 
     venue_cls, plain_cls = VENUES[a.venue]
 
@@ -242,15 +272,27 @@ def main(argv=None) -> int:
     print("\n" + card, flush=True)
     (out / "quote.txt").write_text(card + "\n")
 
+    exposure = q.list_usd
+    if a.measured_chars_per_token:
+        exposure = corrected_list_usd(jobs, q, a.measured_chars_per_token)
+        print(
+            f"\ncorrection: the quote prices input at chars/{CHARS_PER_TOKEN};"
+            f" at a measured {a.measured_chars_per_token} chars/token the same book"
+            f" is ${exposure:.4f} list, not ${q.list_usd:.4f}"
+            f" (+{(exposure / q.list_usd - 1) * 100:.1f}%). The gate uses the"
+            " corrected figure.",
+            flush=True,
+        )
+
     print(
-        f"\ncap check: worst case (all sync at list) ${q.list_usd:.4f}"
+        f"\ncap check: worst case (all sync at list) ${exposure:.4f}"
         f" vs hard cap ${a.cap:.2f} and floor ${a.min_list:.2f}",
         flush=True,
     )
-    if q.list_usd > a.cap:
+    if exposure > a.cap:
         print("ABORT: over the hard cap. Nothing submitted.", flush=True)
         return 2
-    if q.list_usd < a.min_list:
+    if exposure < a.min_list:
         print("ABORT: under the showcase floor — resize passages and re-quote. "
               "Nothing submitted.", flush=True)
         return 2

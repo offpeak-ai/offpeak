@@ -1,0 +1,35 @@
+{
+  "run_id": "2026-09-10-sonnet-showcase-2",
+  "venue_handles": {
+    "anthropic:batch": [
+      "msgbatch_01Un2dxyQQV77vS1QJYmpcdf"
+    ]
+  },
+  "scale": "showcase (2,000 jobs, Anthropic, batch tier, claude-sonnet-5)",
+  "settled_utc": "2026-09-10T01:59:02+00:00",
+  "deadline": "12h",
+  "price_sheet": "2026-08-30",
+  "offpeak_version": "0.2.2",
+  "jobs": 2000,
+  "ok": 2000,
+  "failed": 0,
+  "fell_back": 0,
+  "sla_met": 2000,
+  "input_tokens": 3976002,
+  "output_tokens": 398608,
+  "list_usd": 11.938084,
+  "paid_usd": 5.969042,
+  "captured_usd": 5.969042,
+  "captured_pct": 50.0,
+  "left_on_table_usd": 0.0,
+  "by_venue": {
+    "anthropic:batch": 2000
+  },
+  "notes": [
+    "2,000/2,000 SLAs met, zero sync fallbacks, 50.0% captured, 11m11s end to end including polling, on claude-sonnet-5 against a 12h deadline. Every job reached the batch tier and paid exactly half of list.",
+    "The same book as 2026-09-10-sonnet-showcase-1, re-run. That run captured 49.9% because two of its jobs errored at the venue with invalid_request_error \u2014 credit balance too low \u2014 and were rescued synchronously at list. The account was topped up and the book resubmitted unchanged: identical passages, identical 3,976,002 input tokens, and this time 2,000 of 2,000 cleared the batch tier. The 49.9% was a billing state on our side, never a venue or a tier behaviour, and both runs stay on this ledger.",
+    "Five public-domain novels from Project Gutenberg (War and Peace, Les Miserables, Don Quixote, Anna Karenina, Middlemarch) cut into 2,000 passages of roughly 1,300 tokens, one three-sentence summarisation per passage. Long novels on purpose \u2014 2,000 passages that size needs about 10.4M characters and five average novels hold roughly a third of it.",
+    "The gate was priced correctly this time. offpeak.quote estimates input at characters/4, which on this corpus reads 39% low: it quoted $9.7073 while the settled list was $11.9381. showcase_run.py now takes --measured-chars-per-token and checks the cap against the corrected exposure; at the 2.87 chars/token measured on run 1 it predicted $11.9545 against an actual $11.9381, 0.14% out. Run 1 cleared its $12.00 cap by $0.0636 on the uncorrected figure, which is closer than a cap should ever come to being decorative.",
+    "Output ran to the ceiling rather than under it: 199.3 tokens mean against a 200-token max_tokens, min 151. A three-sentence summary of 1,300 tokens of Tolstoy uses the whole allowance, so there is almost no gap here between pricing a ceiling and pricing an answer."
+  ]
+}
