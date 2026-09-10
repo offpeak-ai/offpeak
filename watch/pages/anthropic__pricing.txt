@@ -26,8 +26,7 @@ Choosing a modelOptimizing for cost and intelligenceUpgrade between model versio
 Lifecycle and reference
 Model IDs and versioningModel deprecationsModel cardsPricing
 System prompts
-
-Console
+Console
 Models & pricingLifecycle and reference
 Pricing
 Copy page

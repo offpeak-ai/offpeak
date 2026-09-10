@@ -82,3 +82,6 @@ and no row about it should be read as rate coverage.
 | 2026-09-09 | `openai:pricing` | changed | +15 / −1 | price change | gpt-5.6-luna | $0.0000638 | New image models were added with explicit input, cached-input, and output prices. |
 | 2026-09-09 | `mistral:pricing` | changed | +5 / −3 | copy change | gpt-5.6-luna | $0.0000499 | News copy and language navigation formatting changed; no pricing numbers or rates were modified. |
 | 2026-09-09 | `google:pricing` | changed | +29 / −19 | price change | gpt-5.6-luna | $0.000109 | Multiple input, output, caching, and storage prices now include lower promotional rates through 2026 with later increases. |
+| 2026-09-10 | `anthropic:pricing` | changed | +1 / −2 | copy change | gpt-5.6-luna | $0.000121 | Navigation text was reflowed by merging an icon and “Console”; no pricing value changed. |
+| 2026-09-10 | `openai:pricing` | changed | +1 / −1 | copy change | gpt-5.6-luna | $0.000175 | The page adds clarification about Bedrock pricing without changing any listed rate or charge. |
+| 2026-09-10 | `mistral:pricing` | changed | +2 / −2 | copy change | gpt-5.6-luna | $0.0000914 | A latest-posts headline was added and another removed; pricing numbers remain unchanged. |
