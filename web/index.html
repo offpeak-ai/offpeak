@@ -49,9 +49,9 @@ window.COPY = {
   "sec.report.eyebrow":     "01 // The report",
   "sec.report.title":       "How much of your spend can wait — and what the wait is worth",
   "sec.report.lede":        "Nobody measures this number today — not the provider, not the gateway, not the spend dashboard. Two weeks of job-log metadata is enough to put it on one page, priced against the sheets your invoice already uses.",
-  "sec.quickstart.eyebrow": "02 // Quickstart",
-  "sec.quickstart.title":   "Half price in three steps",
-  "sec.how.eyebrow":        "03 // How it works",
+  "sec.quickstart.eyebrow": "03 // For the platform team",
+  "sec.quickstart.title":   "Three steps, inside your perimeter",
+  "sec.how.eyebrow":        "02 // How it works",
   "sec.how.title":          "Free to run. Paid to guarantee.",
   "sec.spread.eyebrow":     "04 // The spread",
   "sec.spread.title":       "The price of urgency",
@@ -564,6 +564,37 @@ window.COPY = {
     </div>
   </section>
 
+  <section class="sc rv" id="how">
+    <div class="wrap">
+      <div class="sec-rule"></div>
+      <p class="sec-eyebrow" data-string="sec.how.eyebrow"></p>
+      <h2 class="sec-title" data-string="sec.how.title"></h2>
+      <div class="steps3">
+        <div class="case step3">
+          <i class="ck tl"></i><i class="ck tr"></i><i class="ck bl"></i><i class="ck br"></i>
+          <div class="n">STEP 01</div>
+          <h3>The SDK</h3>
+          <p>Free, Apache-2.0, runs in your process. Work you already run gains a <b>deadline</b> — batching, polling and rescue handled, <b>on your keys.</b> Urgent traffic is never touched.</p>
+          <span class="mono-line">offpeak.run(jobs, deadline="06:00")</span>
+        </div>
+        <div class="case step3">
+          <i class="ck tl"></i><i class="ck tr"></i><i class="ck bl"></i><i class="ck br"></i>
+          <div class="n">STEP 02</div>
+          <h3>The desk</h3>
+          <p>Paid, private beta. The SDK holds your deadline with a <b>fixed buffer</b>; the desk holds it with the <b>measured queue distribution</b>, so fewer jobs pay list. Priced as a share of what it captures — <b>zero savings, zero fee.</b></p>
+          <span class="mono-line">offpeak.run(jobs, deadline="06:00", desk=True)</span>
+        </div>
+        <div class="case step3">
+          <i class="ck tl"></i><i class="ck tr"></i><i class="ck bl"></i><i class="ck br"></i>
+          <div class="n">STEP 03</div>
+          <h3>The receipt</h3>
+          <p>Every run settles one receipt: <b>list, paid, captured, SLA</b> — checkable against a public price sheet. Ours are on <a href="#/receipts">the ledger</a>, failures included.</p>
+          <span class="mono-line">2000/2000 met · 50.0% captured · 2026-09-10-sonnet-showcase-2</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <section class="sc rv" id="quickstart">
     <div class="wrap">
       <div class="sec-rule"></div>
@@ -628,37 +659,6 @@ prices    snapshot <span class="sd">2026-08-30</span> — offpeak.prices
       </div>
 
       <p class="note-line">No key yet? <b>The quote is free:</b> <code>python -m offpeak quote --model gpt-5.6-luna --jobs 5000</code> prices a run against the published sheets — <b>no API calls, no key.</b></p>
-    </div>
-  </section>
-
-  <section class="sc rv" id="how">
-    <div class="wrap">
-      <div class="sec-rule"></div>
-      <p class="sec-eyebrow" data-string="sec.how.eyebrow"></p>
-      <h2 class="sec-title" data-string="sec.how.title"></h2>
-      <div class="steps3">
-        <div class="case step3">
-          <i class="ck tl"></i><i class="ck tr"></i><i class="ck bl"></i><i class="ck br"></i>
-          <div class="n">STEP 01</div>
-          <h3>The SDK</h3>
-          <p>Free, Apache-2.0, runs in your process. Work you already run gains a <b>deadline</b> — batching, polling and rescue handled, <b>on your keys.</b> Urgent traffic is never touched.</p>
-          <span class="mono-line">offpeak.run(jobs, deadline="06:00")</span>
-        </div>
-        <div class="case step3">
-          <i class="ck tl"></i><i class="ck tr"></i><i class="ck bl"></i><i class="ck br"></i>
-          <div class="n">STEP 02</div>
-          <h3>The desk</h3>
-          <p>Paid, private beta. The SDK holds your deadline with a <b>fixed buffer</b>; the desk holds it with the <b>measured queue distribution</b>, so fewer jobs pay list. Priced as a share of what it captures — <b>zero savings, zero fee.</b></p>
-          <span class="mono-line">offpeak.run(jobs, deadline="06:00", desk=True)</span>
-        </div>
-        <div class="case step3">
-          <i class="ck tl"></i><i class="ck tr"></i><i class="ck bl"></i><i class="ck br"></i>
-          <div class="n">STEP 03</div>
-          <h3>The receipt</h3>
-          <p>Every run settles one receipt: <b>list, paid, captured, SLA</b> — checkable against a public price sheet. Ours are on <a href="#/receipts">the ledger</a>, failures included.</p>
-          <span class="mono-line">2000/2000 met · 50.0% captured · 2026-09-10-sonnet-showcase-2</span>
-        </div>
-      </div>
     </div>
   </section>
 
