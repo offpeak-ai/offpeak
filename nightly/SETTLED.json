@@ -1,13 +1,13 @@
 {
   "schema": "offpeak.settled-runs/1",
-  "generated_utc": "2026-09-10T01:29:38+00:00",
+  "generated_utc": "2026-09-10T02:01:38+00:00",
   "summary": {
-    "runs": 12,
-    "jobs": 2232,
-    "list_usd": 11.96284025,
-    "paid_usd": 5.988939275,
-    "captured_usd": 5.973900975,
-    "runs_capturing": 9,
+    "runs": 13,
+    "jobs": 4232,
+    "list_usd": 23.90092425,
+    "paid_usd": 11.957981275,
+    "captured_usd": 11.942942975,
+    "runs_capturing": 10,
     "runs_capturing_nothing": 3,
     "venues_capturing": [
       "anthropic:batch",
@@ -380,9 +380,43 @@
       "notes": [
         "2,000/2,000 SLAs met, 2 sync fallbacks, 49.9% captured, 19m20s end to end including polling, on claude-sonnet-5 against a 12h deadline.",
         "The work is real: five public-domain novels from Project Gutenberg (War and Peace, Les Miserables, Don Quixote, Anna Karenina, Middlemarch) cut into 2,000 passages of roughly 1,300 tokens, one three-sentence summarisation per passage. Long novels on purpose \u2014 2,000 passages of that size needs about 10.4M characters and five average novels hold roughly a third of it.",
-        "Two jobs missed the batch tier and were rescued synchronously at list, which is why capture reads 49.9% rather than the structural 50.0%: $0.006139 left on the table across 3,976,002 input tokens. Both rescued jobs still met the deadline, so the SLA is 2,000/2,000 with 2 fell back \u2014 the insurance working, and costing exactly what it is supposed to cost.",
+        "Two jobs missed the batch tier and were rescued synchronously at list, which is why capture reads 49.9% rather than the structural 50.0%: $0.006139 left on the table. Both rescued jobs still met the deadline, so the SLA is 2,000/2,000 with 2 fell back. The cause was not the venue: both errored with invalid_request_error, \"credit balance is too low\" (request ids workerreq_013qCbZ7LXVvdSGTDfP35LpL and workerreq_012NbUh8dANVyvrp1dXYLuPx). The account ran short two requests from the end of its own batch. Re-run unchanged after topping up as 2026-09-10-sonnet-showcase-2, which captured 50.0% with zero fallbacks \u2014 so the 49.9% here is a billing state on our side, not a tier behaviour.",
         "The quote under-read the bill. Its input estimate is characters/4, which priced 2,853,653 input tokens against an actual 3,976,002 \u2014 39.3% low on 19th-century prose, whose long words and heavy punctuation tokenise worse than the ratio assumes. Quoted list was $9.7073; settled list was $11.9364, which cleared the $12.00 hard cap by $0.0636. The cap gate is priced off the quote, so on this corpus it guarded a number 19% below the one that arrived. A cap is only as good as the estimator underneath it.",
         "Output ran to the ceiling rather than under it: 199.2 tokens mean against a 200-token max_tokens, min 147. A three-sentence summary of 1,300 tokens of Tolstoy uses the whole allowance, so unlike the mechanics proofs there is almost no gap here between pricing a ceiling and pricing an answer."
+      ]
+    },
+    {
+      "run_id": "2026-09-10-sonnet-showcase-2",
+      "receipt_uuid": "b0c84bba-6070-522e-ba12-fca821ffc314",
+      "venue_handles": {
+        "anthropic:batch": [
+          "msgbatch_01Un2dxyQQV77vS1QJYmpcdf"
+        ]
+      },
+      "scale": "showcase (2,000 jobs, Anthropic, batch tier, claude-sonnet-5)",
+      "settled_utc": "2026-09-10T01:59:02+00:00",
+      "price_sheet": "2026-08-30",
+      "offpeak_version": "0.2.2",
+      "jobs": 2000,
+      "ok": 2000,
+      "failed": 0,
+      "fell_back": 0,
+      "sla_met": 2000,
+      "input_tokens": 3976002,
+      "output_tokens": 398608,
+      "list_usd": 11.938084,
+      "paid_usd": 5.969042,
+      "captured_usd": 5.969042,
+      "captured_pct": 50.0,
+      "by_venue": {
+        "anthropic:batch": 2000
+      },
+      "notes": [
+        "2,000/2,000 SLAs met, zero sync fallbacks, 50.0% captured, 11m11s end to end including polling, on claude-sonnet-5 against a 12h deadline. Every job reached the batch tier and paid exactly half of list.",
+        "The same book as 2026-09-10-sonnet-showcase-1, re-run. That run captured 49.9% because two of its jobs errored at the venue with invalid_request_error \u2014 credit balance too low \u2014 and were rescued synchronously at list. The account was topped up and the book resubmitted unchanged: identical passages, identical 3,976,002 input tokens, and this time 2,000 of 2,000 cleared the batch tier. The 49.9% was a billing state on our side, never a venue or a tier behaviour, and both runs stay on this ledger.",
+        "Five public-domain novels from Project Gutenberg (War and Peace, Les Miserables, Don Quixote, Anna Karenina, Middlemarch) cut into 2,000 passages of roughly 1,300 tokens, one three-sentence summarisation per passage. Long novels on purpose \u2014 2,000 passages that size needs about 10.4M characters and five average novels hold roughly a third of it.",
+        "The gate was priced correctly this time. offpeak.quote estimates input at characters/4, which on this corpus reads 39% low: it quoted $9.7073 while the settled list was $11.9381. showcase_run.py now takes --measured-chars-per-token and checks the cap against the corrected exposure; at the 2.87 chars/token measured on run 1 it predicted $11.9545 against an actual $11.9381, 0.14% out. Run 1 cleared its $12.00 cap by $0.0636 on the uncorrected figure, which is closer than a cap should ever come to being decorative.",
+        "Output ran to the ceiling rather than under it: 199.3 tokens mean against a 200-token max_tokens, min 151. A three-sentence summary of 1,300 tokens of Tolstoy uses the whole allowance, so there is almost no gap here between pricing a ceiling and pricing an answer."
       ]
     }
   ]
