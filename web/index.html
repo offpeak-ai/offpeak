@@ -9,7 +9,7 @@
 <meta name="description" content="Deadline-priced inference. pip install offpeak, give unattended work a deadline, and it fills in batch tiers at half price — SLA-guarded, on your own keys, with a receipt you can check against the public sheet.">
 <meta property="og:type" content="website">
 <meta property="og:title" content="Offpeak — same models, half the price, by your deadline">
-<meta property="og:description" content="Evals, embeddings, backfills, unattended agents — no one is waiting. Set a deadline and they run in batch and flex lanes at up to half price. SLA-guarded, on your own keys.">
+<meta property="og:description" content="Evals, embeddings, backfills, overnight agents — the venues sell that work at half price, and most AI bills pay list for it anyway. Offpeak finds the share of your spend that can wait, runs it by deadline on your own keys, and settles the difference on a receipt you can check against the provider's sheet.">
 <meta property="og:url" content="https://off-peak.ai/">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="canonical" href="https://off-peak.ai/">
@@ -30,33 +30,36 @@
 <script>
 window.COPY = {
   /* hero */
-  "hero.kicker":        "The desk is open",
+  "hero.kicker":        "Everyone buys intelligence at spot",
   "hero.headline":      "Same models.<br>Half the price.<br>By your deadline.",
   "hero.role":          "Offpeak — deadline-priced inference",
-  "hero.paragraph":     "Evals, embeddings, backfills, unattended agents — <b>no one is waiting.</b><br>Set a deadline and they run in batch and flex lanes at up to <b>half price.</b><br><b>SLA‑guarded, on your own keys.</b>",
+  "hero.paragraph":     "Evals, embeddings, backfills, overnight agents — the venues sell that work at half price, and <b>most AI bills pay list for it anyway.</b> Offpeak finds the share of your spend that can wait, runs it by deadline on your own keys, and settles the difference on a <b>receipt you can check against the provider's sheet.</b>",
   "hero.tile1.n":       "50% off",
   "hero.tile1.c":       "Batch tier<br>six venues, published",
   "hero.tile2.n":       "4×",
-  "hero.tile2.c":       "Fastest → batch<br>same model, computed live",
+  "hero.tile2.c":       "Urgency premium<br>fastest → batch, same model",
   "hero.tile3.n":       "100%",
   "hero.tile3.c":       "SLAs met on every venue run<br>failures published",
-  "hero.cta.primary":   "Quickstart",
+  "hero.cta.primary":   "Get your flexibility report",
   "hero.cta.secondary": "Estimate savings",
-  "hero.cta.code":      "pip install offpeak",
-  "hero.note":          "APACHE-2.0 · OPEN SOURCE · YOUR KEYS, PROVIDER-DIRECT · <b>THE QUOTE IS FREE</b>",
+  "hero.cta.tertiary":  "Platform team? Quickstart ↓",
+  "hero.note":          "FREE TWO-WEEK FLEXIBILITY REPORT · JOB-LOG METADATA ONLY — NO PROMPTS, NO PAYLOADS, NO KEYS · <b>ZERO SAVINGS, ZERO FEE</b>",
 
   /* section headings */
-  "sec.quickstart.eyebrow": "01 // Quickstart",
+  "sec.report.eyebrow":     "01 // The report",
+  "sec.report.title":       "How much of your spend can wait — and what the wait is worth",
+  "sec.report.lede":        "Nobody measures this number today — not the provider, not the gateway, not the spend dashboard. Two weeks of job-log metadata is enough to put it on one page, priced against the sheets your invoice already uses.",
+  "sec.quickstart.eyebrow": "02 // Quickstart",
   "sec.quickstart.title":   "Half price in three steps",
-  "sec.how.eyebrow":        "02 // How it works",
+  "sec.how.eyebrow":        "03 // How it works",
   "sec.how.title":          "Free to run. Paid to guarantee.",
-  "sec.spread.eyebrow":     "03 // The spread",
+  "sec.spread.eyebrow":     "04 // The spread",
   "sec.spread.title":       "The price of urgency",
-  "sec.book.eyebrow":       "04 // The book",
+  "sec.book.eyebrow":       "05 // The book",
   "sec.book.title":         "The open book",
-  "sec.valley.eyebrow":     "05 // The valley",
+  "sec.valley.eyebrow":     "06 // The valley",
   "sec.valley.title":       "Into the valley",
-  "sec.receipt.eyebrow":    "06 // The receipt",
+  "sec.receipt.eyebrow":    "07 // The receipt",
   "sec.receipt.title":      "Settled, on time",
 
   /* closing call to action */
@@ -516,13 +519,50 @@ window.COPY = {
         <div><div class="n g" data-ledger-stat="sla" data-string="hero.tile3.n"></div><span class="c" data-string="hero.tile3.c"></span></div>
       </div>
       <div class="cta boot-el" style="animation-delay:.65s">
-        <a class="btn btn-gold" href="#quickstart" data-string="hero.cta.primary"></a>
+        <a class="btn btn-gold" href="#report" data-string="hero.cta.primary"></a>
         <a class="btn btn-ghost" href="#/calculator" data-string="hero.cta.secondary"></a>
-        <button class="code" type="button" data-copy='pip install "offpeak[all]"' data-string="hero.cta.code"></button>
+        <a class="btn btn-ghost" href="#quickstart" data-string="hero.cta.tertiary"></a>
       </div>
       <p class="note-line boot-el" style="animation-delay:.72s" data-string="hero.note"></p>
     </div>
   </div>
+
+  <section class="sc rv" id="report">
+    <div class="wrap">
+      <div class="sec-rule"></div>
+      <p class="sec-eyebrow" data-string="sec.report.eyebrow"></p>
+      <h2 class="sec-title" data-string="sec.report.title"></h2>
+      <p class="desc" style="max-width:44em" data-string="sec.report.lede"></p>
+      <div class="steps3">
+        <div class="case step3">
+          <i class="ck tl"></i><i class="ck tr"></i><i class="ck bl"></i><i class="ck br"></i>
+          <div class="n">STEP 01</div>
+          <h3>Two weeks of metadata</h3>
+          <p>Timestamps, models, token counts, job classes — from your gateway logs or the provider's usage export. <b>No prompts, no payloads, no keys.</b> Nothing sensitive leaves your perimeter.</p>
+          <span class="mono-line">ts · model · tokens_in · tokens_out · job_class</span>
+        </div>
+        <div class="case step3">
+          <i class="ck tl"></i><i class="ck tr"></i><i class="ck bl"></i><i class="ck br"></i>
+          <div class="n">STEP 02</div>
+          <h3>Priced line by line</h3>
+          <p>Every job re-priced against the venue's own published list-vs-batch sheet. You get the <b>deferrable share of your spend</b> and <b>what the wait is worth per year</b> at today's spreads — checkable against an invoice you already receive.</p>
+          <span class="mono-line">spread = (list − batch) × tokens</span>
+        </div>
+        <div class="case step3">
+          <i class="ck tl"></i><i class="ck tr"></i><i class="ck bl"></i><i class="ck br"></i>
+          <div class="n">STEP 03</div>
+          <h3>You decide</h3>
+          <p>Attach deadlines to the work that can wait; everything urgent is never touched. The desk is paid as a <b>share of what it captures</b>, settled on receipts — <b>zero savings, zero fee.</b></p>
+          <span class="mono-line">receipt: list · paid · captured · SLA</span>
+        </div>
+      </div>
+      <div class="cta" style="margin-top:28px">
+        <a class="btn btn-gold" href="mailto:theo@off-peak.ai?subject=Flexibility%20report&amp;body=Company%3A%0AAI%20spend%20per%20month%20(rough)%3A%0AWhere%20the%20job%20logs%20live%20(gateway%20%2F%20provider%20usage%20export)%3A%0A">Request the report</a>
+        <a class="btn btn-ghost" href="#/receipts">See a settled receipt</a>
+      </div>
+      <p class="note-line">FREE · WORK EMAIL · TURNAROUND INSIDE DAYS OF YOUR EXPORT · <b>THE NUMBER IS YOURS TO KEEP EITHER WAY</b></p>
+    </div>
+  </section>
 
   <section class="sc rv" id="quickstart">
     <div class="wrap">
