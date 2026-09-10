@@ -534,7 +534,7 @@ window.COPY = {
         <div>
           <div class="qs-n">STEP 01</div>
           <h3>Install</h3>
-          <p class="desc">Zero-dependency core; provider SDKs load only via extras. Python 3.10+, Apache-2.0, <a href="https://github.com/offpeak-ai/offpeak" rel="noopener" target="_blank">built in the open</a>.</p>
+          <p class="desc">Zero-dependency core; provider SDKs load only via extras. Python 3.10+, Apache-2.0, <a href="https://github.com/offpeak-ai/offpeak" rel="noopener" target="_blank">source on GitHub</a>.</p>
         </div>
         <div class="codeblock">
           <div class="cb-head"><span>shell</span><button class="cbtn" type="button" data-copy='pip install "offpeak[all]"'>Copy</button></div>
@@ -545,8 +545,8 @@ window.COPY = {
       <div class="qstep">
         <div>
           <div class="qs-n">STEP 02</div>
-          <h3>Give work a deadline</h3>
-          <p class="desc">One argument on work you already run — batching, submission, polling, and result matching are handled. Your keys via the standard env vars; payloads go provider-direct and <b>never transit Offpeak</b>. If a batch runs long, the stragglers re-run synchronously at list: <b>you state the deadline; it gets met.</b></p>
+          <h3>Set a deadline</h3>
+          <p class="desc">One argument. Batching, submission, polling and result matching are handled. Keys come from the standard env vars; payloads go provider‑direct and <b>never transit Offpeak.</b> If a batch runs long, stragglers re‑run synchronously at list — <b>the deadline holds.</b></p>
         </div>
         <div class="codeblock">
           <div class="cb-head"><span>batch_summarize.py</span><button class="cbtn" type="button" data-copy='import offpeak
@@ -569,8 +569,8 @@ results = offpeak.run(jobs, deadline=<span class="tk-s">"06:00"</span>)  <span c
       <div class="qstep">
         <div>
           <div class="qs-n">STEP 03</div>
-          <h3>Settle the receipt</h3>
-          <p class="desc">Every run prints one — list, paid, captured, arithmetic against the published sheet. This one is from a real settled run on Google's batch tier: <b>50.0% captured, 5/5 SLAs, zero fallbacks</b>. <a href="#/receipts">The ledger</a> holds every receipt.</p>
+          <h3>Read the receipt</h3>
+          <p class="desc">Every run prints one receipt: list, paid, captured — arithmetic against the published sheet. This one is a real run on Gemini's batch tier: <b>50.0% captured, 5/5 SLAs, zero fallbacks.</b> Every receipt is on <a href="#/receipts">the ledger</a>.</p>
         </div>
         <div class="codeblock out">
           <div class="cb-head"><span>receipt · 2026-08-24-gemini-1 · real run</span></div>
@@ -587,7 +587,7 @@ prices    snapshot <span class="sd">2026-08-30</span> — offpeak.prices
         </div>
       </div>
 
-      <p class="note-line">No key yet? <b>The quote is free</b> — <code>python -m offpeak quote --model gpt-5.6-luna --jobs 5000 …</code> prices a run against the published sheets with <b>no API calls and no key at all</b>.</p>
+      <p class="note-line">No key yet? <b>The quote is free:</b> <code>python -m offpeak quote --model gpt-5.6-luna --jobs 5000</code> prices a run against the published sheets — <b>no API calls, no key.</b></p>
     </div>
   </section>
 
