@@ -77,6 +77,13 @@ class Receipt:
     #: rule — a fallback that happened to run off-peak paid half, and a hold
     #: that drained into a peak block paid list, whatever the path was called.
     paid_fraction: float | None = None
+    #: Set only when a run passed ``desk=``. None means the desk was never
+    #: asked; True/False records whether it accepted *this* receipt -- a desk
+    #: that planned the run but dropped the receipt post still reports False
+    #: here, because the ledger never saw this job.
+    desk_reachable: bool | None = None
+    desk_host: str | None = None
+    desk_plan_id: str | None = None
 
     @property
     def sla_met(self) -> bool:
@@ -105,7 +112,8 @@ class Receipt:
         return self.list_usd - self.paid_usd
 
     def __str__(self) -> str:
-        """One line, in money you can actually read.
+        """One line, in money you can actually read -- plus a desk line when
+        a run passed ``desk=``.
 
         The float properties above stay floats — this is the rendering, so a
         sub-cent job reports what it cost instead of $0.00.
@@ -115,11 +123,16 @@ class Receipt:
             where += " (sync fallback)"
         if self.paid_fraction is not None:
             where += f" (paid {self.paid_fraction:g}x list)"
-        return (
+        line = (
             f"{where}: {self.input_tokens:,} in · {self.output_tokens:,} out · "
             f"list ${format_usd(self.list_usd)} · paid ${format_usd(self.paid_usd)} · "
             f"captured ${format_usd(self.spread_usd)}"
         )
+        if self.desk_reachable is True:
+            line += f"\ndesk  {self.desk_host} · plan {self.desk_plan_id}"
+        elif self.desk_reachable is False:
+            line += "\ndesk  unreachable — local plan"
+        return line
 
 
 @dataclass
