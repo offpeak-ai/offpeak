@@ -1,7 +1,7 @@
 {
   "night_of": "2026-09-10",
   "mode": "quote",
-  "generated_utc": "2026-09-10T19:18+00:00",
+  "generated_utc": "2026-09-10T19:23+00:00",
   "span_utc": {
     "from": "2026-09-10T16:00Z",
     "to": "2026-09-11T07:00Z"
@@ -35,6 +35,14 @@
     },
     "chosen_window_spread": 1.31
   },
+  "power_gb_agile": {
+    "n_halfhours": 30,
+    "peak_window_17_21_bst": 42.23,
+    "offpeak_window_00_05_bst": 27.81,
+    "window_spread": 1.52,
+    "max_p_kwh": 47.523,
+    "min_p_kwh": 26.5965
+  },
   "power_caiso_sp15": {
     "n_hours": 24,
     "peak_window_17_21_local": 91.9,
@@ -50,7 +58,6 @@
     "unit": "$/MWh"
   },
   "unavailable": {
-    "power": "https://api.octopus.energy/v1/products/AGILE-24-10-01/electricity-tariffs/E-1R-AGILE-24-10-01-C/standard-unit-rates/ failed after 3 attempts: HTTP Error 502: Bad Gateway",
     "carbon_caiso_sp15": "CISO: EIA-930 has published no hours for 2026-09-10 yet (the feed runs about a day behind)",
     "carbon_ercot_houston": "ERCO: EIA-930 has published no hours for 2026-09-10 yet (the feed runs about a day behind)"
   }
