@@ -19,3 +19,4 @@ Written by `tools/settle_report.py` from the receipts in the main branch's `rece
 | 2026-08-26-mistral-2 | venue probe (24 jobs, Mistral, batch completed but was discarded — driver bug, sync fallback at list) | 24 | mistral:batch 24 | 948 in · 93 out | $0.000198 | $0.000198 | $0.00 (0.0%) | 24/24 (24 fell back) |
 | 2026-08-26-mistral-3 | venue proof (24 jobs, Mistral, batch tier — fourth venue to capture) | 24 | mistral:batch 24 | 948 in · 96 out | $0.000200 | $0.0000999 | $0.0000999 (50.0%) | 24/24 |
 | 2026-08-26-openai-1 | venue proof (24 jobs, OpenAI, batch tier) | 24 | openai:batch 24 | 728 in · 938 out | $0.00127 | $0.000636 | $0.000636 (50.0%) | 24/24 |
+| 2026-09-10-sonnet-showcase-1 | showcase (2,000 jobs, Anthropic, batch tier, claude-sonnet-5) | 2000 | anthropic:batch 2000 | 3,976,002 in · 398,439 out | $11.94 | $5.97 | $5.96 (49.9%) | 2000/2000 (2 fell back) |
