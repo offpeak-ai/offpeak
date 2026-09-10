@@ -33,13 +33,13 @@ window.COPY = {
   "hero.kicker":        "The desk is open",
   "hero.headline":      "Same models.<br>Half the price.<br>By your deadline.",
   "hero.role":          "Offpeak — deadline-priced inference",
-  "hero.paragraph":     "Evals, embeddings, backfills, unattended agents — <b>no one is waiting.</b> Set a deadline and they run in batch and flex lanes at up to <b>half price.</b><br><b>SLA‑guarded, on your own keys.</b>",
+  "hero.paragraph":     "Evals, embeddings, backfills, unattended agents — <b>no one is waiting.</b><br>Set a deadline and they run in batch and flex lanes at up to <b>half price.</b><br><b>SLA‑guarded, on your own keys.</b>",
   "hero.tile1.n":       "50% off",
   "hero.tile1.c":       "Batch tier<br>six venues, published",
   "hero.tile2.n":       "4×",
   "hero.tile2.c":       "Fastest → batch<br>same model, computed live",
   "hero.tile3.n":       "100%",
-  "hero.tile3.c":       "SLAs met · <span data-ledger-stat='sla-runs'>8</span> venue runs<br><span data-ledger-stat='sla-jobs'>136</span> jobs · failures published",
+  "hero.tile3.c":       "SLAs met on every venue run<br>failures published",
   "hero.cta.primary":   "Quickstart",
   "hero.cta.secondary": "Estimate savings",
   "hero.cta.code":      "pip install offpeak",
@@ -2427,8 +2427,6 @@ prices    snapshot <span class="sd">2026-08-30</span> — offpeak.prices
           el.textContent = (pct === 100 ? "100" : pct.toFixed(1)) + "%";
           el.classList.toggle("g", pct === 100);
         });
-        document.querySelectorAll('[data-ledger-stat="sla-runs"]').forEach(function (el) { el.textContent = String(vr.length); });
-        document.querySelectorAll('[data-ledger-stat="sla-jobs"]').forEach(function (el) { el.textContent = num(jobs); });
       }
     })
     .catch(function () { /* keep the rendered fallback */ });
