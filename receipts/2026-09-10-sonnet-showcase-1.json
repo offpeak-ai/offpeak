@@ -1,0 +1,35 @@
+{
+  "run_id": "2026-09-10-sonnet-showcase-1",
+  "venue_handles": {
+    "anthropic:batch": [
+      "msgbatch_011ePvTq7dacb8Mhk4Mb4UFD"
+    ]
+  },
+  "scale": "showcase (2,000 jobs, Anthropic, batch tier, claude-sonnet-5)",
+  "settled_utc": "2026-09-10T01:26:45+00:00",
+  "deadline": "12h",
+  "price_sheet": "2026-08-30",
+  "offpeak_version": "0.2.2",
+  "jobs": 2000,
+  "ok": 2000,
+  "failed": 0,
+  "fell_back": 2,
+  "sla_met": 2000,
+  "input_tokens": 3976002,
+  "output_tokens": 398439,
+  "list_usd": 11.936394,
+  "paid_usd": 5.974336,
+  "captured_usd": 5.962058,
+  "captured_pct": 49.9486,
+  "left_on_table_usd": 0.006139,
+  "by_venue": {
+    "anthropic:batch": 2000
+  },
+  "notes": [
+    "2,000/2,000 SLAs met, 2 sync fallbacks, 49.9% captured, 19m20s end to end including polling, on claude-sonnet-5 against a 12h deadline.",
+    "The work is real: five public-domain novels from Project Gutenberg (War and Peace, Les Miserables, Don Quixote, Anna Karenina, Middlemarch) cut into 2,000 passages of roughly 1,300 tokens, one three-sentence summarisation per passage. Long novels on purpose \u2014 2,000 passages of that size needs about 10.4M characters and five average novels hold roughly a third of it.",
+    "Two jobs missed the batch tier and were rescued synchronously at list, which is why capture reads 49.9% rather than the structural 50.0%: $0.006139 left on the table across 3,976,002 input tokens. Both rescued jobs still met the deadline, so the SLA is 2,000/2,000 with 2 fell back \u2014 the insurance working, and costing exactly what it is supposed to cost.",
+    "The quote under-read the bill. Its input estimate is characters/4, which priced 2,853,653 input tokens against an actual 3,976,002 \u2014 39.3% low on 19th-century prose, whose long words and heavy punctuation tokenise worse than the ratio assumes. Quoted list was $9.7073; settled list was $11.9364, which cleared the $12.00 hard cap by $0.0636. The cap gate is priced off the quote, so on this corpus it guarded a number 19% below the one that arrived. A cap is only as good as the estimator underneath it.",
+    "Output ran to the ceiling rather than under it: 199.2 tokens mean against a 200-token max_tokens, min 147. A three-sentence summary of 1,300 tokens of Tolstoy uses the whole allowance, so unlike the mechanics proofs there is almost no gap here between pricing a ceiling and pricing an answer."
+  ]
+}

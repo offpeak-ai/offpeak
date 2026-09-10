@@ -32,3 +32,7 @@ HANDOFF.md
 site/
 docs/spec.md
 # The site lives here but is deployed from Vercel, not shipped with the SDK.
+
+# Settlement run artifacts. The showcase run caches ~13MB of Project
+# Gutenberg text here; novels are fetched, never committed.
+run/
