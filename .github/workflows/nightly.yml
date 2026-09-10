@@ -150,7 +150,25 @@ jobs:
               why = "forced"
           elif rec.exists():
               run, why = False, "already recorded"
-              if mode == "mark":
+              # A record can exist and still be short a leg. When an
+              # upstream fetch fails (Octopus answered 502 to the 19:07Z
+              # quote on 2026-09-10) the generator records the leg under
+              # "unavailable" and moves on — and every catch-up then saw
+              # a file and skipped, so nothing ever retried it. The two US
+              # carbon legs are the exception: EIA-930 runs about a day
+              # behind by design and the next mark backfills them, so
+              # they never justify a re-run.
+              try:
+                  pending = sorted(
+                      k for k in (json.loads(rec.read_text()).get("unavailable") or {})
+                      if k not in {f"carbon_{z}" for z in br.US_ZONES})
+              except (OSError, ValueError, AttributeError):
+                  pending = []
+              if pending:
+                  run, why = True, (
+                      f"{mode} recorded with unavailable leg(s) "
+                      f"{', '.join(pending)} — retrying")
+              elif mode == "mark":
                   # complete only if it reaches the session's 07:00Z close
                   end = dt.datetime.fromisoformat(
                       dt.date.fromisoformat(night).isoformat()
