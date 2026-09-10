@@ -1,0 +1,10 @@
+OFFPEAK SETTLEMENT ────────────────────────────
+jobs      2000 (2000 ok, 0 sync fallback, 0 failed)
+sla       2000/2000 met
+venues    anthropic:batch 2000
+tokens    3,976,002 in · 398,608 out
+list      $11.94
+paid      $5.97
+captured  $5.97 (50.0%)
+prices    snapshot 2026-08-30 — override via offpeak.prices
+───────────────────────────────────────────────
