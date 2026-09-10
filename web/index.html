@@ -9,7 +9,7 @@
 <meta name="description" content="Deadline-priced inference. pip install offpeak, give unattended work a deadline, and it fills in batch tiers at half price — SLA-guarded, on your own keys, with a receipt you can check against the public sheet.">
 <meta property="og:type" content="website">
 <meta property="og:title" content="Offpeak — same models, half the price, by your deadline">
-<meta property="og:description" content="Evals, embeddings, backfills, unattended agents — nobody is waiting on them. One argument — deadline= — and they run in batch and flex lanes at up to half price, SLA-guarded, on your own keys.">
+<meta property="og:description" content="Evals, embeddings, backfills, unattended agents — no one is waiting. Set a deadline and they run in batch and flex lanes at up to half price. SLA-guarded, on your own keys.">
 <meta property="og:url" content="https://off-peak.ai/">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="canonical" href="https://off-peak.ai/">
@@ -17,6 +17,59 @@
 <style>:root{color-scheme:dark}html,body{margin:0;padding:0;background:#0B1017}img{max-width:100%}</style>
 </head>
 <body>
+
+<!-- ══════════════════════════════════════════════════════════════════════
+     COPY — every human-readable string on the Desk page, plus the footer
+     line. One string per line. This is the only place any of it is written;
+     the markup below renders from it via data-string="<key>", applied by a
+     four-line script just under </footer>. Values are HTML, so inline <b>,
+     <a>, <br> and <span> are allowed. Changing a word here changes the page.
+     Elements carrying data-ledger-stat are still overwritten from the
+     published ledger after load — the values here are the fallback.
+     ══════════════════════════════════════════════════════════════════ -->
+<script>
+window.COPY = {
+  /* hero */
+  "hero.kicker":        "The desk is open",
+  "hero.headline":      "Same models.<br>Half the price.<br>By your deadline.",
+  "hero.role":          "Offpeak — deadline-priced inference",
+  "hero.paragraph":     "Evals, embeddings, backfills, unattended agents — <b>no one is waiting.</b> Set a deadline and they run in batch and flex lanes at up to <b>half price.</b><br><b>SLA‑guarded, on your own keys.</b>",
+  "hero.tile1.n":       "50% off",
+  "hero.tile1.c":       "Batch tier<br>six venues, published",
+  "hero.tile2.n":       "4×",
+  "hero.tile2.c":       "Fastest → batch<br>same model, computed live",
+  "hero.tile3.n":       "100%",
+  "hero.tile3.c":       "SLAs met · <span data-ledger-stat='sla-runs'>8</span> venue runs<br><span data-ledger-stat='sla-jobs'>136</span> jobs · failures published",
+  "hero.cta.primary":   "Quickstart",
+  "hero.cta.secondary": "Estimate savings",
+  "hero.cta.code":      "pip install offpeak",
+  "hero.note":          "APACHE-2.0 · OPEN SOURCE · YOUR KEYS, PROVIDER-DIRECT · <b>THE QUOTE IS FREE</b>",
+
+  /* section headings */
+  "sec.quickstart.eyebrow": "01 // Quickstart",
+  "sec.quickstart.title":   "Half price in three steps",
+  "sec.how.eyebrow":        "02 // How it works",
+  "sec.how.title":          "One argument",
+  "sec.spread.eyebrow":     "03 // The spread",
+  "sec.spread.title":       "The price of urgency",
+  "sec.book.eyebrow":       "04 // The book",
+  "sec.book.title":         "The open book",
+  "sec.valley.eyebrow":     "05 // The valley",
+  "sec.valley.title":       "Into the valley",
+  "sec.receipt.eyebrow":    "06 // The receipt",
+  "sec.receipt.title":      "Settled, on time",
+
+  /* closing call to action */
+  "close.cta.primary":   "Estimate your savings",
+  "close.cta.secondary": "The settled runs",
+  "close.cta.code":      "pip install offpeak",
+
+  /* footer */
+  "footer.line1": "<b>OFFPEAK · INFERENCE FUTURES</b> — SAME MODEL · SAME TOKENS · MINUS THE URGENCY PREMIUM",
+  "footer.line2": "EVERYONE BUYS INTELLIGENCE AT SPOT; OFFPEAK IS THE FUTURES MARKET. QUOTES ARE MARKET OBSERVATION FROM OPEN DATA; SETTLEMENTS ARE TRACK RECORD FROM REAL RUNS — THIS SITE NEVER CONFUSES THE TWO.",
+  "footer.line3": "PRICES: PROVIDER PUBLIC SHEETS, SNAPSHOT <span class='sd'>2026-08-30</span>, RE-VERIFIED FROM RENDERED PAGES; PROMOTIONAL RATES CARRY THEIR EXPIRY AND RE-DERIVE, NEVER CACHED. GRID: NESO · EIA-930 · OCTOPUS AGILE · GRIDSTATUS. DEMO BOOK CONTRACTS ARE SIMULATED AND LABELLED; CURVES, SHEETS AND SETTLED RECEIPTS ARE REAL."
+};
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500;600;700&display=swap">
@@ -453,29 +506,29 @@
 <section class="page active" id="p-home">
   <div class="hero">
     <div class="wrap hero-in">
-      <p class="welcome boot-el" style="animation-delay:.15s">The desk is open</p>
-      <h1 class="name boot-el" style="animation-delay:.3s">Same models.<br>Half the price.<br>By your deadline.</h1>
-      <p class="role boot-el" style="animation-delay:.42s">Offpeak — deadline-priced inference</p>
-      <p class="tag boot-el" style="animation-delay:.5s">Evals, embeddings, backfills, unattended agents — <b>nobody is waiting on them.</b> Give them a deadline and they run in batch and flex lanes at up to <b>half price. SLA-guarded, on your own keys.</b></p>
+      <p class="welcome boot-el" style="animation-delay:.15s" data-string="hero.kicker"></p>
+      <h1 class="name boot-el" style="animation-delay:.3s" data-string="hero.headline"></h1>
+      <p class="role boot-el" style="animation-delay:.42s" data-string="hero.role"></p>
+      <p class="tag boot-el" style="animation-delay:.5s" data-string="hero.paragraph"></p>
       <div class="hstrip boot-el" style="animation-delay:.58s">
-        <div><div class="n money">50% off</div><span class="c">Batch tier<br>six venues, published</span></div>
-        <div><div class="n">4×</div><span class="c">Fastest → batch<br>same model, computed live</span></div>
-        <div><div class="n g" data-ledger-stat="sla">100%</div><span class="c">SLAs met · <span data-ledger-stat="sla-runs">8</span> venue runs<br><span data-ledger-stat="sla-jobs">136</span> jobs · failures published</span></div>
+        <div><div class="n money" data-string="hero.tile1.n"></div><span class="c" data-string="hero.tile1.c"></span></div>
+        <div><div class="n" data-string="hero.tile2.n"></div><span class="c" data-string="hero.tile2.c"></span></div>
+        <div><div class="n g" data-ledger-stat="sla" data-string="hero.tile3.n"></div><span class="c" data-string="hero.tile3.c"></span></div>
       </div>
       <div class="cta boot-el" style="animation-delay:.65s">
-        <a class="btn btn-gold" href="#quickstart">Quickstart</a>
-        <a class="btn btn-ghost" href="#/calculator">Estimate savings</a>
-        <button class="code" type="button" data-copy='pip install "offpeak[all]"'>pip install offpeak</button>
+        <a class="btn btn-gold" href="#quickstart" data-string="hero.cta.primary"></a>
+        <a class="btn btn-ghost" href="#/calculator" data-string="hero.cta.secondary"></a>
+        <button class="code" type="button" data-copy='pip install "offpeak[all]"' data-string="hero.cta.code"></button>
       </div>
-      <p class="note-line boot-el" style="animation-delay:.72s">APACHE-2.0 · OPEN SOURCE · YOUR KEYS, PROVIDER-DIRECT · <b>THE QUOTE IS FREE</b></p>
+      <p class="note-line boot-el" style="animation-delay:.72s" data-string="hero.note"></p>
     </div>
   </div>
 
   <section class="sc rv" id="quickstart">
     <div class="wrap">
       <div class="sec-rule"></div>
-      <p class="sec-eyebrow">01 // Quickstart</p>
-      <h2 class="sec-title">Half price in three steps</h2>
+      <p class="sec-eyebrow" data-string="sec.quickstart.eyebrow"></p>
+      <h2 class="sec-title" data-string="sec.quickstart.title"></h2>
 
       <div class="qstep">
         <div>
@@ -541,8 +594,8 @@ prices    snapshot <span class="sd">2026-08-30</span> — offpeak.prices
   <section class="sc rv" id="how">
     <div class="wrap">
       <div class="sec-rule"></div>
-      <p class="sec-eyebrow">02 // How it works</p>
-      <h2 class="sec-title">One argument</h2>
+      <p class="sec-eyebrow" data-string="sec.how.eyebrow"></p>
+      <h2 class="sec-title" data-string="sec.how.title"></h2>
       <div class="steps3">
         <div class="case step3">
           <i class="ck tl"></i><i class="ck tr"></i><i class="ck bl"></i><i class="ck br"></i>
@@ -571,8 +624,8 @@ prices    snapshot <span class="sd">2026-08-30</span> — offpeak.prices
   <section class="sc rv" id="spread">
     <div class="wrap">
       <div class="sec-rule"></div>
-      <p class="sec-eyebrow">03 // The spread</p>
-      <h2 class="sec-title">The price of urgency</h2>
+      <p class="sec-eyebrow" data-string="sec.spread.eyebrow"></p>
+      <h2 class="sec-title" data-string="sec.spread.title"></h2>
       <div class="case">
         <i class="ck tl"></i><i class="ck tr"></i><i class="ck bl"></i><i class="ck br"></i>
         <div class="duo">
@@ -620,8 +673,8 @@ prices    snapshot <span class="sd">2026-08-30</span> — offpeak.prices
   <section class="sc rv" id="book">
     <div class="wrap">
       <div class="sec-rule"></div>
-      <p class="sec-eyebrow">04 // The book</p>
-      <h2 class="sec-title">The open book</h2>
+      <p class="sec-eyebrow" data-string="sec.book.eyebrow"></p>
+      <h2 class="sec-title" data-string="sec.book.title"></h2>
       <div class="case">
         <i class="ck tl"></i><i class="ck tr"></i><i class="ck bl"></i><i class="ck br"></i>
         <p class="case-eyebrow">Exhibit 02 <em>//</em> deadline contracts · 6,000 rows · showing 5</p>
@@ -654,8 +707,8 @@ prices    snapshot <span class="sd">2026-08-30</span> — offpeak.prices
   <section class="sc rv" id="valley">
     <div class="wrap">
       <div class="sec-rule"></div>
-      <p class="sec-eyebrow">05 // The valley</p>
-      <h2 class="sec-title">Into the valley</h2>
+      <p class="sec-eyebrow" data-string="sec.valley.eyebrow"></p>
+      <h2 class="sec-title" data-string="sec.valley.title"></h2>
       <div class="case">
         <i class="ck tl"></i><i class="ck tr"></i><i class="ck bl"></i><i class="ck br"></i>
         <div class="duo">
@@ -694,8 +747,8 @@ prices    snapshot <span class="sd">2026-08-30</span> — offpeak.prices
   <section class="sc rv" id="receipt">
     <div class="wrap">
       <div class="sec-rule"></div>
-      <p class="sec-eyebrow">06 // The receipt</p>
-      <h2 class="sec-title">Settled, on time</h2>
+      <p class="sec-eyebrow" data-string="sec.receipt.eyebrow"></p>
+      <h2 class="sec-title" data-string="sec.receipt.title"></h2>
       <div class="case">
         <i class="ck tl"></i><i class="ck tr"></i><i class="ck bl"></i><i class="ck br"></i>
         <div class="settle">
@@ -707,9 +760,9 @@ prices    snapshot <span class="sd">2026-08-30</span> — offpeak.prices
         <p class="note-line" style="margin:14px 0 0"><b>DEMO BOOK · REAL CURVES.</b> The dollar figures above are a simulated 6,000-job book.<br><b style="color:var(--green)">REAL SETTLEMENTS EXIST.</b> Every run that reached a batch tier <em>and kept it</em> settled at <b>exactly 50.0% of list</b> — real bills, <b>four capturing venues</b>, every receipt public and checkable against the published sheet. The runs that captured nothing — a gated venue, and one night offpeak's own driver discarded a batch that had already succeeded — are on the same ledger. <a href="#/receipts">The ledger</a>.</p>
         <p class="desc" style="margin:22px 0 22px">Every dollar reproducible from a public price sheet. <b>Quotes ≠ settlements</b> — settlements only ever come from real runs.</p>
         <div class="cta">
-          <a class="btn btn-gold" href="#/calculator">Estimate your savings</a>
-          <a class="btn btn-ghost" href="#/receipts">The settled runs</a>
-          <button class="code" type="button" data-copy='pip install "offpeak[all]"'>pip install offpeak</button>
+          <a class="btn btn-gold" href="#/calculator" data-string="close.cta.primary"></a>
+          <a class="btn btn-ghost" href="#/receipts" data-string="close.cta.secondary"></a>
+          <button class="code" type="button" data-copy='pip install "offpeak[all]"' data-string="close.cta.code"></button>
         </div>
       </div>
     </div>
@@ -1307,11 +1360,23 @@ prices    snapshot <span class="sd">2026-08-30</span> — offpeak.prices
       <a href="https://github.com/offpeak-ai/offpeak" rel="noopener" target="_blank">↗ GitHub</a>
       <a href="https://pypi.org/project/offpeak/" rel="noopener" target="_blank">↗ PyPI</a>
     </div>
-    <b>OFFPEAK · INFERENCE FUTURES</b> — SAME MODEL · SAME TOKENS · MINUS THE URGENCY PREMIUM<br>
-    EVERYONE BUYS INTELLIGENCE AT SPOT; OFFPEAK IS THE FUTURES MARKET. QUOTES ARE MARKET OBSERVATION FROM OPEN DATA; SETTLEMENTS ARE TRACK RECORD FROM REAL RUNS — THIS SITE NEVER CONFUSES THE TWO.<br>
-    PRICES: PROVIDER PUBLIC SHEETS, SNAPSHOT <span class="sd">2026-08-30</span>, RE-VERIFIED FROM RENDERED PAGES; PROMOTIONAL RATES CARRY THEIR EXPIRY AND RE-DERIVE, NEVER CACHED. GRID: NESO · EIA-930 · OCTOPUS AGILE · GRIDSTATUS. DEMO BOOK CONTRACTS ARE SIMULATED AND LABELLED; CURVES, SHEETS AND SETTLED RECEIPTS ARE REAL.
+    <span data-string="footer.line1"></span><br>
+    <span data-string="footer.line2"></span><br>
+    <span data-string="footer.line3"></span>
   </div>
 </footer>
+
+<script>
+/* Renders the COPY block at the top of this file into the markup above.
+   Synchronous during parse, so it lands before the boot class, before
+   stampSheet() rewrites the .sd dates and before the ledger fetch. */
+(function () {
+  Array.prototype.forEach.call(document.querySelectorAll("[data-string]"), function (el) {
+    var v = window.COPY[el.getAttribute("data-string")];
+    if (v != null) el.innerHTML = v;
+  });
+})();
+</script>
 
 <div class="toast" id="toast" role="status" aria-live="polite">Link copied</div>
 
