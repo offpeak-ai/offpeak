@@ -29,13 +29,13 @@ and no row about it should be read as rate coverage.
 | source | why | rates visible | url |
 | --- | --- | --- | --- |
 | `anthropic:pricing` | cited by prices.py | 157 | <https://platform.claude.com/docs/en/about-claude/pricing> |
-| `openai:pricing` | cited by prices.py | 225 | <https://developers.openai.com/api/docs/pricing> |
+| `openai:pricing` | cited by prices.py | 226 | <https://developers.openai.com/api/docs/pricing> |
 | `groq:pricing` | cited by prices.py | 1 | <https://groq.com/pricing> |
 | `mistral:pricing` | cited by prices.py | 50 | <https://mistral.ai/pricing/api> |
 | `google:pricing` | cited by prices.py | 532 | <https://ai.google.dev/pricing> |
 | `groq:plans` | watched, not yet priced | **0 — rendered client-side** | <https://console.groq.com/docs/service-tiers> |
 | `xai:pricing` | watched, not yet priced | 8 | <https://docs.x.ai/docs/models> |
-| `deepseek:pricing` | cited by prices.py | **0 — rendered client-side** | <https://api-docs.deepseek.com/quick_start/pricing> |
+| `deepseek:pricing` | cited by prices.py | 12 | <https://api-docs.deepseek.com/quick_start/pricing> |
 | `qwen:pricing` | watched, not yet priced | **0 — rendered client-side** | <https://www.alibabacloud.com/help/en/model-studio/models> |
 
 ## Drift
@@ -85,3 +85,7 @@ and no row about it should be read as rate coverage.
 | 2026-09-10 | `anthropic:pricing` | changed | +1 / −2 | copy change | gpt-5.6-luna | $0.000121 | Navigation text was reflowed by merging an icon and “Console”; no pricing value changed. |
 | 2026-09-10 | `openai:pricing` | changed | +1 / −1 | copy change | gpt-5.6-luna | $0.000175 | The page adds clarification about Bedrock pricing without changing any listed rate or charge. |
 | 2026-09-10 | `mistral:pricing` | changed | +2 / −2 | copy change | gpt-5.6-luna | $0.0000914 | A latest-posts headline was added and another removed; pricing numbers remain unchanged. |
+| 2026-09-11 | `openai:pricing` | changed | +68 / −24 | unclassified | gpt-5.6-luna | $0.000468 | classifier reply did not name a label |
+| 2026-09-11 | `mistral:pricing` | changed | +2 / −2 | copy change | gpt-5.6-luna | $0.0000934 | A news item was added and another removed; pricing and charged rates are unchanged. |
+| 2026-09-11 | `deepseek:pricing` | changed | +83 / −76 | price change | gpt-5.6-luna | $0.000410 | New pricing rates were added, including input and output token charges for Flash and Pro models. |
+| 2026-09-11 | `qwen:pricing` | changed | +1 / −1 | noise | gpt-5.6-luna | $0.0000786 | Only the page’s last-updated date changed; pricing and substantive content remain unchanged. |

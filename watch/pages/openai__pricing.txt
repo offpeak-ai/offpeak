@@ -35,7 +35,7 @@ Programs, meetups, and support for builders
 Start searching
 API Dashboard
 Try ChatGPT
-Overview Models Agents Tools Voice & Audio Production API reference
+Overview Models Agents Tools Audio & voice Production API reference
 Search the API docs
 Search docs
 Suggested
@@ -45,8 +45,8 @@ API Codex ChatGPT Docs Use cases Training Resources Resources
 Search docs
 Suggested
 responses createreasoning_effortrealtimeprompt caching
-Overview Models Agents Tools Voice & Audio Production API reference
-OverviewModelsAgentsToolsVoice & AudioProductionAPI referenceDocsModels
+Overview Models Agents Tools Audio & voice Production API reference
+OverviewModelsAgentsToolsAudio & voiceProductionAPI referenceDocsModels
 Home
 Get started
 Quickstart
@@ -123,14 +123,40 @@ Image prompting
 Video generation
 Realtime and audio
 Audio and speech
-Overview
+Getting started
 Voice agents
 Specialized models
 Deep research
 Embeddings
 Moderation
 Overview
+Agents API
+Overview
+Quickstart
+Architecture
+Configuring Agents
+Sessions
+Run and continue sessions
+Events and items
+Manage sessions
+Webhooks
+Environments and sandboxes
+OpenAI-hosted sandboxes
+Self-hosted sandboxes
+Sandbox lifecycle
+Sandbox security
+Files and artifacts
+Tools and integrations
+Web search
+Functions
+MCP connections
+Plugins
+Vaults
+Multi-agent
+Observability and usage
+Tracing
 Agents SDK
+Overview
 Quickstart
 Agent definitions
 Models and providers
@@ -170,26 +196,34 @@ Code interpreter
 Media
 Image generation
 Overview
-Get started
-Voice agents
-Live translation
-Realtime prompting guide
-Audio
-Audio and speech
-Transcription
-File transcription
-Realtime transcription
-Speech generation
-Connection methods
-WebRTC
-WebSocket
-SIP
-Sessions and operations
+GPT-Live
+Getting started
+Prompting
+Managing sessions
+Delegation and tools
+Migrate to GPT-Live
+Partner integrations
+Realtime API
+Getting started
+Prompting
 Managing conversations
 Voice activity detection
-Realtime with tools
-Webhooks and server-side controls
-Managing costs
+Tools and MCP
+Build with voice
+Voice agents
+Custom voices
+Cost optimization
+Connections
+WebRTC
+WebSockets
+Telephony and SIP
+Server-side controls
+Audio processing
+File transcription
+Live transcription
+Live translation
+Text to speech
+Audio in Chat Completions
 Go live
 Production best practices
 Deployment checklist
@@ -317,8 +351,10 @@ Bulk API
 Product Feeds
 Delta Feeds API
 Campaign Targeting
-Conversion-Optimized Campaigns
+Location Targeting
+Platform Targeting
 Custom Audiences
+Conversion-Optimized Campaigns
 API Reference
 Authentication
 Ad Account
@@ -631,7 +667,7 @@ Image prompting
 Video generation
 Realtime and audio
 Audio and speech
-Overview
+Getting started
 Voice agents
 Specialized models
 Deep research
@@ -888,6 +924,14 @@ models, with pricing adjusted to match each underlying model.
 Multimodal models
 To estimate vision model input costs, use the image input cost
 calculator.
+GPT-Live sessions
+GPT-Live 1 voice sessions are billed per second,
+without rounding up to a whole minute. Backend model and tool usage is charged
+separately.
+Model
+Price per minute
+gpt-live-1
+$0.05
 Realtime and audio generation models
 Prices per 1M tokens unless noted.
 Model

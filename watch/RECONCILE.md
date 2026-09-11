@@ -17,15 +17,15 @@ into a receipt.
 what moved, per the classifier that already ran. It answers a different question
 than the rows below it and is here so a reader has both at once.
 
-Reconciled 2026-09-10 against `offpeak.prices` sheet **2026-08-30**.
+Reconciled 2026-09-11 against `offpeak.prices` sheet **2026-08-30**.
 
 | source | status | mismatches | missing | unverifiable | models on page | classification |
 | --- | --- | --- | --- | --- | --- | --- |
 | `anthropic` | **drift** | 20 | 0 | 40 | 17 | copy change (2026-09-10) |
 | `google` | **drift** | 10 | 0 | 0 | 32 | price change (2026-09-09) |
 | `groq` | skipped | 0 | 0 | 1 | 0 | — |
-| `mistral` | ok | 0 | 1 | 37 | 17 | copy change (2026-09-10) |
-| `openai` | ok | 0 | 0 | 0 | 6 | copy change (2026-09-10) |
+| `mistral` | ok | 0 | 1 | 37 | 17 | copy change (2026-09-11) |
+| `openai` | ok | 0 | 0 | 0 | 6 | unclassified (2026-09-11) |
 
 ## `anthropic`
 
@@ -103,7 +103,7 @@ Not compared, and not counted as agreement.
 
 ## `mistral`
 
-Sheet watch's latest classification: **copy change (2026-09-10)**.
+Sheet watch's latest classification: **copy change (2026-09-11)**.
 
 ### Missing from the page
 
@@ -125,7 +125,7 @@ Informational. The sheet omits models on purpose; see the comments in `prices.py
 
 ## `openai`
 
-Sheet watch's latest classification: **copy change (2026-09-10)**.
+Sheet watch's latest classification: **unclassified (2026-09-11)**.
 
 ### On the page, not on the sheet (3)
 
