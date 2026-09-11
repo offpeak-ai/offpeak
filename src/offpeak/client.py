@@ -53,6 +53,7 @@ def run(
     fallback: str = "sync",
     poll_interval: float | None = None,
     risk_buffer: float | None = None,
+    desk: object = None,
 ) -> list[Result]:
     """Run *jobs* against *deadline* on the cheapest supporting venue.
 
@@ -76,12 +77,16 @@ def run(
     cannot stay alive that long — a laptop, a CI step, a serverless function —
     use :func:`submit` and :func:`collect` and keep the :class:`Ticket` between
     them; ``run()`` is exactly ``collect(submit(...))``.
+
+    *desk* opts into the hosted desk (a URL, or ``True`` for ``OFFPEAK_DESK``)
+    and is passed straight through to :func:`submit`; see there for what it
+    changes and how it degrades.
     """
     job_list = [jobs] if isinstance(jobs, Job) else list(jobs)
     if not job_list:
         return []
     venue_list = venues if venues is not None else default_venues()
-    ticket = submit(job_list, deadline, venues=venue_list, risk_buffer=risk_buffer)
+    ticket = submit(job_list, deadline, venues=venue_list, risk_buffer=risk_buffer, desk=desk)
     results = collect(
         ticket, venues=venue_list, fallback=fallback, wait=True, poll_interval=poll_interval
     )

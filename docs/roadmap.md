@@ -65,15 +65,13 @@ A hosted desk that does the forecasting, cross-venue portfolio scheduling, and
 SLA insurance at fleet scale — with payloads never leaving your perimeter — is
 being built by the same team.
 
-The intended seam is the one already in the library: a desk would be selected
-per run, alongside the venues you already pass, so that moving from local
-scheduling to hosted scheduling is a keyword argument rather than a rewrite.
+The seam is the one already in the library: pass `desk=` alongside the venues
+you already use, so moving from local scheduling to hosted scheduling is a
+keyword argument rather than a rewrite.
 
-!!! note "Not implemented"
-    That parameter does not exist in the public API today, and nothing in this
-    release accepts it. It is described here so the shape of the plan is
-    legible — not as something you can call. The SDK and the deadline spec stay
-    open, Apache-2.0, either way.
+!!! note "Private beta"
+    Keys are issued by hand — ask. The SDK and the deadline spec stay open,
+    Apache-2.0, either way.
 
 ## The spec
 

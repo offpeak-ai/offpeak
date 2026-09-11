@@ -34,10 +34,14 @@ import time
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from .deadline import parse_deadline, seconds_until
 from .job import Job, Receipt, Result, Status
 from .venues.base import BatchState, Venue
+
+if TYPE_CHECKING:
+    from .desk import DeskPlan
 
 __all__ = ["Ticket", "submit", "status", "collect"]
 
@@ -98,6 +102,12 @@ class Ticket:
     collected: dict[str, Result] = field(default_factory=dict)
     #: job ids rescued by the sync fallback
     fell_back: set[str] = field(default_factory=set)
+    #: Set only when ``submit()`` was given ``desk=``. The key itself is never
+    #: kept here -- it is re-read from ``OFFPEAK_KEY`` wherever the ticket is
+    #: collected, so a saved ticket file never carries it.
+    desk_url: str | None = None
+    #: Set once the desk answered ``/v1/plan``; stays ``None`` if it did not.
+    desk_plan_id: str | None = None
     version: int = TICKET_VERSION
 
     # -- state -------------------------------------------------------------
@@ -142,6 +152,8 @@ class Ticket:
                 for jid, r in self.collected.items()
             },
             "fell_back": sorted(self.fell_back),
+            "desk_url": self.desk_url,
+            "desk_plan_id": self.desk_plan_id,
         }
 
     @classmethod
@@ -176,6 +188,8 @@ class Ticket:
             venue_errors=dict(data.get("venue_errors") or {}),
             collected=collected,
             fell_back=set(data.get("fell_back") or []),
+            desk_url=data.get("desk_url"),
+            desk_plan_id=data.get("desk_plan_id"),
             version=version,
         )
 
@@ -212,12 +226,75 @@ class Ticket:
 # -- the three verbs --------------------------------------------------------
 
 
+def _plan_with_desk(
+    desk: object, job_list: list[Job], deadline: datetime, venue_list: list[Venue]
+) -> tuple[str | None, DeskPlan | None]:
+    """Ask the desk for a plan, if *desk* names one. Never raises.
+
+    Returns ``(desk_url, plan)`` -- *desk_url* is set whenever a desk was
+    named, even if the plan call itself failed, so the caller can still stamp
+    "desk unreachable" on the receipts.
+    """
+    from . import desk as _desk
+
+    desk_url, key = _desk.resolve_desk(desk)
+    if desk_url is None:
+        return None, None
+
+    from .quote import estimate_tokens
+
+    input_tokens = output_tokens = 0
+    for j in job_list:
+        i, o, _, _ = estimate_tokens(j)
+        input_tokens += i
+        output_tokens += o
+
+    plan = _desk.request_plan(
+        desk_url,
+        key,
+        deadline=deadline,
+        models=sorted({j.model for j in job_list}),
+        job_count=len(job_list),
+        input_tokens=input_tokens,
+        output_tokens=output_tokens,
+        venue_keys=_desk.venue_key_signals([v.name for v in venue_list]),
+    )
+    return desk_url, plan
+
+
+def _apply_plan(
+    plan: DeskPlan, deadline: datetime, risk_buffer: float, venue_list: list[Venue]
+) -> tuple[float, list[Venue]]:
+    """Fold a desk's plan into the local risk buffer and venue order.
+
+    ``rescue_at`` overrides the risk buffer directly -- it is the desk's own
+    forecast of when a straggler must be rescued, not a fixed fraction of the
+    window. A recommended ``venue`` that matches one already on *venue_list*
+    is tried first; one that does not match anything the caller configured is
+    ignored; the caller's own venues remain the only thing that ever runs.
+    """
+    if plan.rescue_at:
+        try:
+            rescue_dt = datetime.fromisoformat(plan.rescue_at)
+        except ValueError:
+            rescue_dt = None
+        if rescue_dt is not None:
+            risk_buffer = max(0.0, (deadline - rescue_dt).total_seconds())
+    if plan.venue:
+        preferred = [v for v in venue_list if v.name == plan.venue]
+        if preferred:
+            rest = [v for v in venue_list if v.name != plan.venue]
+            venue_list = preferred + rest
+    return risk_buffer, venue_list
+
+
 def submit(
     jobs: Job | list[Job],
     deadline: object,
     *,
     venues: list[Venue] | None = None,
     risk_buffer: float | None = None,
+    desk: object = None,
 ) -> Ticket:
     """Submit *jobs* to their venues' batch tiers and return immediately.
 
@@ -226,6 +303,14 @@ def submit(
     for programming errors (a bad or past deadline, a model no venue supports);
     a venue that fails at submit is recorded on the ticket and its jobs are
     rescued by the fallback at collect time.
+
+    *desk* opts into the hosted desk: a URL string, or ``True`` to read
+    ``OFFPEAK_DESK`` (the key always comes from ``OFFPEAK_KEY``). When set,
+    the desk is asked for a plan before anything is submitted -- metadata
+    only, never prompts or provider keys -- and its ``rescue_at`` and
+    ``venue`` are folded into the local risk buffer and venue order. The desk
+    is optional by construction: unreachable, slow, or wrong shape, and this
+    behaves exactly as it would with no ``desk=`` at all.
     """
     job_list = [jobs] if isinstance(jobs, Job) else list(jobs)
     resolved = parse_deadline(deadline)
@@ -242,6 +327,15 @@ def submit(
     )
     if not job_list:
         return ticket
+
+    desk_url, plan = _plan_with_desk(desk, job_list, resolved, venue_list)
+    if desk_url is not None:
+        ticket.desk_url = desk_url
+        if plan is not None:
+            ticket.desk_plan_id = plan.plan_id
+            ticket.risk_buffer, venue_list = _apply_plan(
+                plan, resolved, ticket.risk_buffer, venue_list
+            )
 
     groups: dict[str, tuple[Venue, list[Job]]] = {}
     for j in job_list:
@@ -393,8 +487,33 @@ def _settle(ticket: Ticket, by_name: dict[str, Venue], fallback: str) -> list[Re
             fell_back=j.id in ticket.fell_back,
             paid_fraction=_paid_fraction(result.raw),
         )
+        _report_to_desk(ticket, result.receipt)
         results.append(result)
     return results
+
+
+def _report_to_desk(ticket: Ticket, receipt: Receipt) -> None:
+    """Best-effort ``POST .../v1/receipts``; stamps the receipt either way.
+
+    A ticket carries only ``desk_url`` and ``desk_plan_id`` -- never a key, so
+    it is re-read from ``OFFPEAK_KEY`` here, which also makes this work when
+    a ticket is collected in a different process than the one that submitted
+    it.
+    """
+    if ticket.desk_url is None:
+        return
+    receipt.desk_host = None
+    ok = False
+    if ticket.desk_plan_id is not None:
+        from . import desk as _desk
+
+        ok = _desk.send_receipt(
+            ticket.desk_url, _desk.desk_key(), ticket.desk_plan_id, receipt
+        )
+        if ok:
+            receipt.desk_host = _desk.desk_host(ticket.desk_url)
+            receipt.desk_plan_id = ticket.desk_plan_id
+    receipt.desk_reachable = ok
 
 
 def collect(
