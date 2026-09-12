@@ -345,16 +345,14 @@ Conversions API
 Supported Events
 Advertiser API
 Overview
-API Partner Setup
-Quickstart
-Bulk API
+Campaign Management
+Bidding & Budgets
+Targeting
 Product Feeds
-Delta Feeds API
-Campaign Targeting
-Location Targeting
-Platform Targeting
-Custom Audiences
-Conversion-Optimized Campaigns
+Conversion Tracking
+Reporting
+Troubleshooting
+Account Management
 API Reference
 Authentication
 Ad Account
@@ -461,7 +459,6 @@ Git worktrees
 Build with Codex
 Codex SDK
 App Server
-MCP Server
 GitHub Action
 Non-interactive mode
 Third-party integrations
@@ -582,11 +579,11 @@ Showcase Blog Cookbook Learn Community
 ShowcaseBlogCookbookLearnCommunityDocsSelect...
 All posts
 Recent
+Rethinking skills and prompts for GPT-6 Astra
 Architectural visualization with Astra
 Building games with Astra
 Meet Rosalind Workbench: Empowering every scientist to be their own research team
 Automating repetitive work at OpenAI with Codex
-Meet the winners of OpenAI Build Week
 Topics
 General
 API
@@ -1149,6 +1146,13 @@ gpt-5.3-codex
 $1.75
 $0.175
 $14.00
+Life Sciences
+gpt-rosalind-research
+$5.00
+$0.50
+$25.00
+Billing for gpt-rosalind-research begins on October 5, 2026. Cache-write pricing does not apply to this model. Access is limited to approved internal research through the trusted-access program. All eligible organizations will continue to get access to the latest GPT-Rosalind models as they’re released.
+Regional processing (data residency) endpoints are charged a 10% uplift for models released on or after March 5, 2026, that are eligible for data residency. See our Your data guide for supported regions and processing details.
 All models
 Fast mode
 Category
@@ -1161,6 +1165,7 @@ gpt-5.3-codex
 $3.50
 $0.35
 $28.00
+Regional processing (data residency) endpoints are charged a 10% uplift for models released on or after March 5, 2026, that are eligible for data residency. See our Your data guide for supported regions and processing details.
 Finetuning
 Prices per 1M tokens.
 OpenAI is winding down the fine-tuning platform. The platform is no longer

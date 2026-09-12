@@ -29,10 +29,10 @@ and no row about it should be read as rate coverage.
 | source | why | rates visible | url |
 | --- | --- | --- | --- |
 | `anthropic:pricing` | cited by prices.py | 157 | <https://platform.claude.com/docs/en/about-claude/pricing> |
-| `openai:pricing` | cited by prices.py | 226 | <https://developers.openai.com/api/docs/pricing> |
+| `openai:pricing` | cited by prices.py | 229 | <https://developers.openai.com/api/docs/pricing> |
 | `groq:pricing` | cited by prices.py | 1 | <https://groq.com/pricing> |
 | `mistral:pricing` | cited by prices.py | 50 | <https://mistral.ai/pricing/api> |
-| `google:pricing` | cited by prices.py | 532 | <https://ai.google.dev/pricing> |
+| `google:pricing` | cited by prices.py | 522 | <https://ai.google.dev/pricing> |
 | `groq:plans` | watched, not yet priced | **0 — rendered client-side** | <https://console.groq.com/docs/service-tiers> |
 | `xai:pricing` | watched, not yet priced | 8 | <https://docs.x.ai/docs/models> |
 | `deepseek:pricing` | cited by prices.py | 12 | <https://api-docs.deepseek.com/quick_start/pricing> |
@@ -89,3 +89,7 @@ and no row about it should be read as rate coverage.
 | 2026-09-11 | `mistral:pricing` | changed | +2 / −2 | copy change | gpt-5.6-luna | $0.0000934 | A news item was added and another removed; pricing and charged rates are unchanged. |
 | 2026-09-11 | `deepseek:pricing` | changed | +83 / −76 | price change | gpt-5.6-luna | $0.000410 | New pricing rates were added, including input and output token charges for Flash and Pro models. |
 | 2026-09-11 | `qwen:pricing` | changed | +1 / −1 | noise | gpt-5.6-luna | $0.0000786 | Only the page’s last-updated date changed; pricing and substantive content remain unchanged. |
+| 2026-09-12 | `openai:pricing` | changed | +16 / −11 | price change | gpt-5.6-luna | $0.000107 | New gpt-rosalind-research pricing was added, including $5.00, $0.50, and $25.00 charges. |
+| 2026-09-12 | `google:pricing` | changed | +3 / −62 | price change | gpt-5.6-luna | $0.000166 | Pricing sections for Gemini Embedding and Robotics ER 1.6 Preview, including paid rates, were removed. |
+| 2026-09-12 | `deepseek:pricing` | changed | +1 / −1 | copy change | gpt-5.6-luna | $0.000113 | Retirement and routing language changed, but no explicit pricing number or rate changed. |
+| 2026-09-12 | `qwen:pricing` | changed | +4 / −5 | copy change | gpt-5.6-luna | $0.0000882 | Model names and the last-updated date changed, but no pricing amounts or rates are shown. |
