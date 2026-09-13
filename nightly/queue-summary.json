@@ -1,5 +1,5 @@
 {
-  "generated_utc": "2026-09-13T00:27:56Z",
+  "generated_utc": "2026-09-13T12:40:46Z",
   "tail_started": "2026-08-28",
   "buckets": [
     {
@@ -18,12 +18,12 @@
     {
       "venue": "gemini",
       "window": "24h",
-      "n": 18,
-      "p50_s": 176.8,
-      "p90_s": 324.3,
-      "p99_s": 474.7,
+      "n": 19,
+      "p50_s": 169.8,
+      "p90_s": 318.3,
+      "p99_s": 473.4,
       "max_s": 497.0,
-      "open": 1,
+      "open": 0,
       "expired": 0,
       "overran": 0,
       "censored": 0
@@ -44,12 +44,12 @@
     {
       "venue": "openai",
       "window": "24h",
-      "n": 18,
-      "p50_s": 154.7,
-      "p90_s": 2349.1,
-      "p99_s": 22109.5,
+      "n": 19,
+      "p50_s": 155.0,
+      "p90_s": 2091.8,
+      "p99_s": 21893.2,
       "max_s": 25788.0,
-      "open": 1,
+      "open": 0,
       "expired": 0,
       "overran": 0,
       "censored": 2
