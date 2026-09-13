@@ -93,3 +93,4 @@ and no row about it should be read as rate coverage.
 | 2026-09-12 | `google:pricing` | changed | +3 / −62 | price change | gpt-5.6-luna | $0.000166 | Pricing sections for Gemini Embedding and Robotics ER 1.6 Preview, including paid rates, were removed. |
 | 2026-09-12 | `deepseek:pricing` | changed | +1 / −1 | copy change | gpt-5.6-luna | $0.000113 | Retirement and routing language changed, but no explicit pricing number or rate changed. |
 | 2026-09-12 | `qwen:pricing` | changed | +4 / −5 | copy change | gpt-5.6-luna | $0.0000882 | Model names and the last-updated date changed, but no pricing amounts or rates are shown. |
+| 2026-09-13 | `xai:pricing` | changed | +1 / −1 | price change | gpt-5.6-luna | $0.0000403 | The Agent starting rate increased from $0.05 per minute to $0.08 per minute. |
