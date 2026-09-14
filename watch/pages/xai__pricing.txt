@@ -190,7 +190,7 @@ Output$6.00 / 1M tokens
 ReasoningConfigurable
 Voice API
 Real-time conversations, speech-to-text, and text-to-speech.
-AgentStarting at $0.08 / min
+Agent$0.08 / min
 TTS$15.00 / 1M chars
 STT (Batch)$0.10 / hour
 STT (Streaming)$0.20 / hour

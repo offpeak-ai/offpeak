@@ -94,3 +94,5 @@ and no row about it should be read as rate coverage.
 | 2026-09-12 | `deepseek:pricing` | changed | +1 / −1 | copy change | gpt-5.6-luna | $0.000113 | Retirement and routing language changed, but no explicit pricing number or rate changed. |
 | 2026-09-12 | `qwen:pricing` | changed | +4 / −5 | copy change | gpt-5.6-luna | $0.0000882 | Model names and the last-updated date changed, but no pricing amounts or rates are shown. |
 | 2026-09-13 | `xai:pricing` | changed | +1 / −1 | price change | gpt-5.6-luna | $0.0000403 | The Agent starting rate increased from $0.05 per minute to $0.08 per minute. |
+| 2026-09-14 | `xai:pricing` | changed | +1 / −1 | copy change | gpt-5.6-luna | $0.0000587 | “Starting at” was removed, but the displayed rate remains $0.08 per minute. |
+| 2026-09-14 | `qwen:pricing` | changed | +2 / −2 | copy change | gpt-5.6-luna | $0.0000638 | A model name and update date changed, but no pricing amount or billing rate changed. |

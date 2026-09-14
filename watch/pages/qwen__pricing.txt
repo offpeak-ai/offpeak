@@ -13,14 +13,14 @@ All Products
 Alibaba Cloud Model Studio:Recommended models
 Document Center
 Alibaba Cloud Model Studio:Recommended models
-Last Updated:Sep 11, 2026
+Last Updated:Sep 14, 2026
 Alibaba Cloud Model Studio offers Qwen and third-party models for text, image, audio, and video.
 Text generation
 qwen3.8-max
 qwen3.7-plus
 qwen3.8-flash
 deepseek-v4-pro-0813
-deepseek-v4-flash-0731
+deepseek-v4.1-flash
 glm-5.2
 ZHIPU/GLM-5.3
 kimi-k3
