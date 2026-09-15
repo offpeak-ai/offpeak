@@ -27,48 +27,48 @@ Written by `tools/queue_summary.py`, never by hand.
 
 | range | n | p50 | p90 | p99 | max |
 |---|---|---|---|---|---|
-| 7d | 8 | 1m46s | 9m32s | 23m18s | 24m50s |
+| 7d | 7 | 1m33s | 11m43s | 23m31s | 24m50s |
 | 30d | 22 | 2m00s | 4m42s | 20m42s | 24m50s |
 | all-time | 22 | 2m00s | 4m42s | 20m42s | 24m50s |
 
-Completed: 22/22. Expired: 0. Overran window: 0. Failed: 0.
+Completed: 22/23. Expired: 0. Overran window: 0. Failed: 0.
 
 ## gemini (24h)
 
 | range | n | p50 | p90 | p99 | max |
 |---|---|---|---|---|---|
-| 7d | 8 | 2m16s | 4m48s | 7m56s | 8m17s |
+| 7d | 7 | 2m03s | 5m14s | 7m59s | 8m17s |
 | 30d | 20 | 2m49s | 5m12s | 7m52s | 8m17s |
 | all-time | 20 | 2m49s | 5m12s | 7m52s | 8m17s |
 
-Completed: 20/20. Expired: 0. Overran window: 0. Failed: 0.
+Completed: 20/21. Expired: 0. Overran window: 0. Failed: 0.
 
 ## mistral (24h)
 
 | range | n | p50 | p90 | p99 | max |
 |---|---|---|---|---|---|
 | 7d | 8 | 32s | 52s | 1m02s | 1m03s |
-| 30d | 19 | 1m03s | 15h40m14s | 20h03m21s | 20h17m15s |
-| all-time | 19 | 1m03s | 15h40m14s | 20h03m21s | 20h17m15s |
+| 30d | 20 | 1m03s | 15h15m15s | 20h02m35s | 20h17m15s |
+| all-time | 20 | 1m03s | 15h15m15s | 20h02m35s | 20h17m15s |
 
-Completed: 19/20. Expired: 0. Overran window: 0. Failed: 0.
+Completed: 20/21. Expired: 0. Overran window: 0. Failed: 0.
 
 ## openai (24h)
 
 | range | n | p50 | p90 | p99 | max |
 |---|---|---|---|---|---|
-| 7d | 8 | 3m11s | 2h57m21s | 6h44m33s | 7h09m48s |
+| 7d | 7 | 2m59s | 3h33m25s | 6h48m10s | 7h09m48s |
 | 30d | 20 | 2m38s | 30m35s | 6h01m17s | 7h09m48s |
 | all-time | 20 | 2m38s | 30m35s | 6h01m17s | 7h09m48s |
 
-Completed: 20/22. Expired: 0. Overran window: 0. Failed: 0.
+Completed: 20/23. Expired: 0. Overran window: 0. Failed: 0.
 
 ## Days of continuous accrual
 
 | venue | days |
 |---|---|
-| anthropic | 22 |
-| gemini | 20 |
-| mistral | 20 |
-| openai | 22 |
+| anthropic | 23 |
+| gemini | 21 |
+| mistral | 21 |
+| openai | 23 |
 

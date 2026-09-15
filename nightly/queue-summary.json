@@ -1,5 +1,5 @@
 {
-  "generated_utc": "2026-09-14T22:25:40Z",
+  "generated_utc": "2026-09-15T01:00:14Z",
   "tail_started": "2026-08-28",
   "buckets": [
     {
@@ -10,7 +10,7 @@
       "p90_s": 281.8,
       "p99_s": 1241.7,
       "max_s": 1490.0,
-      "open": 0,
+      "open": 1,
       "expired": 0,
       "overran": 0,
       "censored": 0
@@ -23,7 +23,7 @@
       "p90_s": 312.4,
       "p99_s": 472.1,
       "max_s": 497.0,
-      "open": 0,
+      "open": 1,
       "expired": 0,
       "overran": 0,
       "censored": 0
@@ -31,10 +31,10 @@
     {
       "venue": "mistral",
       "window": "24h",
-      "n": 19,
-      "p50_s": 63.0,
-      "p90_s": 56413.8,
-      "p99_s": 72200.9,
+      "n": 20,
+      "p50_s": 62.6,
+      "p90_s": 54915.4,
+      "p99_s": 72154.5,
       "max_s": 73035.0,
       "open": 0,
       "expired": 0,
@@ -49,7 +49,7 @@
       "p90_s": 1834.6,
       "p99_s": 21676.8,
       "max_s": 25788.0,
-      "open": 0,
+      "open": 1,
       "expired": 0,
       "overran": 0,
       "censored": 2
