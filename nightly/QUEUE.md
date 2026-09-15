@@ -27,21 +27,21 @@ Written by `tools/queue_summary.py`, never by hand.
 
 | range | n | p50 | p90 | p99 | max |
 |---|---|---|---|---|---|
-| 7d | 7 | 1m33s | 11m43s | 23m31s | 24m50s |
-| 30d | 22 | 2m00s | 4m42s | 20m42s | 24m50s |
-| all-time | 22 | 2m00s | 4m42s | 20m42s | 24m50s |
+| 7d | 8 | 1m46s | 19m46s | 24m20s | 24m50s |
+| 30d | 23 | 2m03s | 5m04s | 23m15s | 24m50s |
+| all-time | 23 | 2m03s | 5m04s | 23m15s | 24m50s |
 
-Completed: 22/23. Expired: 0. Overran window: 0. Failed: 0.
+Completed: 23/23. Expired: 0. Overran window: 0. Failed: 0.
 
 ## gemini (24h)
 
 | range | n | p50 | p90 | p99 | max |
 |---|---|---|---|---|---|
-| 7d | 7 | 2m03s | 5m14s | 7m59s | 8m17s |
-| 30d | 20 | 2m49s | 5m12s | 7m52s | 8m17s |
-| all-time | 20 | 2m49s | 5m12s | 7m52s | 8m17s |
+| 7d | 8 | 2m16s | 30m32s | 1h17m15s | 1h22m26s |
+| 30d | 21 | 2m50s | 6m06s | 1h07m36s | 1h22m26s |
+| all-time | 21 | 2m50s | 6m06s | 1h07m36s | 1h22m26s |
 
-Completed: 20/21. Expired: 0. Overran window: 0. Failed: 0.
+Completed: 21/21. Expired: 0. Overran window: 0. Failed: 0.
 
 ## mistral (24h)
 
@@ -57,11 +57,11 @@ Completed: 20/21. Expired: 0. Overran window: 0. Failed: 0.
 
 | range | n | p50 | p90 | p99 | max |
 |---|---|---|---|---|---|
-| 7d | 7 | 2m59s | 3h33m25s | 6h48m10s | 7h09m48s |
-| 30d | 20 | 2m38s | 30m35s | 6h01m17s | 7h09m48s |
-| all-time | 20 | 2m38s | 30m35s | 6h01m17s | 7h09m48s |
+| 7d | 8 | 3m11s | 2h57m21s | 6h44m33s | 7h09m48s |
+| 30d | 21 | 2m41s | 26m17s | 5h57m40s | 7h09m48s |
+| all-time | 21 | 2m41s | 26m17s | 5h57m40s | 7h09m48s |
 
-Completed: 20/23. Expired: 0. Overran window: 0. Failed: 0.
+Completed: 21/23. Expired: 0. Overran window: 0. Failed: 0.
 
 ## Days of continuous accrual
 
